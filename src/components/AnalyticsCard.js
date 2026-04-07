@@ -5,16 +5,18 @@ import BarChartComponent from "./BarChartComponent";
 
 const AnalyticsCard = () => {
   return (
-    <Paper elevation={3} className="calculator-paper">
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+    <Grid container spacing={3}>
+      <Grid item xs={12} md={6}>
+        <Paper elevation={3} className="calculator-paper">
           <PieChartComponent />
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <BarChartComponent />
-        </Grid>
+        </Paper>
       </Grid>
-    </Paper>
+      <Grid item xs={12} md={6}>
+        <Paper elevation={3} className="calculator-paper">
+          <BarChartComponent />
+        </Paper>
+      </Grid>
+    </Grid>
   );
 };
 

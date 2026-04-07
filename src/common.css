@@ -18,12 +18,12 @@
 }
 
 [data-theme="dark"] {
-  --primary-color: #2a9d8f;
-  --secondary-color: #e9c46a;
-  --background-color: #264653;
-  --surface-color: #2f5f71;
-  --text-primary-color: #ffffff;
-  --text-secondary-color: #e9d8a6;
+  --primary-color: #90CAF9; /* Light Blue */
+  --secondary-color: #BBDEFB; /* Lighter Blue */
+  --background-color: #121212; /* Very dark grey */
+  --surface-color: #1E1E1E; /* Darker grey */
+  --text-primary-color: #E0E0E0; /* Light grey */
+  --text-secondary-color: #B0B0B0; /* Grey */
 }
 
 [data-theme="blue"] {
@@ -51,4 +51,13 @@
   --surface-color: #ffffff;
   --text-primary-color: #023047;
   --text-secondary-color: #219ebc;
+}
+
+[data-theme="dodgerblue"] {
+  --primary-color: #1E90FF; /* DodgerBlue */
+  --secondary-color: #6495ED; /* CornflowerBlue */
+  --background-color: #E0FFFF; /* LightCyan */
+  --surface-color: #F0F8FF; /* AliceBlue */
+  --text-primary-color: #191970; /* MidnightBlue */
+  --text-secondary-color: #4169E1; /* RoyalBlue */
 }
