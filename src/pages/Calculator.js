@@ -2,11 +2,12 @@ import React from "react";
 import { Grid, Box, Paper, Typography } from "@mui/material";
 import HomeLoanForm from "../components/HomeLoanForm";
 import PrepaymentsForm from "../components/PrepaymentsForm";
-import AnalyticsCard from "../components/AnalyticsCard";
 import PaymentScheduleTable from "../components/PaymentScheduleTable";
 import TotalMonthlyPayment from "../components/TotalMonthlyPayment";
 import "./Calculator.scss";
 import { useEmiContext } from "../context/EmiContext";
+import PieChartComponent from "../components/PieChartComponent";
+import BarChartComponent from "../components/BarChartComponent";
 
 const Calculator = () => {
   const { calculatedValues } = useEmiContext();
@@ -26,19 +27,30 @@ const Calculator = () => {
 
         <Grid item xs={12}>
           <Paper elevation={3} className="calculator-paper">
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <PrepaymentsForm />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <TotalMonthlyPayment />
-              </Grid>
-            </Grid>
+            <PrepaymentsForm />
           </Paper>
         </Grid>
-        
         <Grid item xs={12}>
-          <AnalyticsCard />
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8} sx={{ display: "flex" }}>
+              <Grid item xs={12}>
+                <Paper elevation={3} className="calculator-paper">
+                  <PieChartComponent />
+                </Paper>
+              </Grid>
+            </Grid>
+            <Grid item xs={12} md={4} sx={{ display: "flex" }}>
+              <Paper elevation={3} className="calculator-paper">
+                <TotalMonthlyPayment />
+              </Paper>
+            </Grid>
+          </Grid>
+        </Grid>
+
+        <Grid item spacing={3} xs={12}>
+          <Paper elevation={3} className="calculator-paper">
+            <BarChartComponent />
+          </Paper>
         </Grid>
 
         {/* Full Width Row: Payment Schedule */}

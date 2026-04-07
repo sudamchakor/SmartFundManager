@@ -33,14 +33,14 @@ const PrepaymentsForm = () => {
   };
 
   return (
-    <Paper elevation={3} className="prepayments-paper">
+    <>
       <Box className="prepayments-header">
         <Typography variant="h6">Partial Prepayments</Typography>
       </Box>
 
       <Grid container spacing={2} className="prepayments-grid">
         {/* Monthly Prepayment */}
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={3}>
           <Typography variant="subtitle2" gutterBottom>
             Monthly Payment
           </Typography>
@@ -68,7 +68,7 @@ const PrepaymentsForm = () => {
         </Grid>
 
         {/* Yearly Prepayment */}
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={3}>
           <Typography variant="subtitle2" gutterBottom>
             Yearly Payment
           </Typography>
@@ -96,7 +96,7 @@ const PrepaymentsForm = () => {
         </Grid>
 
         {/* Quarterly Prepayment */}
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={3}>
           <Typography variant="subtitle2" gutterBottom>
             Quarterly Payment
           </Typography>
@@ -124,7 +124,7 @@ const PrepaymentsForm = () => {
         </Grid>
 
         {/* One-Time Prepayment */}
-        <Grid item xs={12} sm={6}>
+        <Grid item xs={12} sm={3}>
           <Typography variant="subtitle2" gutterBottom>
             One-time Payment
           </Typography>
@@ -151,7 +151,7 @@ const PrepaymentsForm = () => {
           </Box>
         </Grid>
       </Grid>
-    </Paper>
+    </>
   );
 };
 

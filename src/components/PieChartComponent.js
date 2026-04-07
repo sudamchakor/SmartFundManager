@@ -16,7 +16,7 @@ const PieChartComponent = () => {
     theme.palette.info.main,
     theme.palette.error.main,
     theme.palette.success.main,
-    '#9d8d8f',
+    "#9d8d8f",
   ];
 
   const data = [
@@ -87,7 +87,7 @@ const PieChartComponent = () => {
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => `${currency}${value.toFixed(2)}`}
+                  formatter={(value) => `${currency}${Math.round(value)}`}
                   contentStyle={{
                     backgroundColor: theme.palette.background.paper,
                     color: theme.palette.text.primary,
@@ -114,7 +114,7 @@ const PieChartComponent = () => {
               <Grid item xs={4}>
                 <Typography variant="body1" align="right">
                   {currency}
-                  {downPaymentFees.toFixed(2)}
+                  {Math.round(downPaymentFees)}
                 </Typography>
               </Grid>
 
@@ -130,7 +130,7 @@ const PieChartComponent = () => {
               <Grid item xs={4}>
                 <Typography variant="body1" align="right">
                   {currency}
-                  {principal.toFixed(2)}
+                  {Math.round(principal)}
                 </Typography>
               </Grid>
 
@@ -146,7 +146,7 @@ const PieChartComponent = () => {
               <Grid item xs={4}>
                 <Typography variant="body1" align="right">
                   {currency}
-                  {prepayments.toFixed(2)}
+                  {Math.round(prepayments)}
                 </Typography>
               </Grid>
 
@@ -162,7 +162,7 @@ const PieChartComponent = () => {
               <Grid item xs={4}>
                 <Typography variant="body1" align="right">
                   {currency}
-                  {interest.toFixed(2)}
+                  {Math.round(interest)}
                 </Typography>
               </Grid>
 
@@ -178,7 +178,7 @@ const PieChartComponent = () => {
               <Grid item xs={4}>
                 <Typography variant="body1" align="right">
                   {currency}
-                  {taxesInsMaint.toFixed(2)}
+                  {Math.round(taxesInsMaint)}
                 </Typography>
               </Grid>
             </Grid>
@@ -192,7 +192,7 @@ const PieChartComponent = () => {
               <Grid item xs={4}>
                 <Typography variant="h6" align="right">
                   {currency}
-                  {calculatedValues.totalPayments.toFixed(2)}
+                  {Math.round(calculatedValues.totalPayments)}
                 </Typography>
               </Grid>
             </Grid>

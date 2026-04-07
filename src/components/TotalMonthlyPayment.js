@@ -6,10 +6,12 @@ import "./TotalMonthlyPayment.scss";
 const TotalMonthlyPayment = () => {
   const { calculatedValues, expenses, currency } = useEmiContext();
 
-  const emi = calculatedValues.emi || 0;
-  const monthlyTaxes = (calculatedValues.taxesYearlyInRs || 0) / 12;
-  const monthlyInsurance = (calculatedValues.homeInsYearlyInRs || 0) / 12;
-  const monthlyMaintenance = expenses.maintenance || 0;
+  const emi = Math.round(calculatedValues.emi) || 0;
+  const monthlyTaxes = Math.round((calculatedValues.taxesYearlyInRs || 0) / 12);
+  const monthlyInsurance = Math.round(
+    (calculatedValues.homeInsYearlyInRs || 0) / 12,
+  );
+  const monthlyMaintenance = Math.round(expenses.maintenance) || 0;
 
   const totalMonthlyPayment =
     emi + monthlyTaxes + monthlyInsurance + monthlyMaintenance;
@@ -27,7 +29,7 @@ const TotalMonthlyPayment = () => {
           <Grid item xs={4}>
             <Typography variant="body1" align="right">
               {currency}
-              {emi.toFixed(2)}
+              {emi}
             </Typography>
           </Grid>
 
@@ -37,7 +39,7 @@ const TotalMonthlyPayment = () => {
           <Grid item xs={4}>
             <Typography variant="body1" align="right">
               {currency}
-              {monthlyTaxes.toFixed(2)}
+              {monthlyTaxes}
             </Typography>
           </Grid>
 
@@ -47,7 +49,7 @@ const TotalMonthlyPayment = () => {
           <Grid item xs={4}>
             <Typography variant="body1" align="right">
               {currency}
-              {monthlyInsurance.toFixed(2)}
+              {monthlyInsurance}
             </Typography>
           </Grid>
 
@@ -57,7 +59,7 @@ const TotalMonthlyPayment = () => {
           <Grid item xs={4}>
             <Typography variant="body1" align="right">
               {currency}
-              {monthlyMaintenance.toFixed(2)}
+              {monthlyMaintenance}
             </Typography>
           </Grid>
         </Grid>
@@ -71,7 +73,7 @@ const TotalMonthlyPayment = () => {
           <Grid item xs={4}>
             <Typography variant="h6" align="right" color="primary">
               {currency}
-              {totalMonthlyPayment.toFixed(2)}
+              {totalMonthlyPayment}
             </Typography>
           </Grid>
         </Grid>
