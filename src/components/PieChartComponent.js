@@ -117,7 +117,10 @@ const PieChartComponent = () => {
                   {Math.round(downPaymentFees)}
                 </Typography>
               </Grid>
-
+              <Divider
+                className="pie-chart-divider"
+                style={{ borderStyle: "dotted" }}
+              />
               <Grid item xs={8}>
                 <Typography
                   variant="body1"
@@ -133,7 +136,10 @@ const PieChartComponent = () => {
                   {Math.round(principal)}
                 </Typography>
               </Grid>
-
+              <Divider
+                className="pie-chart-divider"
+                style={{ borderStyle: "dotted" }}
+              />
               <Grid item xs={8}>
                 <Typography
                   variant="body1"
@@ -149,7 +155,10 @@ const PieChartComponent = () => {
                   {Math.round(prepayments)}
                 </Typography>
               </Grid>
-
+              <Divider
+                className="pie-chart-divider"
+                style={{ borderStyle: "dotted" }}
+              />
               <Grid item xs={8}>
                 <Typography
                   variant="body1"
@@ -175,6 +184,10 @@ const PieChartComponent = () => {
                   Taxes, Insurance & Maint.
                 </Typography>
               </Grid>
+              <Divider
+                className="pie-chart-divider"
+                style={{ borderStyle: "dotted" }}
+              />
               <Grid item xs={4}>
                 <Typography variant="body1" align="right">
                   {currency}
@@ -182,9 +195,7 @@ const PieChartComponent = () => {
                 </Typography>
               </Grid>
             </Grid>
-
             <Divider className="pie-chart-divider" />
-
             <Grid container spacing={2}>
               <Grid item xs={8}>
                 <Typography variant="h6">Total of all Payments</Typography>

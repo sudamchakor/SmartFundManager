@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import {
-  BarChart,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Line,
 } from "recharts";
 import { useEmiContext } from "../context/EmiContext";
 import { useTheme } from "@mui/material/styles";
@@ -24,6 +25,10 @@ const BarChartComponent = () => {
         name: item.date,
         Principal: item.principal,
         Interest: item.interest,
+        Prepayments: item.prepayment,
+        "Taxes, Home Insurance & Maintenance":
+          item.taxes + item.homeInsurance + item.maintenance,
+        Balance: item.balance,
       }));
     }
 
@@ -35,10 +40,17 @@ const BarChartComponent = () => {
           name: year,
           Principal: 0,
           Interest: 0,
+          Prepayments: 0,
+          "Taxes, Home Insurance & Maintenance": 0,
+          Balance: 0,
         };
       }
       yearlyData[year].Principal += row.principal;
       yearlyData[year].Interest += row.interest;
+      yearlyData[year].Prepayments += row.prepayment;
+      yearlyData[year]["Taxes, Home Insurance & Maintenance"] +=
+        row.taxes + row.homeInsurance + row.maintenance;
+      yearlyData[year].Balance = row.balance; // Take the last balance of the year
     });
 
     return Object.values(yearlyData);
@@ -53,7 +65,7 @@ const BarChartComponent = () => {
         </Typography>
       )}
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart
+        <ComposedChart
           data={chartData}
           margin={{
             top: 20,
@@ -64,9 +76,32 @@ const BarChartComponent = () => {
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="name" />
-          <YAxis />
+          <YAxis
+            yAxisId="left"
+            label={{
+              value: "Payments",
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+          />
+          <YAxis
+            yAxisId="right"
+            orientation="right"
+            label={{
+              value: "Balance",
+              angle: -90,
+              position: "insideRight",
+              style: { textAnchor: "middle" },
+            }}
+          />
           <Tooltip
-            formatter={(value) => `${currency}${value.toFixed(2)}`}
+            formatter={(value, name) => {
+              if (name === "Balance") {
+                return [`${currency}${value.toFixed(2)}`, name];
+              }
+              return `${currency}${value.toFixed(2)}`;
+            }}
             contentStyle={{
               backgroundColor: theme.palette.background.paper,
               color: theme.palette.text.primary,
@@ -74,16 +109,38 @@ const BarChartComponent = () => {
           />
           <Legend />
           <Bar
+            yAxisId="left"
             dataKey="Principal"
             stackId="a"
             fill={theme.palette.primary.main}
           />
           <Bar
+            yAxisId="left"
             dataKey="Interest"
             stackId="a"
             fill={theme.palette.secondary.main}
           />
-        </BarChart>
+          <Bar
+            yAxisId="left"
+            dataKey="Prepayments"
+            stackId="a"
+            fill={theme.palette.success.main}
+          />
+          <Bar
+            yAxisId="left"
+            dataKey="Taxes, Home Insurance & Maintenance"
+            stackId="b"
+            fill={theme.palette.info.main}
+          />
+          <Line
+            yAxisId="right"
+            type="monotone"
+            dataKey="Balance"
+            stroke={theme.palette.warning.main}
+            strokeWidth={2}
+            dot={false}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </>
   );

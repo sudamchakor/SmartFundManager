@@ -31,7 +31,7 @@ export const EmiProvider = ({ children }) => {
     monthly: { amount: 0, startDate: dayjs() },
     yearly: { amount: 0, startDate: dayjs() },
     quarterly: { amount: 0, startDate: dayjs() },
-    oneTime: { amount: 800000, date: dayjs() },
+    oneTime: { amount: 0, date: dayjs() },
   });
 
   // State for Homeowner Expenses
@@ -183,17 +183,21 @@ export const EmiProvider = ({ children }) => {
       totalPrincipal += principalForMonth;
       totalPrepayments += prepayForMonth;
 
+      const totalPayment = principalForMonth + interestForMonth + prepayForMonth;
+      const paidPercent = loanAmount > 0 ? ((loanAmount - balance) / loanAmount) * 100 : 0;
+
       schedule.push({
         month: i,
         date: currentDate.format("MMM YYYY"),
-        principal: principalForMonth,
-        interest: interestForMonth,
-        prepayment: prepayForMonth,
-        balance: balance,
-        taxes: taxesYearlyInRs / 12,
-        homeInsurance: homeInsYearlyInRs / 12,
-        maintenance: expenses.maintenance,
-        totalPayment: principalForMonth + interestForMonth + prepayForMonth,
+        principal: Math.round(principalForMonth),
+        interest: Math.round(interestForMonth),
+        prepayment: Math.round(prepayForMonth),
+        balance: Math.round(balance),
+        totalPayment: Math.round(totalPayment),
+        taxes: Math.round(taxesYearlyInRs / 12),
+        homeInsurance: Math.round(homeInsYearlyInRs / 12),
+        maintenance: Math.round(expenses.maintenance),
+        paidPercent: paidPercent.toFixed(2),
       });
     }
 
