@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { 
-  Typography, Paper, Box, Button, 
+import {
+  Typography, Paper, Box, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Select, MenuItem, FormControl, InputLabel,
   Tooltip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Grid
 } from '@mui/material';
@@ -30,7 +30,7 @@ import {
   selectCalculatedSalary,
   selectTaxComparison,
 } from '../store/taxSlice';
-import '../assets/styles.css';
+import '../../../styles/taxCalculator.css';
 
 const TaxDashboard = () => {
   const dispatch = useDispatch();
@@ -52,7 +52,7 @@ const TaxDashboard = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-  
+
   const settings = useSelector(selectSettings);
   const declarations = useSelector(selectCalculatedDeclarations);
   const dynamicRows = useSelector(selectDynamicRows);
@@ -110,15 +110,15 @@ const TaxDashboard = () => {
 
   const renderCell = (month, index, field, isCalculated = false) => {
     const isHovered = hoveredCell === `${index}-${field}`;
-    
+
     if (isCalculated) {
       return (
         <TableCell key={field} sx={{ p: 0.5, borderRight: '1px solid #e0e0e0' }}>
-          <TextField 
-            variant="outlined" 
-            size="small" 
-            value={Math.round(month[field] || 0)} 
-            disabled 
+          <TextField
+            variant="outlined"
+            size="small"
+            value={Math.round(month[field] || 0)}
+            disabled
             sx={{ width: '100%', minWidth: 60, '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: '#000', backgroundColor: '#f5f5f5', padding: '6px' } }}
           />
         </TableCell>
@@ -126,28 +126,28 @@ const TaxDashboard = () => {
     }
 
     return (
-      <TableCell 
-        key={field} 
+      <TableCell
+        key={field}
         onMouseEnter={() => setHoveredCell(`${index}-${field}`)}
         onMouseLeave={() => setHoveredCell(null)}
         sx={{ position: 'relative', p: 0.5, borderRight: '1px solid #e0e0e0' }}
       >
-        <TextField 
-          variant="outlined" 
-          size="small" 
-          value={month[field] || (month[field] === 0 ? '0' : '')} 
+        <TextField
+          variant="outlined"
+          size="small"
+          value={month[field] || (month[field] === 0 ? '0' : '')}
           onChange={(e) => handleMonthChange(index, field, e.target.value)}
           sx={{ width: '100%', minWidth: 60, '& .MuiInputBase-input': { padding: '6px' } }}
         />
         {isHovered && index < 11 && (
           <Tooltip title={`Populate remaining months with this value`}>
-             <IconButton 
-               size="small" 
-               onClick={() => handlePopulateRowFromCurrent(index, field)} 
+             <IconButton
+               size="small"
+               onClick={() => handlePopulateRowFromCurrent(index, field)}
                sx={{ position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)', zIndex: 10, bgcolor: 'background.paper', boxShadow: 1, padding: '2px' }}
              >
                <ArrowRightAltIcon fontSize="small" color="primary" />
-             </IconButton>
+            </IconButton>
           </Tooltip>
         )}
       </TableCell>
@@ -172,7 +172,7 @@ const TaxDashboard = () => {
     { label: 'VPF', field: 'vpf', calculated: true, tooltip: 'Voluntary Provident Fund - Additional contribution, also eligible for 80C.' },
     { label: 'IT', field: 'it', tooltip: 'Income Tax Deducted (TDS) - Tax deducted at source by employer.' },
     { label: 'Rent', field: 'rent', tooltip: 'Rent Paid - Used to calculate HRA Exemption. Must exceed 10% of Basic Salary to get any exemption.' },
-    { label: 'Life Insur.', field: 'lifeInsur', tooltip: 'Life Insurance Premium - Deducted directly by employer, eligible for 80C.' },
+    { label: 'Life Insur.', field: 'lifeInsur', tooltip: 'Life Insurance Premium - Deductions directly by employer, eligible for 80C.' },
   ];
 
   const otherFields = [
@@ -261,46 +261,46 @@ const TaxDashboard = () => {
 
         <Grid item xs={12} md={8}>
           <DataCard title="A. Exemptions under Section 10 & 17">
-              <ExemptionRow label="HRA Exemption (sec 10 (13A))" 
+              <ExemptionRow label="HRA Exemption (sec 10 (13A))"
                   produced={
                     <TextField size="small" sx={{ width: 100 }} value={declarations.exemptions.hra.produced} onChange={(e) => handleDeclarationChange('exemptions', 'hra', 'produced', e.target.value)} />
-                  } 
-                  limited={declarations.exemptions.hra.limited} 
+                  }
+                  limited={declarations.exemptions.hra.limited}
               />
-              <ExemptionRow label="Transport Exemption (sec 10(14))" 
+              <ExemptionRow label="Transport Exemption (sec 10(14))"
                   produced={
                     <TextField size="small" sx={{ width: 100 }} value={declarations.exemptions.transport.produced} onChange={(e) => handleDeclarationChange('exemptions', 'transport', 'produced', e.target.value)} />
-                  } 
-                  limited={declarations.exemptions.transport.limited} 
+                  }
+                  limited={declarations.exemptions.transport.limited}
               />
-              <ExemptionRow label="Gratuity / Other (sec 10(10))" 
+              <ExemptionRow label="Gratuity / Other (sec 10(10))"
                   produced={
                     <TextField size="small" sx={{ width: 100 }} value={declarations.exemptions.gratuity.produced} onChange={(e) => handleDeclarationChange('exemptions', 'gratuity', 'produced', e.target.value)} />
-                  } 
-                  limited={declarations.exemptions.gratuity.limited} 
+                  }
+                  limited={declarations.exemptions.gratuity.limited}
               />
-              <ExemptionRow label="Children's Ed. Allowance (sec 10(14))" 
+              <ExemptionRow label="Children's Ed. Allowance (sec 10(14))"
                   produced={
                     <TextField size="small" sx={{ width: 100 }} value={declarations.exemptions.childrenEduc.produced} onChange={(e) => handleDeclarationChange('exemptions', 'childrenEduc', 'produced', e.target.value)} />
-                  } 
-                  limited={declarations.exemptions.childrenEduc.limited} 
+                  }
+                  limited={declarations.exemptions.childrenEduc.limited}
               />
-              <ExemptionRow label="LTA Exemption (sec 10(5))" 
+              <ExemptionRow label="LTA Exemption (sec 10(5))"
                   produced={
                     <TextField size="small" sx={{ width: 100 }} value={declarations.exemptions.lta.produced} onChange={(e) => handleDeclarationChange('exemptions', 'lta', 'produced', e.target.value)} />
-                  } 
-                  limited={declarations.exemptions.lta.limited} 
+                  }
+                  limited={declarations.exemptions.lta.limited}
               />
-              <ExemptionRow label="Uniform Expenses (sec 10(14))" 
+              <ExemptionRow label="Uniform Expenses (sec 10(14))"
                   produced={
                     <TextField size="small" sx={{ width: 100 }} value={declarations.exemptions.uniform.produced} onChange={(e) => handleDeclarationChange('exemptions', 'uniform', 'produced', e.target.value)} />
-                  } 
-                  limited={declarations.exemptions.uniform.limited} 
+                  }
+                  limited={declarations.exemptions.uniform.limited}
               />
                <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="h6">Total Exempted Allowances</Typography>
                   <TextField size="small" sx={{ width: 150, '& .MuiInputBase-input.Mui-disabled': { WebkitTextFillColor: '#000', backgroundColor: '#f5f5f5' } }} value={Math.round(declarations.exemptions.totalLimited)} disabled />
-              </Box>
+               </Box>
           </DataCard>
 
            <DataCard title="B. Other Income & Bonus">
@@ -321,39 +321,39 @@ const TaxDashboard = () => {
                   <TextField label="Virtual Digital Assets (Crypto) - 30%" value={declarations.otherIncome.crypto} onChange={(e) => handleDeclarationChange('otherIncome', 'crypto', null, e.target.value)} fullWidth size="small" margin="normal" />
                 </Grid>
              </Grid>
-          </DataCard>
+           </DataCard>
 
-          <DataCard title="C. Deductions (Chapter VI-A)">
-              <ExemptionRow label="80D - Health Insurance" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80D.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80D', 'produced', e.target.value)} />} 
-                  limited={declarations.deductions.sec80D.limited} 
+           <DataCard title="C. Deductions (Chapter VI-A)">
+              <ExemptionRow label="80D - Health Insurance"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80D.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80D', 'produced', e.target.value)} />}
+                  limited={declarations.deductions.sec80D.limited}
               />
-              <ExemptionRow label="80DD/DDB - Medical (Handicapped/Specified)" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80DD_DDB.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80DD_DDB', 'produced', e.target.value)} />} 
-                  limited={declarations.deductions.sec80DD_DDB.limited} 
+              <ExemptionRow label="80DD/DDB - Medical (Handicapped/Specified)"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80DD_DDB.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80DD_DDB', 'produced', e.target.value)} />}
+                  limited={declarations.deductions.sec80DD_DDB.limited}
               />
-              <ExemptionRow label="80E/EEB - Education/EV Loan Interest" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80E_EEB.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80E_EEB', 'produced', e.target.value)} />} 
-                  limited={declarations.deductions.sec80E_EEB.limited} 
+              <ExemptionRow label="80E/EEB - Education/EV Loan Interest"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80E_EEB.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80E_EEB', 'produced', e.target.value)} />}
+                  limited={declarations.deductions.sec80E_EEB.limited}
               />
-              <ExemptionRow label="80G - Donations to Charities" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80G.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80G', 'produced', e.target.value)} />} 
-                  limited={declarations.deductions.sec80G.limited} 
+              <ExemptionRow label="80G - Donations to Charities"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80G.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80G', 'produced', e.target.value)} />}
+                  limited={declarations.deductions.sec80G.limited}
               />
-               <ExemptionRow label="80GG - Rent Deduction (if no HRA)" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80GG.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80GG', 'produced', e.target.value)} />} 
-                  limited={declarations.deductions.sec80GG.limited} 
+               <ExemptionRow label="80GG - Rent Deduction (if no HRA)"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80GG.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80GG', 'produced', e.target.value)} />}
+                  limited={declarations.deductions.sec80GG.limited}
               />
-              <ExemptionRow label="80TTA/U - Bank Interest / Disability" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80TTA_U.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80TTA_U', 'produced', e.target.value)} />} 
-                  limited={declarations.deductions.sec80TTA_U.limited} 
+              <ExemptionRow label="80TTA/U - Bank Interest / Disability"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={declarations.deductions.sec80TTA_U.produced} onChange={(e) => handleDeclarationChange('deductions', 'sec80TTA_U', 'produced', e.target.value)} />}
+                  limited={declarations.deductions.sec80TTA_U.limited}
               />
-              <ExemptionRow label="Sec 24(b) - Home Loan Interest" 
-                  produced={<TextField size="small" sx={{ width: 100 }} value={houseProperty.interest} onChange={(e) => dispatch(updateHouseProperty({interest: e.target.value}))} />} 
-                  limited={Math.min(parseFloat(houseProperty.interest) || 0, 200000)} 
+              <ExemptionRow label="Sec 24(b) - Home Loan Interest"
+                  produced={<TextField size="small" sx={{ width: 100 }} value={houseProperty.interest} onChange={(e) => dispatch(updateHouseProperty({interest: e.target.value}))} />}
+                  limited={Math.min(parseFloat(houseProperty.interest) || 0, 200000)}
               />
-          </DataCard>
-          
+           </DataCard>
+
            <DataCard title="D. Section 80C (Investments)">
              <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
@@ -370,12 +370,12 @@ const TaxDashboard = () => {
                 </Grid>
              </Grid>
              <Box sx={{ mt: 3 }}>
-                <ExemptionRow label="Total 80C (Including PF, VPF, Life Insur)" 
-                  produced={<Typography>₹{Math.round(declarations.sec80C.totalProduced)}</Typography>} 
-                  limited={declarations.sec80C.limited} 
+                <ExemptionRow label="Total 80C (Including PF, VPF, Life Insur)"
+                  produced={<Typography>₹{Math.round(declarations.sec80C.totalProduced)}</Typography>}
+                  limited={declarations.sec80C.limited}
                 />
              </Box>
-          </DataCard>
+           </DataCard>
         </Grid>
 
         <Grid item xs={12} md={4} className="verdict-column">
@@ -466,7 +466,7 @@ const TaxDashboard = () => {
               <Grid item xs={12} sm={6}>
                 <TextField label="Voluntary PF %" value={settings.vpfPercent} onChange={(e) => handleSettingChange('vpfPercent', e.target.value)} fullWidth size="small" />
               </Grid>
-               
+
                <Grid item xs={12}>
                  <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>PF Inclusion Rules (Apply to all months)</Typography>
                  <TableContainer component={Paper} variant="outlined">

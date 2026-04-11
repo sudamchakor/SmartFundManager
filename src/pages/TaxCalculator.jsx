@@ -1,9 +1,10 @@
 import React from 'react';
 import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Box, CssBaseline } from '@mui/material';
-import store from '../taxCalculator/store';
-import TaxDashboard from '../taxCalculator/containers/TaxDashboard';
+import store, { persistor } from '../components/taxCalculator/store';
+import TaxDashboard from '../components/taxCalculator/containers/TaxDashboard';
 import { useEmiContext } from '../context/EmiContext';
 import { themes } from '../components/ThemeSelector';
 
@@ -47,10 +48,12 @@ const TaxCalculator = () => {
   return (
     <Box>
       <Provider store={store}>
-        <ThemeProvider theme={taxTheme}>
-          <CssBaseline />
-          <TaxDashboard />
-        </ThemeProvider>
+        <PersistGate loading={null} persistor={persistor}>
+          <ThemeProvider theme={taxTheme}>
+            <CssBaseline />
+            <TaxDashboard />
+          </ThemeProvider>
+        </PersistGate>
       </Provider>
     </Box>
   );

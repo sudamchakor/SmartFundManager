@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { Box, Paper, Typography, Grid, Divider } from "@mui/material";
-import { useEmiContext } from "../context/EmiContext";
-import { AmountInput, AmountWithUnitInput, DatePickerInput } from "./common/CommonComponents";
+import { useEmiContext } from "../../../context/EmiContext";
+import { AmountInput, AmountWithUnitInput, DatePickerInput } from "../../common/CommonComponents";
 
 const StyledPaper = styled(Paper)`
   padding: 24px;

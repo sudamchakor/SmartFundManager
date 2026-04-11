@@ -1,6 +1,6 @@
 import React from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { useEmiContext } from "../context/EmiContext";
+import { useEmiContext } from "../../context/EmiContext";
 import { Box, Typography, Grid, Divider } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import "./PieChartComponent.scss";

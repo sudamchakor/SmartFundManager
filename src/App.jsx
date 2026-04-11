@@ -9,7 +9,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { EmiProvider, useEmiContext } from "./context/EmiContext";
 
 // Components
-import Header from "./components/Header";
+import Header from "./components/layout/Header";
 import Calculator from "./pages/Calculator";
 import FAQ from "./pages/FAQ";
 import Settings from "./components/Settings";
@@ -19,7 +19,7 @@ import { themes } from "./components/ThemeSelector";
 import CreditCardEmiCalculator from "./pages/CreditCardEmiCalculator";
 import PersonalLoanCalculator from "./pages/PersonalLoanCalculator";
 import InvestmentCalculator from "./pages/InvestmentCalculator";
-
+import TaxCalculator from "./pages/TaxCalculator";
 
 // Styles
 import "./App.css";
@@ -86,6 +86,7 @@ const AppContent = () => {
             <Route path="/personal-loan" element={<PersonalLoanCalculator />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/tax-calculator" element={<TaxCalculator />} />
           </Routes>
         </Box>
       </Box>

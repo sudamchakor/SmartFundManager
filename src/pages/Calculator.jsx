@@ -1,13 +1,13 @@
 import React from "react";
 import { Grid, Box, Paper, Typography } from "@mui/material";
-import HomeLoanForm from "../components/HomeLoanForm";
+import HomeLoanForm from "../components/calculators/homeLoan/HomeLoanForm";
 import PrepaymentsForm from "../components/PrepaymentsForm";
 import PaymentScheduleTable from "../components/PaymentScheduleTable";
 import TotalMonthlyPayment from "../components/TotalMonthlyPayment";
 import "./Calculator.scss";
 import { useEmiContext } from "../context/EmiContext";
-import PieChartComponent from "../components/PieChartComponent";
-import BarChartComponent from "../components/BarChartComponent";
+import PieChartComponent from "../components/charts/PieChartComponent";
+import BarChartComponent from "../components/charts/BarChartComponent";
 
 const Calculator = () => {
   const { calculatedValues } = useEmiContext();

@@ -7,11 +7,11 @@ import SavingsIcon from "@mui/icons-material/Savings";
 import { useLocation, useNavigate } from "react-router-dom";
 
 // Import the individual components
-import SipCalculatorForm from "../components/SipCalculatorForm";
-import LumpsumCalculatorForm from "../components/LumpsumCalculatorForm";
-import StepUpSipCalculatorForm from "../components/StepUpSipCalculatorForm";
-import SwpCalculatorForm from "../components/SwpCalculatorForm";
-import InvestmentChart from "../components/InvestmentChart";
+import SipCalculatorForm from "../components/calculators/investment/SipCalculatorForm";
+import LumpsumCalculatorForm from "../components/calculators/investment/LumpsumCalculatorForm";
+import StepUpSipCalculatorForm from "../components/calculators/investment/StepUpSipCalculatorForm";
+import SwpCalculatorForm from "../components/calculators/investment/SwpCalculatorForm";
+import InvestmentChart from "../components/calculators/investment/InvestmentChart";
 
 const TAB_ROUTES = [
   "/investment",

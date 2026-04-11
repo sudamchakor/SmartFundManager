@@ -20,7 +20,7 @@ import ShowChartIcon from "@mui/icons-material/ShowChart";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { useEmiContext } from "../context/EmiContext";
+import { useEmiContext } from "../../context/EmiContext";
 import "./Header.css";
 import { SettingsRounded } from "@mui/icons-material";
 
@@ -29,6 +29,7 @@ const calculators = [
   { path: "/credit-card-emi", label: "Credit Card EMI Calculator", icon: <CreditCardIcon fontSize="small" style={{ marginRight: 8 }} /> },
   { path: "/investment", label: "Investment Calculators", icon: <TrendingUpIcon fontSize="small" style={{ marginRight: 8 }} /> },
   { path: "/personal-loan", label: "Personal Loan & BNPL Calculator", icon: <MoneyIcon fontSize="small" style={{ marginRight: 8 }} /> },
+  { path: "/tax-calculator", label: "Tax Calculator", icon: <AccountBalanceWalletIcon fontSize="small" style={{ marginRight: 8 }} /> },
 ];
 
 const Header = () => {
@@ -79,8 +80,8 @@ const Header = () => {
   ) || calculators[0];
 
   // Fix for exact match on home route
-  const activeCalculator = location.pathname === "/" 
-    ? calculators[0] 
+  const activeCalculator = location.pathname === "/"
+    ? calculators[0]
     : currentCalculator;
 
 
@@ -122,8 +123,8 @@ const Header = () => {
             <MenuItem
               key={calc.path}
               selected={
-                calc.path === "/" 
-                  ? location.pathname === "/" 
+                calc.path === "/"
+                  ? location.pathname === "/"
                   : location.pathname.startsWith(calc.path)
               }
               onClick={() => handleCalculatorSelect(calc.path)}
