@@ -5,7 +5,8 @@ import PrepaymentsForm from "../components/PrepaymentsForm";
 import PaymentScheduleTable from "../components/PaymentScheduleTable";
 import TotalMonthlyPayment from "../components/TotalMonthlyPayment";
 import "./Calculator.scss";
-import { useEmiContext } from "../context/EmiContext";
+import { useSelector } from "react-redux"; // Import useSelector
+import { selectCalculatedValues } from "../store/emiSlice"; // Import selectCalculatedValues from emiSlice
 import PieChartComponent from "../components/charts/PieChartComponent";
 import BarChartComponent from "../components/charts/BarChartComponent";
 import styled from "styled-components";
@@ -15,7 +16,8 @@ const SectionContainer = styled(Box)`
 `;
 
 const Calculator = () => {
-  const { calculatedValues } = useEmiContext();
+  // Use useSelector to get calculatedValues from Redux store
+  const calculatedValues = useSelector(selectCalculatedValues);
 
   const schedule = calculatedValues.schedule;
   const startMonthYear = schedule.length > 0 ? schedule[0].date : "";

@@ -9,6 +9,7 @@ import {
   Select,
   FormControl,
   IconButton,
+  Divider, // Import Divider
 } from "@mui/material";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -20,16 +21,47 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { useSelector, useDispatch } from 'react-redux';
-import { selectCalculatedValues, selectCurrency, selectThemeMode, setCurrency, setThemeMode } from '../../store/emiSlice';
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectCalculatedValues,
+  selectCurrency,
+  selectThemeMode,
+  setCurrency,
+  setThemeMode,
+  resetEmiState,
+} from "../../store/emiSlice";
+import { useSnackbar } from "notistack";
+import storage from "redux-persist/lib/storage"; // Import storage
 import "./Header.css";
 
 const calculators = [
-  { path: "/", label: "Home Loan EMI Calculator", icon: <HomeIcon fontSize="small" style={{ marginRight: 8 }} /> },
-  { path: "/credit-card-emi", label: "Credit Card EMI Calculator", icon: <CreditCardIcon fontSize="small" style={{ marginRight: 8 }} /> },
-  { path: "/investment", label: "Investment Calculators", icon: <TrendingUpIcon fontSize="small" style={{ marginRight: 8 }} /> },
-  { path: "/personal-loan", label: "Personal Loan & BNPL Calculator", icon: <MoneyIcon fontSize="small" style={{ marginRight: 8 }} /> },
-  { path: "/tax-calculator", label: "Tax Calculator", icon: <AccountBalanceWalletIcon fontSize="small" style={{ marginRight: 8 }} /> },
+  {
+    path: "/",
+    label: "Home Loan EMI Calculator",
+    icon: <HomeIcon fontSize="small" style={{ marginRight: 8 }} />,
+  },
+  {
+    path: "/credit-card-emi",
+    label: "Credit Card EMI Calculator",
+    icon: <CreditCardIcon fontSize="small" style={{ marginRight: 8 }} />,
+  },
+  {
+    path: "/investment",
+    label: "Investment Calculators",
+    icon: <TrendingUpIcon fontSize="small" style={{ marginRight: 8 }} />,
+  },
+  {
+    path: "/personal-loan",
+    label: "Personal Loan & BNPL Calculator",
+    icon: <MoneyIcon fontSize="small" style={{ marginRight: 8 }} />,
+  },
+  {
+    path: "/tax-calculator",
+    label: "Tax Calculator",
+    icon: (
+      <AccountBalanceWalletIcon fontSize="small" style={{ marginRight: 8 }} />
+    ),
+  },
 ];
 
 const Header = () => {
@@ -39,7 +71,8 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const { enqueueSnackbar } = useSnackbar();
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
 
@@ -91,15 +124,26 @@ const Header = () => {
     setProfileAnchorEl(null);
   };
 
+  const handleResetLocalData = async () => {
+    dispatch(resetEmiState()); // Reset the Redux state for emi slice
+    await storage.removeItem("persist:app_v1"); // Clear the persisted state from localStorage
+
+    enqueueSnackbar("All the local data has been reset.", {
+      variant: "success",
+    });
+    handleProfileMenuClose();
+    window.location.reload(); // Force a full page reload to rehydrate with default state
+  };
+
   // Determine current active calculator for display in header
-  const currentCalculator = calculators.find(
-    (calc) => location.pathname.startsWith(calc.path) && calc.path !== "/"
-  ) || calculators[0];
+  const currentCalculator =
+    calculators.find(
+      (calc) => location.pathname.startsWith(calc.path) && calc.path !== "/",
+    ) || calculators[0];
 
   // Fix for exact match on home route
-  const activeCalculator = location.pathname === "/"
-    ? calculators[0]
-    : currentCalculator;
+  const activeCalculator =
+    location.pathname === "/" ? calculators[0] : currentCalculator;
 
   return (
     <AppBar position="fixed" className="header-appbar">
@@ -125,7 +169,13 @@ const Header = () => {
           component="div"
           className="header-calculator-selector"
           onClick={handleMenuOpen}
-          style={{ cursor: "pointer", display: "flex", alignItems: "center", marginRight: "32px", padding: '8px 0' }}
+          style={{
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            marginRight: "32px",
+            padding: "8px 0",
+          }}
         >
           {activeCalculator.label} <ArrowDropDownIcon fontSize="small" />
         </Typography>
@@ -151,7 +201,10 @@ const Header = () => {
           ))}
         </Menu>
 
-        <Box className="header-actions" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box
+          className="header-actions"
+          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+        >
           <FormControl variant="standard" sx={{ minWidth: 70, mr: 2 }}>
             <Select
               value=""
@@ -169,14 +222,22 @@ const Header = () => {
           </FormControl>
 
           <Typography variant="button" sx={{ mr: 2 }}>
-            <Link to="/faq" className="header-link" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link
+              to="/faq"
+              className="header-link"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
               FAQ
             </Link>
           </Typography>
 
           {/* Profile Menu Icon */}
           <Box>
-            <IconButton color="inherit" sx={{ padding: '8px' }} onClick={handleProfileMenuOpen}>
+            <IconButton
+              color="inherit"
+              sx={{ padding: "8px" }}
+              onClick={handleProfileMenuOpen}
+            >
               <AccountCircleIcon />
             </IconButton>
             <Menu
@@ -184,9 +245,19 @@ const Header = () => {
               open={Boolean(profileAnchorEl)}
               onClose={handleProfileMenuClose}
             >
-              <MenuItem onClick={() => handleProfileSelect('personal')}>Personal Profile</MenuItem>
-              <MenuItem onClick={() => handleProfileSelect('goals')}>Future Goals</MenuItem>
-              <MenuItem onClick={() => handleProfileSelect('settings')}>Settings</MenuItem>
+              <MenuItem onClick={() => handleProfileSelect("personal")}>
+                Personal Profile
+              </MenuItem>
+              <MenuItem onClick={() => handleProfileSelect("goals")}>
+                Future Goals
+              </MenuItem>
+              <MenuItem onClick={() => handleProfileSelect("settings")}>
+                Settings
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={handleResetLocalData}>
+                Reset Local Data
+              </MenuItem>
             </Menu>
           </Box>
         </Box>

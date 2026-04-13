@@ -10,6 +10,8 @@ import {
   Tooltip,
   Select,
   MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -33,8 +35,9 @@ export const EditableGoalItem = ({
   const [investmentMode, setInvestmentMode] = useState(false);
   const [investmentData, setInvestmentData] = useState({
     monthlyInvestment: investmentAmount || 0,
-    investmentType: "sip", // 'lumpsum' or 'sip'
+    investmentType: goal.investmentType || "sip", // Use goal's investment type
     expectedReturn: 8, // percentage per annum
+    stepUpRate: goal.stepUpRate || 0, // Use goal's step-up rate
   });
 
   const handleSave = () => {
@@ -43,6 +46,9 @@ export const EditableGoalItem = ({
         ...editedGoal,
         targetAmount: Number(editedGoal.targetAmount),
         targetYear: Number(editedGoal.targetYear),
+        // Ensure investmentType and stepUpRate are saved with the goal itself
+        investmentType: editedGoal.investmentType,
+        stepUpRate: editedGoal.investmentType === 'step_up_sip' ? Number(editedGoal.stepUpRate) : 0,
       });
       setIsEditing(false);
     }
@@ -55,7 +61,9 @@ export const EditableGoalItem = ({
 
   const calculateInflatedAmount = () => {
     if (considerInflation && goal.targetYear > currentYear) {
-      return goal.targetAmount * Math.pow(1.06, goal.targetYear - currentYear);
+      // Use educationInflationRate if category is 'education', else generalInflationRate
+      const inflationRate = goal.category === 'education' ? 0.10 : 0.06; // Hardcoded for now, will use selector later
+      return goal.targetAmount * Math.pow(1 + inflationRate, goal.targetYear - currentYear);
     }
     return goal.targetAmount;
   };
@@ -65,10 +73,10 @@ export const EditableGoalItem = ({
     `${currency}${Number(val).toLocaleString("en-IN")}`;
 
   const getGoalTypeColor = () => {
-    const goalName = goal.name.toLowerCase();
-    if (goalName.includes("retirement")) return "error";
-    if (goalName.includes("education")) return "success";
-    if (goalName.includes("emergency")) return "warning";
+    const goalCategory = goal.category;
+    if (goalCategory === "retirement") return "error";
+    if (goalCategory === "education") return "success";
+    if (goalCategory === "safety") return "warning"; // For emergency fund
     return "info";
   };
 
@@ -120,6 +128,32 @@ export const EditableGoalItem = ({
             step={1}
             showInput={true}
           />
+          <FormControl size="small" fullWidth>
+            <InputLabel>Investment Type</InputLabel>
+            <Select
+              value={editedGoal.investmentType || 'sip'}
+              label="Investment Type"
+              onChange={(e) => setEditedGoal({...editedGoal, investmentType: e.target.value})}
+            >
+              <MenuItem value="sip">Standard SIP</MenuItem>
+              <MenuItem value="lumpsum">Lumpsum</MenuItem>
+              <MenuItem value="step_up_sip">Step-Up SIP</MenuItem>
+            </Select>
+          </FormControl>
+
+          {editedGoal.investmentType === 'step_up_sip' && (
+            <SliderInput
+              label="Annual Step-Up Rate (%)"
+              value={Number(editedGoal.stepUpRate) || 0}
+              onChange={(val) => setEditedGoal({...editedGoal, stepUpRate: val})}
+              min={0}
+              max={20}
+              step={0.5}
+              showInput={true}
+              unit="%"
+            />
+          )}
+
           <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
             <Button
               size="small"
@@ -170,8 +204,8 @@ export const EditableGoalItem = ({
                 Target: {formatCurrency(goal.targetAmount)}
               </Typography>
 
-              {considerInflation && goal.targetYear > currentYear && (
-                <Tooltip title={`Adjusted for 6% annual inflation`}>
+              {considerInflation && yearsToGoal > 0 && (
+                <Tooltip title={`Adjusted for ${goal.category === 'education' ? '10%' : '6%'} annual inflation`}>
                   <Typography
                     variant="caption"
                     sx={{
@@ -220,25 +254,26 @@ export const EditableGoalItem = ({
                 Investment Plan
               </Typography>
 
-              <Select
-                fullWidth
-                size="small"
-                value={investmentData.investmentType}
-                onChange={(e) =>
-                  setInvestmentData({
-                    ...investmentData,
-                    investmentType: e.target.value,
-                  })
-                }
-                sx={{ mb: 1.5 }}
-              >
-                <MenuItem value="sip">
-                  SIP (Systematic Investment Plan)
-                </MenuItem>
-                <MenuItem value="lumpsum">Lumpsum Investment</MenuItem>
-              </Select>
+              <FormControl size="small" fullWidth sx={{ mb: 1.5 }}>
+                <InputLabel>Investment Type</InputLabel>
+                <Select
+                  value={investmentData.investmentType}
+                  label="Investment Type"
+                  onChange={(e) =>
+                    setInvestmentData({
+                      ...investmentData,
+                      investmentType: e.target.value,
+                      stepUpRate: e.target.value === 'step_up_sip' ? investmentData.stepUpRate : 0, // Reset stepUpRate if not step-up
+                    })
+                  }
+                >
+                  <MenuItem value="sip">Standard SIP</MenuItem>
+                  <MenuItem value="lumpsum">Lumpsum Investment</MenuItem>
+                  <MenuItem value="step_up_sip">Step-Up SIP</MenuItem>
+                </Select>
+              </FormControl>
 
-              {investmentData.investmentType === "sip" ? (
+              {investmentData.investmentType === "sip" && (
                 <TextField
                   fullWidth
                   label="Monthly Investment"
@@ -258,13 +293,15 @@ export const EditableGoalItem = ({
                   }}
                   sx={{ mb: 1.5 }}
                 />
-              ) : (
+              )}
+
+              {investmentData.investmentType === "lumpsum" && (
                 <TextField
                   fullWidth
                   label="Lumpsum Amount"
                   type="number"
                   size="small"
-                  value={investmentData.monthlyInvestment}
+                  value={investmentData.monthlyInvestment} // Reusing monthlyInvestment for lumpsum amount
                   onChange={(e) =>
                     setInvestmentData({
                       ...investmentData,
@@ -273,6 +310,40 @@ export const EditableGoalItem = ({
                   }
                   sx={{ mb: 1.5 }}
                 />
+              )}
+
+              {investmentData.investmentType === "step_up_sip" && (
+                <>
+                  <TextField
+                    fullWidth
+                    label="Initial Monthly Investment"
+                    type="number"
+                    size="small"
+                    value={investmentData.monthlyInvestment}
+                    onChange={(e) =>
+                      setInvestmentData({
+                        ...investmentData,
+                        monthlyInvestment: Number(e.target.value),
+                      })
+                    }
+                    InputProps={{
+                      endAdornment: (
+                        <Typography variant="body2">/ month</Typography>
+                      ),
+                    }}
+                    sx={{ mb: 1.5 }}
+                  />
+                  <SliderInput
+                    label="Annual Step-Up Rate (%)"
+                    value={Number(investmentData.stepUpRate) || 0}
+                    onChange={(val) => setInvestmentData({...investmentData, stepUpRate: val})}
+                    min={0}
+                    max={20}
+                    step={0.5}
+                    showInput={true}
+                    unit="%"
+                  />
+                </>
               )}
 
               <TextField
@@ -288,6 +359,7 @@ export const EditableGoalItem = ({
                   })
                 }
                 inputProps={{ min: 0, max: 100, step: 0.1 }}
+                sx={{ mt: 1.5 }}
               />
 
               <Button
@@ -319,7 +391,7 @@ export const EditableGoalItem = ({
                 variant="caption"
                 sx={{ color: "#1b5e20", fontWeight: 600 }}
               >
-                💰 Active Investment: {formatCurrency(investmentAmount)}/month
+                💰 Active Investment: {formatCurrency(investmentAmount)}/month ({goal.investmentType === 'step_up_sip' ? `Step-Up SIP @ ${goal.stepUpRate}%` : goal.investmentType.toUpperCase()})
               </Typography>
             </Box>
           )}

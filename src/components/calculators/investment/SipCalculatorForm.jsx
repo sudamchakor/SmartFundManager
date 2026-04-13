@@ -7,6 +7,7 @@ import {
   Grid,
   InputAdornment,
 } from "@mui/material";
+import { calculateSIP } from "../../../utils/financialCalculations"; // Import the utility function
 
 const SipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) => {
   const { monthlyInvestment, expectedReturnRate, timePeriod } = sharedState;
@@ -17,36 +18,56 @@ const SipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
 
   const calculateSip = () => {
     const P = monthlyInvestment;
-    const n = timePeriod * 12; // Total number of months
-    const i = expectedReturnRate / 100 / 12; // Monthly rate of return
+    const years = timePeriod;
+    const annualRate = expectedReturnRate / 100;
 
-    // Formula: M = P * ({[1 + i]^n - 1} / i) * (1 + i)
-    let M = P * ((Math.pow(1 + i, n) - 1) / i) * (1 + i);
+    // Calculate total future value using the utility function
+    // Note: calculateSIP returns the *monthly contribution needed* for a target.
+    // Here, we have the monthly contribution and need the *future value*.
+    // So we need to reverse the formula or use a future value of SIP formula.
+    // Let's implement FV of SIP here directly for consistency with the chart data generation.
+
+    const n = years * 12; // Total number of months
+    const i = annualRate / 12; // Monthly rate of return
+
+    let totalValue = 0;
+    if (i > 0) {
+      // FV = P * ({[1 + i]^n - 1} / i) * (1 + i) - SIP at beginning of period
+      totalValue = P * ((Math.pow(1 + i, n) - 1) / i) * (1 + i);
+    } else {
+      totalValue = P * n; // Simple sum if rate is 0
+    }
 
     const investedAmount = P * n;
-    const estimatedReturns = M - investedAmount;
-    
+    const estimatedReturns = totalValue - investedAmount;
+
     // Generate data for chart
     let chartData = [];
     let currentInvested = 0;
-    
-    for (let year = 1; year <= timePeriod; year++) {
-      currentInvested += P * 12;
+    let currentTotalValue = 0;
+
+    for (let year = 1; year <= years; year++) {
+      currentInvested = P * year * 12; // Total invested up to this year
       const months = year * 12;
-      let yearlyM = P * ((Math.pow(1 + i, months) - 1) / i) * (1 + i);
-      
+      let yearlyTotalValue = 0;
+      if (i > 0) {
+        yearlyTotalValue = P * ((Math.pow(1 + i, months) - 1) / i) * (1 + i);
+      } else {
+        yearlyTotalValue = P * months;
+      }
+
       chartData.push({
         year: year,
         invested: Math.round(currentInvested),
-        returns: Math.round(yearlyM - currentInvested),
-        total: Math.round(yearlyM)
+        returns: Math.round(yearlyTotalValue - currentInvested),
+        total: Math.round(yearlyTotalValue)
       });
     }
 
     onCalculate({
       investedAmount: Math.round(investedAmount),
       estimatedReturns: Math.round(estimatedReturns),
-      totalValue: Math.round(M),
+      totalValue: Math.round(totalValue),
       chartData: chartData
     });
   };

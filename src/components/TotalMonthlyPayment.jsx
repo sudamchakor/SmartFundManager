@@ -1,6 +1,12 @@
 import React from "react";
 import { Paper, Typography, Box, Grid, Divider, Skeleton } from "@mui/material";
-import { useEmiContext } from "../context/EmiContext";
+import { useSelector } from "react-redux";
+import {
+  selectCalculatedValues,
+  selectExpenses,
+  selectPrepayments,
+  selectCurrency,
+} from "../store/emiSlice"; // Corrected path to emiSlice
 import { useTheme } from "@mui/material/styles";
 import "./TotalMonthlyPayment.scss";
 
@@ -9,88 +15,26 @@ const formatNumberWithCommas = (number) => {
 };
 
 const TotalMonthlyPayment = () => {
-  const { calculatedValues, expenses, currency, prepayments } = useEmiContext(); // Removed isCalculating
+  const calculatedValues = useSelector(selectCalculatedValues);
+  const expenses = useSelector(selectExpenses);
+  const currency = useSelector(selectCurrency);
+  const prepayments = useSelector(selectPrepayments); // Although prepayments are not directly used here, keeping it for consistency if needed later.
+
   const theme = useTheme();
 
-  const emi = Math.round(calculatedValues.emi) || 0;
+  const emi = Math.round(calculatedValues.emi || 0);
   const monthlyTaxes = Math.round((calculatedValues.taxesYearlyInRs || 0) / 12);
   const monthlyInsurance = Math.round(
     (calculatedValues.homeInsYearlyInRs || 0) / 12,
   );
-  const monthlyMaintenance = Math.round(expenses.maintenance) || 0;
+  const monthlyMaintenance = Math.round(expenses.maintenance || 0);
 
   // Calculate average monthly prepayment
   const tenureInMonths = calculatedValues.tenureInMonths || 1;
-  const averageMonthlyPrepayment = Math.round(calculatedValues.totalPrepayments / tenureInMonths) || 0;
+  const averageMonthlyPrepayment = Math.round((calculatedValues.totalPrepayments || 0) / tenureInMonths) || 0;
 
   const totalMonthlyPayment =
     emi + monthlyTaxes + monthlyInsurance + monthlyMaintenance + averageMonthlyPrepayment;
-
-  // Removed conditional rendering based on isCalculating
-  // if (isCalculating) {
-  //   return (
-  //     <Box>
-  //       <Typography variant="h6" gutterBottom>
-  //         Total Monthly Payment Calculation
-  //       </Typography>
-  //       <Box className="total-monthly-box">
-  //         <Grid container spacing={2}>
-  //           <Grid item xs={8}>
-  //             <Skeleton variant="text" width="80%" />
-  //           </Grid>
-  //           <Grid item xs={4}>
-  //             <Skeleton variant="text" width="60%" />
-  //           </Grid>
-  //           <Grid item xs={12}>
-  //             <Divider style={{ borderStyle: "dotted", width: '100%' }} />
-  //           </Grid>
-  //           <Grid item xs={8}>
-  //             <Skeleton variant="text" width="80%" />
-  //           </Grid>
-  //           <Grid item xs={4}>
-  //             <Skeleton variant="text" width="60%" />
-  //           </Grid>
-  //           <Grid item xs={12}>
-  //             <Divider style={{ borderStyle: "dotted", width: '100%' }} />
-  //           </Grid>
-  //           <Grid item xs={8}>
-  //             <Skeleton variant="text" width="80%" />
-  //           </Grid>
-  //           <Grid item xs={4}>
-  //             <Skeleton variant="text" width="60%" />
-  //           </Grid>
-  //           <Grid item xs={12}>
-  //             <Divider style={{ borderStyle: "dotted", width: '100%' }} />
-  //           </Grid>
-  //           <Grid item xs={8}>
-  //             <Skeleton variant="text" width="80%" />
-  //           </Grid>
-  //           <Grid item xs={4}>
-  //             <Skeleton variant="text" width="60%" />
-  //           </Grid>
-  //           <Grid item xs={12}>
-  //             <Divider style={{ borderStyle: "dotted", width: '100%' }} />
-  //           </Grid>
-  //           <Grid item xs={8}>
-  //             <Skeleton variant="text" width="80%" />
-  //           </Grid>
-  //           <Grid item xs={4}>
-  //             <Skeleton variant="text" width="60%" />
-  //           </Grid>
-  //         </Grid>
-  //         <Divider sx={{ my: 2, width: '100%' }} />
-  //         <Grid container spacing={2}>
-  //           <Grid item xs={8}>
-  //             <Skeleton variant="text" width="70%" height={30} />
-  //           </Grid>
-  //           <Grid item xs={4}>
-  //             <Skeleton variant="text" width="50%" height={30} />
-  //           </Grid>
-  //         </Grid>
-  //       </Box>
-  //     </Box>
-  //   );
-  // }
 
   return (
     <Box>

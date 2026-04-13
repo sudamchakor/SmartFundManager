@@ -7,8 +7,10 @@ import {
   setRetirementAge,
   setConsiderInflation,
   resetProfile,
+  selectCurrentSurplus, // Import new selector
+  selectDebtFreeCountdown, // Import new selector
 } from "../store/profileSlice";
-import { selectCalculatedValues, selectCurrency } from "../store/emiSlice";
+import { selectCurrency } from "../store/emiSlice"; // Only need currency now
 import PersonalProfileTab from "../components/profile/PersonalProfileTab";
 import FutureGoalsTab from "../components/profile/FutureGoalsTab";
 import Settings from "../components/Settings";
@@ -55,22 +57,11 @@ export default function UserProfile() {
     navigate(`/profile?tab=${newTabName}`);
   };
 
-  const { tenureInMonths, emi, schedule, taxesYearlyInRs } = useSelector(
-    selectCalculatedValues,
-  );
+  // Use new selectors for surplus and debt-free countdown
+  const investableSurplus = useSelector(selectCurrentSurplus);
+  const debtFreeCountdown = useSelector(selectDebtFreeCountdown);
   const currency = useSelector(selectCurrency);
 
-  // Get profile data for footer calculations
-  const incomes = useSelector((state) => state.profile?.incomes) || [];
-  const expenses = useSelector((state) => state.profile?.expenses) || [];
-  const totalIncome = incomes.reduce((acc, curr) => acc + curr.amount, 0);
-  const totalExpenses = expenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const totalMonthlyPayment =
-    schedule?.length > 0
-      ? schedule[0].totalPayment + (taxesYearlyInRs || 0) / 12
-      : emi || 0;
-
-  const investableSurplus = totalIncome - (totalExpenses + totalMonthlyPayment);
   const formatCurrency = (val) =>
     `${currency}${Number(val).toLocaleString("en-IN")}`;
 
@@ -149,7 +140,7 @@ export default function UserProfile() {
         </Typography>
         <Typography variant="h6">
           Debt-Free Countdown:{" "}
-          <strong>{Math.ceil(tenureInMonths / 12)} years</strong>
+          <strong>{debtFreeCountdown}</strong>
         </Typography>
       </Box>
     </Box>

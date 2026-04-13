@@ -32,8 +32,13 @@ import {
   updateExpense,
   setCurrentAge,
   setRetirementAge,
+  selectTotalMonthlyIncome, // Import new selector
+  selectTotalMonthlyExpenses, // Import new selector
+  selectCurrentSurplus, // Import new selector
+  selectCareerGrowthRate, // Changed from selectExpectedAnnualSalaryHike
+  setCareerGrowthRate, // Changed from setExpectedAnnualSalaryHike
 } from "../../store/profileSlice";
-import { selectCalculatedValues, selectCurrency } from "../../store/emiSlice";
+import { selectCalculatedValues, selectCurrency } from "../../store/emiSlice"; // Changed from selectMonthlyEmi
 import {
   PieChart,
   Pie,
@@ -42,6 +47,7 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
 } from "recharts";
+import TotalMonthlyPayment from "../TotalMonthlyPayment"; // Import TotalMonthlyPayment
 
 const COLORS = ["#ff6b6b", "#4ecdc4", "#9c27b0", "#2ecc71"];
 
@@ -52,11 +58,25 @@ export default function PersonalProfileTab() {
   const expenses = useSelector(selectProfileExpenses) || [];
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
+  const careerGrowthRate = useSelector(selectCareerGrowthRate); // Get hike rate
 
-  const { emi, schedule, taxesYearlyInRs, homeInsYearlyInRs } = useSelector(
-    selectCalculatedValues,
-  );
+  const { emi: monthlyEmi } = useSelector(selectCalculatedValues); // Get EMI from emiSlice
   const currency = useSelector(selectCurrency);
+
+  // Use derived selectors for consistency
+  const totalIncome = useSelector(selectTotalMonthlyIncome);
+  const totalProfileExpenses = useSelector(selectTotalMonthlyExpenses);
+  const investableSurplus = useSelector(selectCurrentSurplus);
+
+  // totalMonthlyPayment now only refers to the EMI part, as other expenses are in profileSlice
+  const totalMonthlyPayment = monthlyEmi;
+
+  const totalExpensesIncludingLoan = totalProfileExpenses + (monthlyEmi || 0); // Ensure monthlyEmi defaults to 0 for calculation
+
+  const isBudgetExceeded = investableSurplus < 0;
+  const budgetWarning = isBudgetExceeded
+    ? `Your spending (${currency}${totalExpensesIncludingLoan.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) exceeds income (${currency}${totalIncome.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) by ${currency}${Math.abs(investableSurplus).toLocaleString("en-IN", { maximumFractionDigits: 0 })}. Consider reducing expenses or increasing income.`
+    : "";
 
   const [newIncome, setNewIncome] = useState({
     name: "",
@@ -78,7 +98,7 @@ export default function PersonalProfileTab() {
           id: Date.now(),
           name: newIncome.name,
           amount: Number(newIncome.amount),
-          type: "monthly",
+          type: "monthly", // Assuming all added incomes are monthly for now
           frequency: newIncome.frequency,
         }),
       );
@@ -93,7 +113,7 @@ export default function PersonalProfileTab() {
           id: Date.now(),
           name: newExpense.name,
           amount: Number(newExpense.amount),
-          type: "monthly",
+          type: "monthly", // Assuming all added expenses are monthly for now
           category: newExpense.category,
           frequency: newExpense.frequency,
         }),
@@ -107,46 +127,41 @@ export default function PersonalProfileTab() {
     }
   };
 
-  const totalIncome = incomes.reduce((acc, curr) => {
-    let monthlyAmount = curr.amount;
-    if (curr.frequency === "yearly") monthlyAmount = curr.amount / 12;
-    else if (curr.frequency === "quarterly") monthlyAmount = curr.amount / 3;
-    return acc + monthlyAmount;
-  }, 0);
-
-  const totalProfileExpenses = expenses.reduce((acc, curr) => {
-    let monthlyAmount = curr.amount;
-    if (curr.frequency === "yearly") monthlyAmount = curr.amount / 12;
-    else if (curr.frequency === "quarterly") monthlyAmount = curr.amount / 3;
-    return acc + monthlyAmount;
-  }, 0);
-
-  const totalMonthlyPayment =
-    schedule?.length > 0
-      ? schedule[0].totalPayment +
-        taxesYearlyInRs / 12 +
-        homeInsYearlyInRs / 12 +
-        schedule[0].maintenance
-      : emi + taxesYearlyInRs / 12 + homeInsYearlyInRs / 12;
-
-  const totalExpensesIncludingLoan = totalProfileExpenses + totalMonthlyPayment;
-  const investableSurplus = totalIncome - totalExpensesIncludingLoan;
-  const isBudgetExceeded = investableSurplus < 0;
-  const budgetWarning = isBudgetExceeded
-    ? `Your spending (${currency}${totalExpensesIncludingLoan.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) exceeds income (${currency}${totalIncome.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) by ${currency}${Math.abs(investableSurplus).toLocaleString("en-IN", { maximumFractionDigits: 0 })}. Consider reducing expenses or increasing income.`
-    : "";
-
   const donutData = [
-    { name: "Expenses", value: totalProfileExpenses },
-    { name: "Loan EMI & Taxes", value: totalMonthlyPayment },
     {
-      name: "Savings/Surplus",
+      name: "Needs",
+      value: useSelector((state) =>
+        state.profile.expenses
+          .filter((e) => e.category === "basic")
+          .reduce((acc, curr) => acc + curr.amount, 0),
+      ),
+    },
+    {
+      name: "Wants",
+      value: useSelector((state) =>
+        state.profile.expenses
+          .filter((e) => e.category === "discretionary")
+          .reduce((acc, curr) => acc + curr.amount, 0),
+      ),
+    },
+    { name: "Loan EMIs", value: monthlyEmi || 0 }, // Ensure monthlyEmi defaults to 0 for chart
+    {
+      name: "Future Wealth (Goals)",
+      value: useSelector((state) =>
+        state.profile.goals.reduce(
+          (acc, curr) => acc + curr.monthlyContribution,
+          0,
+        ),
+      ),
+    },
+    {
+      name: "Surplus",
       value: investableSurplus > 0 ? investableSurplus : 0,
     },
-  ];
+  ].filter((item) => item.value > 0); // Filter out zero values for cleaner chart
 
   const formatCurrency = (val) =>
-    `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+    `${currency}${Number(val || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`; // Ensure val defaults to 0
 
   const handleSaveBasicInfo = (newCurrentAge, newRetirementAge) => {
     dispatch(setCurrentAge(newCurrentAge));
@@ -279,6 +294,29 @@ export default function PersonalProfileTab() {
           >
             Total Monthly Income: {formatCurrency(totalIncome)}
           </Typography>
+          <Divider sx={{ my: 2 }} />
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            Career Growth
+          </Typography>
+          <SliderInput
+            label="Expected Annual Salary Hike (%)"
+            value={(careerGrowthRate * 100).toFixed(2)}
+            onChange={(val) => dispatch(setCareerGrowthRate(val / 100))}
+            min={0}
+            max={30}
+            step={0.1}
+            showInput={true}
+            unit="%"
+          />
         </Paper>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -348,6 +386,29 @@ export default function PersonalProfileTab() {
                 totalExpenses={totalProfileExpenses}
               />
             ))}
+          <Divider sx={{ my: 2 }} />
+
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              Total Monthly Expenses
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: isBudgetExceeded ? "error.main" : "text.primary",
+                fontSize: isBudgetExceeded ? "1.2rem" : "1rem",
+              }}
+            >
+              {formatCurrency(totalExpensesIncludingLoan.toFixed(0))}
+            </Typography>
+          </Box>
         </Paper>
       </Grid>
       <Grid item xs={12} md={6}>
@@ -364,30 +425,6 @@ export default function PersonalProfileTab() {
           >
             Add New Expense
           </Typography>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              mb: 2,
-              alignItems: "center",
-              bgcolor: "#f3e5f5",
-              p: 1.5,
-              borderRadius: 1,
-              borderLeft: "4px solid #9c27b0",
-            }}
-          >
-            <Box>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                Total Loan Payment (Monthly)
-              </Typography>
-              <Typography variant="caption" color="textSecondary">
-                EMI + Taxes + Maintenance
-              </Typography>
-            </Box>
-            <Typography sx={{ fontWeight: 700 }}>
-              {formatCurrency(totalMonthlyPayment.toFixed(0))}
-            </Typography>
-          </Box>
 
           <Box
             sx={{
@@ -480,28 +517,7 @@ export default function PersonalProfileTab() {
               </Grid>
             </Grid>
           </Box>
-          <Divider sx={{ my: 2 }} />
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              Total Monthly Expenses
-            </Typography>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                fontWeight: 700,
-                color: isBudgetExceeded ? "error.main" : "text.primary",
-                fontSize: isBudgetExceeded ? "1.2rem" : "1rem",
-              }}
-            >
-              {formatCurrency(totalExpensesIncludingLoan.toFixed(0))}
-            </Typography>
-          </Box>
+
           {isBudgetExceeded && (
             <Paper
               sx={{

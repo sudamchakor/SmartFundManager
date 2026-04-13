@@ -1,7 +1,8 @@
 import { createSlice, createSelector } from "@reduxjs/toolkit";
 import dayjs from "dayjs";
 
-const initialState = {
+// Define the default initial state
+const defaultInitialState = {
   loanDetails: {
     homeValue: 5000000,
     marginAmount: 1000000,
@@ -38,7 +39,7 @@ const initialState = {
 
 const emiSlice = createSlice({
   name: "emi",
-  initialState,
+  initialState: defaultInitialState, // Use defaultInitialState directly
   reducers: {
     updateLoanDetails: (state, action) => {
       const { key, value } = action.payload;
@@ -161,6 +162,9 @@ const emiSlice = createSlice({
     setAutoSave: (state, action) => {
       state.autoSave = action.payload;
     },
+    resetEmiState: () => {
+      return defaultInitialState; // Simply return the default state
+    },
   },
 });
 
@@ -173,6 +177,7 @@ export const {
   setCurrency,
   setThemeMode,
   setAutoSave,
+  resetEmiState, // Export the new action
 } = emiSlice.actions;
 
 export const selectLoanDetails = (state) => state.emi.loanDetails;
