@@ -2,11 +2,11 @@ import React from "react";
 import { Paper, Typography, Box, Grid, Divider, Skeleton } from "@mui/material";
 import { useSelector } from "react-redux";
 import {
-  selectCalculatedValues,
   selectExpenses,
   selectPrepayments,
   selectCurrency,
-} from "../store/emiSlice"; // Corrected path to emiSlice
+} from "../store/emiSlice";
+import { selectCalculatedValues } from "../utils/emiCalculator"; // Corrected import path
 import { useTheme } from "@mui/material/styles";
 import "./TotalMonthlyPayment.scss";
 

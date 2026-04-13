@@ -22,7 +22,8 @@ import {
   selectTotalMonthlyIncome, // For wealth projection
   selectTotalMonthlyGoalContributions, // For wealth projection
 } from '../../store/profileSlice';
-import { selectCalculatedValues, selectCurrency } from '../../store/emiSlice'; // Changed from selectMonthlyEmi
+import { selectCurrency } from '../../store/emiSlice';
+import { selectCalculatedValues } from '../../utils/emiCalculator'; // Corrected import path
 import { useSelector, useDispatch } from 'react-redux';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, ReferenceLine, AreaChart, Area } from 'recharts';
 import { calculateSIP, calculateStepUpSIP, calculateLumpsum } from '../../utils/financialCalculations'; // Import financial calculations

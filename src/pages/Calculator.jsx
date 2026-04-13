@@ -6,7 +6,7 @@ import PaymentScheduleTable from "../components/PaymentScheduleTable";
 import TotalMonthlyPayment from "../components/TotalMonthlyPayment";
 import "./Calculator.scss";
 import { useSelector } from "react-redux"; // Import useSelector
-import { selectCalculatedValues } from "../store/emiSlice"; // Import selectCalculatedValues from emiSlice
+import { selectCalculatedValues } from "../utils/emiCalculator"; // Import selectCalculatedValues from emiCalculator
 import PieChartComponent from "../components/charts/PieChartComponent";
 import BarChartComponent from "../components/charts/BarChartComponent";
 import styled from "styled-components";

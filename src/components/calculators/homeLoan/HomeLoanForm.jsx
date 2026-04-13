@@ -1,10 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import { Box, Paper, Typography, Grid, Divider } from "@mui/material";
-// import { useSelector, useDispatch } from 'react-redux'; // Remove Redux imports
-// import { selectLoanDetails, selectExpenses, selectCalculatedValues, selectCurrency, updateLoanDetails, updateExpenses, changeLoanUnit, changeExpenseUnit } from "../../../store/emiSlice"; // Remove Redux imports
-import { useEmiContext } from "../../../context/EmiContext"; // Import useEmiContext
+import { useEmiContext } from "../../../context/EmiContext";
 import { AmountInput, AmountWithUnitInput, DatePickerInput } from "../../common/CommonComponents";
+import {
+  convertAmount,
+  convertTenure,
+  convertYearlyPaymentIncrease,
+} from "../../../utils/emiCalculator"; // Import conversion helpers
 
 const StyledPaper = styled(Paper)`
   padding: 24px;
@@ -19,13 +22,6 @@ const SectionHeader = styled(Box)`
 `;
 
 const HomeLoanForm = () => {
-  // const dispatch = useDispatch(); // Remove useDispatch
-  // const loanDetails = useSelector(selectLoanDetails); // Remove useSelector
-  // const expenses = useSelector(selectExpenses); // Remove useSelector
-  // const calculatedValues = useSelector(selectCalculatedValues); // Remove useSelector
-  // const currency = useSelector(selectCurrency); // Remove useSelector
-
-  // Use useEmiContext to get state and update functions
   const {
     loanDetails,
     expenses,
@@ -38,27 +34,52 @@ const HomeLoanForm = () => {
   } = useEmiContext();
 
   const handleUnitChange = (unitField, amountField, event) => {
-    // dispatch(changeLoanUnit({ unitField, amountField, newUnit: event.target.value })); // Old Redux dispatch
-    changeLoanUnit(unitField, amountField, event.target.value); // Use context function
+    const newUnit = event.target.value;
+    const oldUnit = loanDetails[unitField];
+    const currentAmount = loanDetails[amountField];
+    let convertedAmount = currentAmount;
+
+    if (unitField === "tenureUnit") {
+      convertedAmount = convertTenure(currentAmount, oldUnit, newUnit);
+    } else if (unitField === "yearlyPaymentIncreaseUnit") {
+      convertedAmount = convertYearlyPaymentIncrease(
+        currentAmount,
+        oldUnit,
+        newUnit,
+        calculatedValues.emi // Pass the calculated EMI
+      );
+    } else {
+      let baseValue = loanDetails.homeValue;
+      if (unitField === "feesUnit") {
+        baseValue = calculatedValues.loanAmount;
+      }
+      convertedAmount = convertAmount(currentAmount, oldUnit, newUnit, baseValue);
+    }
+
+    changeLoanUnit(unitField, amountField, newUnit, convertedAmount);
   };
 
   const handleChange = (field, event) => {
     let value = parseFloat(event.target.value);
     if (isNaN(value)) value = 0;
-    // dispatch(updateLoanDetails({ key: field, value })); // Old Redux dispatch
-    updateLoanDetails(field, value); // Use context function
+    updateLoanDetails(field, value);
   };
 
   const handleExpenseUnitChange = (unitField, amountField, event) => {
-    // dispatch(changeExpenseUnit({ unitField, amountField, newUnit: event.target.value })); // Old Redux dispatch
-    changeExpenseUnit(unitField, amountField, event.target.value); // Use context function
+    const newUnit = event.target.value;
+    const oldUnit = expenses[unitField];
+    const currentAmount = expenses[amountField];
+    const baseValue = loanDetails.homeValue; // Expenses are typically based on home value
+
+    const convertedAmount = convertAmount(currentAmount, oldUnit, newUnit, baseValue);
+
+    changeExpenseUnit(unitField, amountField, newUnit, convertedAmount);
   };
 
   const handleExpenseChange = (field, event) => {
     let value = parseFloat(event.target.value);
     if (isNaN(value)) value = 0;
-    // dispatch(updateExpenses({ key: field, value })); // Old Redux dispatch
-    updateExpenses(field, value); // Use context function
+    updateExpenses(field, value);
   };
 
   return (
@@ -159,7 +180,7 @@ const HomeLoanForm = () => {
           <DatePickerInput
             label="Start Month & Year"
             value={loanDetails.startDate}
-            onChange={(newValue) => updateLoanDetails("startDate", newValue)} // Use context function
+            onChange={(newValue) => updateLoanDetails("startDate", newValue)}
           />
         </Grid>
       </Grid>

@@ -38,7 +38,8 @@ import {
   selectCareerGrowthRate, // Changed from selectExpectedAnnualSalaryHike
   setCareerGrowthRate, // Changed from setExpectedAnnualSalaryHike
 } from "../../store/profileSlice";
-import { selectCalculatedValues, selectCurrency } from "../../store/emiSlice"; // Changed from selectMonthlyEmi
+import { selectCurrency } from "../../store/emiSlice";
+import { selectCalculatedValues } from "../../utils/emiCalculator"; // Corrected import path
 import {
   PieChart,
   Pie,
@@ -70,6 +71,8 @@ export default function PersonalProfileTab() {
 
   // totalMonthlyPayment now only refers to the EMI part, as other expenses are in profileSlice
   const totalMonthlyPayment = monthlyEmi;
+
+  console.log("Sudam monthly payment", totalMonthlyPayment);
 
   const totalExpensesIncludingLoan = totalProfileExpenses + (monthlyEmi || 0); // Ensure monthlyEmi defaults to 0 for calculation
 
@@ -127,6 +130,12 @@ export default function PersonalProfileTab() {
     }
   };
 
+  const handleSaveBasicInfo = (newCurrentAge, newRetirementAge) => {
+    dispatch(setCurrentAge(newCurrentAge));
+    dispatch(setRetirementAge(newRetirementAge));
+    setEditingBasicInfo(false);
+  };
+
   const donutData = [
     {
       name: "Needs",
@@ -162,12 +171,6 @@ export default function PersonalProfileTab() {
 
   const formatCurrency = (val) =>
     `${currency}${Number(val || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`; // Ensure val defaults to 0
-
-  const handleSaveBasicInfo = (newCurrentAge, newRetirementAge) => {
-    dispatch(setCurrentAge(newCurrentAge));
-    dispatch(setRetirementAge(newRetirementAge));
-    setEditingBasicInfo(false);
-  };
 
   return (
     <Grid container spacing={2}>
@@ -372,22 +375,25 @@ export default function PersonalProfileTab() {
             )}
           </Typography>
           {expenses &&
-            expenses.map((exp) => (
-              <EditableIncomeExpenseItem
-                key={exp.id}
-                item={exp}
-                currency={currency}
-                onUpdate={(updated) => dispatch(updateExpense(updated))}
-                onDelete={(id) => dispatch(deleteExpense(id))}
-                isExpense={true}
-                isBudgetExceeded={isBudgetExceeded}
-                budgetWarning={budgetWarning}
-                totalIncome={totalIncome}
-                totalExpenses={totalProfileExpenses}
-              />
-            ))}
-          <Divider sx={{ my: 2 }} />
+            expenses.map((exp) => {
+              console.log(exp, "Sudam");
+              return (
+                <EditableIncomeExpenseItem
+                  key={exp.id}
+                  item={exp}
+                  currency={currency}
+                  onUpdate={(updated) => dispatch(updateExpense(updated))}
+                  onDelete={(id) => dispatch(deleteExpense(id))}
+                  isExpense={true}
+                  isBudgetExceeded={isBudgetExceeded}
+                  budgetWarning={budgetWarning}
+                  totalIncome={totalIncome}
+                  totalExpenses={totalProfileExpenses}
+                />
+              );
+            })}
 
+          <Divider sx={{ my: 2 }} />
           <Box
             sx={{
               display: "flex",

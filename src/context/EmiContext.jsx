@@ -10,10 +10,19 @@ import {
   selectThemeMode,
   selectCurrency,
   selectAutoSave,
+  selectLoanDetails, // Import from emiSlice
+  selectExpenses, // Import from emiSlice
+  selectPrepayments, // Import from emiSlice
   setThemeMode as reduxSetThemeMode,
   setCurrency as reduxSetCurrency,
   setAutoSave as reduxSetAutoSave,
+  updateLoanDetails as reduxUpdateLoanDetails, // Import Redux action
+  updateExpenses as reduxUpdateExpenses, // Import Redux action
+  updatePrepayments as reduxUpdatePrepayments, // Import Redux action
+  changeLoanUnit as reduxChangeLoanUnit, // Import Redux action
+  changeExpenseUnit as reduxChangeExpenseUnit, // Import Redux action
 } from "../store/emiSlice";
+import { selectCalculatedValues } from "../utils/emiCalculator"; // Import from emiCalculator.js
 import dayjs from "dayjs";
 
 // Create the Context
@@ -26,10 +35,14 @@ export const useEmiContext = () => useContext(EmiContext);
 export const EmiProvider = ({ children }) => {
   const dispatch = useDispatch();
 
-  // Use Redux selectors for theme, currency, and autoSave
+  // Use Redux selectors for all state
   const themeMode = useSelector(selectThemeMode);
   const currency = useSelector(selectCurrency);
   const autoSave = useSelector(selectAutoSave);
+  const loanDetails = useSelector(selectLoanDetails);
+  const expenses = useSelector(selectExpenses);
+  const prepayments = useSelector(selectPrepayments);
+  const calculatedValues = useSelector(selectCalculatedValues); // Use the new selector
 
   // Wrapper functions that dispatch Redux actions
   const setThemeMode = (newTheme) => {
@@ -44,291 +57,31 @@ export const EmiProvider = ({ children }) => {
     dispatch(reduxSetAutoSave(newAutoSave));
   };
 
-  // State for Home Loan Details
-  const [loanDetails, setLoanDetails] = useState({
-    homeValue: 5000000,
-    marginAmount: 1000000,
-    marginUnit: "Rs", // 'Rs' or '%'
-    loanInsurance: 0,
-    interestRate: 8.5,
-    loanTenure: 20,
-    tenureUnit: "years", // 'years' or 'months'
-    loanFees: 10000,
-    feesUnit: "Rs", // 'Rs' or '%'
-    startDate: dayjs(),
-  });
+  const updateLoanDetails = (key, value) => {
+    dispatch(reduxUpdateLoanDetails({ key, value: key === "startDate" ? dayjs(value).toISOString() : value }));
+  };
 
-  // State for Partial Prepayments
-  const [prepayments, setPrepayments] = useState({
-    monthly: { amount: 0, startDate: dayjs() },
-    yearly: { amount: 0, startDate: dayjs() },
-    quarterly: { amount: 0, startDate: dayjs() },
-    oneTime: { amount: 0, date: dayjs() },
-  });
+  const updateExpenses = (key, value) => {
+    dispatch(reduxUpdateExpenses({ key, value }));
+  };
 
-  // State for Homeowner Expenses
-  const [expenses, setExpenses] = useState({
-    oneTimeExpenses: 0,
-    oneTimeUnit: "Rs", // 'Rs' or '%'
-    propertyTaxes: 0,
-    taxesUnit: "Rs", // 'Rs' or '%'
-    homeInsurance: 0,
-    homeInsUnit: "Rs", // 'Rs' or '%'
-    maintenance: 0, // monthly Rs
-  });
+  const updatePrepayments = (type, key, value) => {
+    dispatch(reduxUpdatePrepayments({ type, key, value: (key === "startDate" || key === "date") ? dayjs(value).toISOString() : value }));
+  };
+
+  const changeLoanUnit = (unitField, amountField, newUnit, convertedAmount) => {
+    dispatch(reduxChangeLoanUnit({ unitField, amountField, newUnit, convertedAmount }));
+  };
+
+  const changeExpenseUnit = (unitField, amountField, newUnit, convertedAmount) => {
+    dispatch(reduxChangeExpenseUnit({ unitField, amountField, newUnit, convertedAmount }));
+  };
 
   const [saveTrigger, setSaveTrigger] = useState(0);
 
   const saveSettingsToLocal = (data) => {
     // Settings are now persisted via Redux, just signal the update
     setSaveTrigger((prev) => prev + 1);
-  };
-
-  // Derived values & Calculations
-  const calculatedValues = useMemo(() => {
-    const marginInRs =
-      loanDetails.marginUnit === "%"
-        ? (loanDetails.homeValue * loanDetails.marginAmount) / 100
-        : loanDetails.marginAmount;
-    const loanAmount =
-      loanDetails.homeValue + loanDetails.loanInsurance - marginInRs;
-    const feesInRs =
-      loanDetails.feesUnit === "%"
-        ? (loanAmount * loanDetails.loanFees) / 100
-        : loanDetails.loanFees; // Corrected: should be loanDetails.loanFees directly if unit is 'Rs'
-    const tenureInMonths =
-      loanDetails.tenureUnit === "years"
-        ? loanDetails.loanTenure * 12
-        : loanDetails.loanTenure;
-
-    const oneTimeInRs =
-      expenses.oneTimeUnit === "%"
-        ? (loanDetails.homeValue * expenses.oneTimeExpenses) / 100
-        : expenses.oneTimeExpenses;
-    const taxesYearlyInRs =
-      expenses.taxesUnit === "%"
-        ? (loanDetails.homeValue * expenses.propertyTaxes) / 100
-        : expenses.propertyTaxes;
-    const homeInsYearlyInRs =
-      expenses.homeInsUnit === "%"
-        ? (loanDetails.homeValue * expenses.homeInsurance) / 100
-        : expenses.homeInsurance;
-
-    const monthlyInterestRate = loanDetails.interestRate / 12 / 100;
-
-    let emi = 0;
-    if (monthlyInterestRate > 0 && tenureInMonths > 0 && loanAmount > 0) {
-      emi =
-        (loanAmount *
-          monthlyInterestRate *
-          Math.pow(1 + monthlyInterestRate, tenureInMonths)) /
-        (Math.pow(1 + monthlyInterestRate, tenureInMonths) - 1);
-    } else if (tenureInMonths > 0) {
-      emi = loanAmount / tenureInMonths;
-    }
-
-    let balance = loanAmount;
-    let totalInterest = 0;
-    let totalPrincipal = 0;
-    let totalPrepayments = 0;
-    const schedule = [];
-
-    const getMonthDate = (start, addMonths) => start.add(addMonths, "month");
-
-    for (let i = 1; i <= tenureInMonths && balance > 0; i++) {
-      const currentDate = getMonthDate(loanDetails.startDate, i - 1);
-      let interestForMonth = balance * monthlyInterestRate;
-      let prepayForMonth = 0;
-
-      if (
-        prepayments.monthly.amount > 0 &&
-        !currentDate.isBefore(prepayments.monthly.startDate, "month")
-      ) {
-        prepayForMonth += prepayments.monthly.amount;
-      }
-
-      if (
-        prepayments.yearly.amount > 0 &&
-        !currentDate.isBefore(prepayments.yearly.startDate, "month")
-      ) {
-        if (currentDate.month() === prepayments.yearly.startDate.month()) {
-          prepayForMonth += prepayments.yearly.amount;
-        }
-      }
-
-      if (
-        prepayments.quarterly.amount > 0 &&
-        !currentDate.isBefore(prepayments.quarterly.startDate, "month")
-      ) {
-        const monthsDiff = currentDate.diff(
-          prepayments.quarterly.startDate,
-          "month",
-        );
-        if (monthsDiff >= 0 && monthsDiff % 3 === 0) {
-          prepayForMonth += prepayments.quarterly.amount;
-        }
-      }
-
-      if (
-        prepayments.oneTime.amount > 0 &&
-        currentDate.isSame(prepayments.oneTime.date, "month")
-      ) {
-        prepayForMonth += prepayments.oneTime.amount;
-      }
-
-      let principalForMonth = emi - interestForMonth;
-
-      if (balance < principalForMonth + prepayForMonth) {
-        if (balance < principalForMonth) {
-          principalForMonth = balance;
-          prepayForMonth = 0;
-        } else {
-          prepayForMonth = balance - principalForMonth;
-        }
-      }
-
-      balance -= principalForMonth + prepayForMonth;
-      if (balance < 0) balance = 0;
-
-      totalInterest += interestForMonth;
-      totalPrincipal += principalForMonth;
-      totalPrepayments += prepayForMonth;
-
-      const totalPayment =
-        principalForMonth + interestForMonth + prepayForMonth;
-      const paidPercent =
-        loanAmount > 0 ? ((loanAmount - balance) / loanAmount) * 100 : 0;
-
-      schedule.push({
-        month: i,
-        date: currentDate.format("MMM YYYY"),
-        principal: Math.round(principalForMonth),
-        interest: Math.round(interestForMonth),
-        prepayment: Math.round(prepayForMonth),
-        balance: Math.round(balance),
-        totalPayment: Math.round(totalPayment),
-        taxes: Math.round(taxesYearlyInRs / 12),
-        homeInsurance: Math.round(homeInsYearlyInRs / 12),
-        maintenance: Math.round(expenses.maintenance),
-        paidPercent: paidPercent.toFixed(2),
-      });
-    }
-
-    const totalPayments =
-      marginInRs +
-      feesInRs +
-      oneTimeInRs +
-      totalPrincipal +
-      totalPrepayments +
-      totalInterest +
-      taxesYearlyInRs * (schedule.length / 12) +
-      homeInsYearlyInRs * (schedule.length / 12) +
-      expenses.maintenance * schedule.length;
-    
-    return {
-      marginInRs,
-      loanAmount,
-      feesInRs,
-      tenureInMonths,
-      oneTimeInRs,
-      taxesYearlyInRs,
-      homeInsYearlyInRs,
-      emi,
-      totalInterest,
-      totalPrincipal,
-      totalPrepayments,
-      schedule,
-      totalPayments,
-    };
-  }, [loanDetails, expenses, prepayments]);
-
-  const updateLoanDetails = (key, value) => {
-    setLoanDetails((prev) => ({
-      ...prev,
-      [key]: key === "startDate" ? dayjs(value) : value,
-    }));
-  };
-
-  const updateExpenses = (key, value) => {
-    setExpenses((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const updatePrepayments = (type, key, value) => {
-    setPrepayments((prev) => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        [key]: key === "startDate" || key === "date" ? dayjs(value) : value,
-      },
-    }));
-  };
-
-  const changeLoanUnit = (unitField, amountField, newUnit) => {
-    const oldUnit = loanDetails[unitField];
-    if (oldUnit === newUnit) return;
-
-    if (unitField === "tenureUnit") {
-      const currentTenure = loanDetails.loanTenure;
-      let newTenure = currentTenure;
-
-      if (newUnit === "months" && oldUnit === "years") {
-        newTenure = Math.round(currentTenure * 12);
-      } else if (newUnit === "years" && oldUnit === "months") {
-        newTenure = currentTenure / 12;
-      }
-
-      setLoanDetails((prev) => ({
-        ...prev,
-        [unitField]: newUnit,
-        [amountField]: newTenure,
-      }));
-    } else {
-      let currentAmount = loanDetails[amountField] || 0;
-      let baseValue = loanDetails.homeValue;
-
-      if (unitField === "feesUnit") {
-        const marginInRs =
-          loanDetails.marginUnit === "%"
-            ? (loanDetails.homeValue * loanDetails.marginAmount) / 100
-            : loanDetails.marginAmount;
-        baseValue =
-          loanDetails.homeValue + loanDetails.loanInsurance - marginInRs;
-      }
-
-      let newAmount = currentAmount;
-      if (newUnit === "%") {
-        newAmount = baseValue ? (currentAmount / baseValue) * 100 : 0;
-      } else {
-        newAmount = (currentAmount * baseValue) / 100;
-      }
-
-      setLoanDetails((prev) => ({
-        ...prev,
-        [unitField]: newUnit,
-        [amountField]: newAmount,
-      }));
-    }
-  };
-
-  const changeExpenseUnit = (unitField, amountField, newUnit) => {
-    const oldUnit = expenses[unitField];
-    if (oldUnit === newUnit) return;
-
-    let currentAmount = expenses[amountField] || 0;
-    let baseValue = loanDetails.homeValue;
-
-    let newAmount = currentAmount;
-    if (newUnit === "%") {
-      newAmount = baseValue ? (currentAmount / baseValue) * 100 : 0.0;
-    } else {
-      newAmount = (currentAmount * baseValue) / 100;
-    }
-
-    setExpenses((prev) => ({
-      ...prev,
-      [unitField]: newUnit,
-      [amountField]: newAmount,
-    }));
   };
 
   return (

@@ -23,13 +23,13 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  selectCalculatedValues,
   selectCurrency,
   selectThemeMode,
   setCurrency,
   setThemeMode,
   resetEmiState,
 } from "../../store/emiSlice";
+import { selectCalculatedValues } from "../../utils/emiCalculator"; // Corrected import path
 import { useSnackbar } from "notistack";
 import storage from "redux-persist/lib/storage"; // Import storage
 import "./Header.css";
