@@ -5,122 +5,180 @@ import {
   Paper,
   Tooltip,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from "@mui/material";
 import WarningIcon from "@mui/icons-material/Warning";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import React from "react";
+import React, { useState } from "react";
 
-const expenseReadOnlyItem = (props) => {
+const ExpenseReadOnlyItem = (props) => {
   const {
     item,
     currency,
-    onUpdate,
-    onDelete,
+    onUpdate, // Not used in read-only, but kept for consistency if it becomes editable
+    onDelete, // This will now trigger the confirmation dialog
+    onConfirmDelete, // New prop: function to call when deletion is confirmed
+    deletionImpactMessage, // New prop: message to show in deletion confirmation
     isExpense = false,
     isIncome = false,
     isBudgetExceeded = false,
     budgetWarning = "",
     totalIncome = 0,
-    totalExpenses = 0,
-    isEditing,
-    setIsEditing,
+    isEditing, // Not used in read-only
+    setIsEditing, // Not used in read-only
     expenseRatio,
     getExpenseColor,
     formatCurrency,
     isReadOnly = false,
+    onClick, // New prop: function to call when the item itself is clicked
   } = props;
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        mb: 1.5,
-        border: isBudgetExceeded ? "2px solid #f44336" : "1px solid #e0e0e0",
-        backgroundColor: isBudgetExceeded ? "#ffebee" : "background.paper",
-        borderRadius: 1.5,
-        transition: "all 0.3s ease",
-        "&:hover": {
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-        },
-      }}
-    >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-        }}
-      >
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {item.name}
-            </Typography>
-            {isExpense && totalIncome > 0 && (
-              <Typography variant="caption" color="textSecondary">
-                {expenseRatio.toFixed(1)}% of income
-              </Typography>
-            )}
-            {isExpense && item.category && (
-              <Chip
-                label={item.category === "basic" ? "Basic" : "Discretionary"}
-                size="small"
-                variant="outlined"
-              />
-            )}
-            {(isExpense || isIncome) && item.frequency && (
-              <Chip
-                label={
-                  item.frequency.charAt(0).toUpperCase() +
-                  item.frequency.slice(1)
-                }
-                size="small"
-                variant="filled"
-                color="info"
-              />
-            )}
 
-            {isBudgetExceeded && (
-              <Tooltip title={budgetWarning}>
-                <WarningIcon
-                  fontSize="small"
-                  sx={{ color: "error.main", cursor: "help" }}
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+
+  const handleDeleteClick = () => {
+    setOpenConfirmDelete(true);
+  };
+
+  const handleCloseConfirmDelete = () => {
+    setOpenConfirmDelete(false);
+  };
+
+  const handleConfirmDelete = () => {
+    onConfirmDelete(item.id); // Call the provided confirmation handler
+    handleCloseConfirmDelete();
+  };
+
+  return (
+    <>
+      <Paper
+        sx={{
+          p: 2,
+          mb: 1.5,
+          border: isBudgetExceeded ? "2px solid #f44336" : "1px solid #e0e0e0",
+          backgroundColor: isBudgetExceeded ? "#ffebee" : "background.paper",
+          borderRadius: 1.5,
+          transition: "all 0.3s ease",
+          "&:hover": {
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            cursor: onClick ? "pointer" : "default", // Show pointer if clickable
+          },
+        }}
+        onClick={onClick} // Attach onClick handler to the Paper component
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+          }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                {item.name}
+              </Typography>
+              {isExpense && totalIncome > 0 && (
+                <Typography variant="caption" color="textSecondary">
+                  {expenseRatio ? expenseRatio.toFixed(1) : 0}% of income
+                </Typography>
+              )}
+              {isExpense && item.category && (
+                <Chip
+                  label={item.category === "basic" ? "Basic" : "Discretionary"}
+                  size="small"
+                  variant="outlined"
                 />
-              </Tooltip>
+              )}
+              {(isExpense || isIncome) && item.frequency && (
+                <Chip
+                  label={
+                    item.frequency.charAt(0).toUpperCase() +
+                    item.frequency.slice(1)
+                  }
+                  size="small"
+                  variant="filled"
+                  color="info"
+                />
+              )}
+
+              {isBudgetExceeded && (
+                <Tooltip title={budgetWarning}>
+                  <WarningIcon
+                    fontSize="small"
+                    sx={{ color: "error.main", cursor: "help" }}
+                  />
+                </Tooltip>
+              )}
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{
+                color: isExpense ? getExpenseColor() : "success.main",
+                fontWeight: 600,
+              }}
+            >
+              {formatCurrency(item.amount)}
+            </Typography>
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 0.5 }}>
+            {!isReadOnly && (
+              <IconButton
+                size="small"
+                onClick={() => setIsEditing(true)}
+                color="primary"
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
+            )}
+            {/* Always show delete for read-only items if onDelete is provided */}
+            {onConfirmDelete && (
+              <IconButton
+                size="small"
+                onClick={handleDeleteClick}
+                color="error"
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
             )}
           </Box>
-          <Typography
-            variant="body2"
-            sx={{
-              color: isExpense ? getExpenseColor() : "success.main",
-              fontWeight: 600,
-            }}
-          >
-            {formatCurrency(item.amount)}
-          </Typography>
         </Box>
+      </Paper>
 
-        <Box sx={{ display: "flex", gap: 0.5 }}>
-          {!isReadOnly && (
-            <IconButton
-              size="small"
-              onClick={() => setIsEditing(true)}
-              color="primary"
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-          )}
-          <IconButton
-            size="small"
-            onClick={() => onDelete(item.id)}
-            color="error"
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      </Box>
-    </Paper>
+      <Dialog
+        open={openConfirmDelete}
+        onClose={handleCloseConfirmDelete}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Confirm Deletion"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete "{item.name}"?
+            <br />
+            <br />
+            <strong>Impact of deletion:</strong>
+            <br />
+            {deletionImpactMessage || "This item will be permanently removed."}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseConfirmDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} autoFocus color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
-export default expenseReadOnlyItem;
+export default ExpenseReadOnlyItem;

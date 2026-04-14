@@ -18,11 +18,15 @@ const initialState = {
     { id: 2, name: "Discretionary", amount: 20000, type: 'monthly', category: 'discretionary', frequency: 'monthly' },
   ],
   goals: [
-    { id: 1, name: "Retirement", targetAmount: 20000000, targetYear: currentYear + 30, monthlyContribution: 0, investmentType: 'sip' },
+    { 
+      id: 1, 
+      name: "Retirement", 
+      targetAmount: 20000000, 
+      targetYear: currentYear + 30, 
+      category: 'retirement',
+      investmentPlans: [] // Initialize with empty array
+    },
   ],
-  goalInvestments: {
-    // goalId: { monthlyInvestment: amount, investmentType: 'sip'|'lumpsum', expectedReturn: 8 }
-  }
 };
 
 const profileSlice = createSlice({
@@ -48,19 +52,19 @@ const profileSlice = createSlice({
         if(index !== -1) state.expenses[index] = action.payload;
     },
     deleteExpense: (state, action) => { state.expenses = state.expenses.filter(e => e.id !== action.payload); },
-    addGoal: (state, action) => { state.goals.push({ ...action.payload, id: state.goals.length > 0 ? Math.max(...state.goals.map(g => g.id)) + 1 : 1 }); },
+    addGoal: (state, action) => { 
+        state.goals.push({ 
+            ...action.payload, 
+            id: state.goals.length > 0 ? Math.max(...state.goals.map(g => g.id)) + 1 : 1,
+            investmentPlans: action.payload.investmentPlans || [] // Ensure investmentPlans array exists
+        }); 
+    },
     updateGoal: (state, action) => {
         const index = state.goals.findIndex(g => g.id === action.payload.id);
         if(index !== -1) state.goals[index] = action.payload;
     },
     deleteGoal: (state, action) => { state.goals = state.goals.filter(g => g.id !== action.payload); },
-    setGoalInvestment: (state, action) => {
-        const { goalId, investmentData } = action.payload;
-        state.goalInvestments[goalId] = investmentData;
-    },
-    deleteGoalInvestment: (state, action) => {
-        delete state.goalInvestments[action.payload];
-    },
+    
     addTemplateGoal: (state, action) => { // New reducer for template goals
       const { type, monthlyExpenses } = action.payload;
       let newGoal = {};
@@ -73,8 +77,7 @@ const profileSlice = createSlice({
             name: "Emergency Fund", 
             targetAmount: monthlyExpenses * 6, 
             targetYear: currentYear + 1, // Aim for 1 year to build
-            monthlyContribution: 0, 
-            investmentType: 'savings',
+            investmentPlans: [], // Initialize with empty array
             category: 'safety'
           };
           break;
@@ -84,8 +87,7 @@ const profileSlice = createSlice({
             name: "Child's Higher Education", 
             targetAmount: 5000000, // Example amount
             targetYear: currentYear + 18, // Example: child is 0, goal in 18 years
-            monthlyContribution: 0, 
-            investmentType: 'sip',
+            investmentPlans: [], // Initialize with empty array
             category: 'education'
           };
           break;
@@ -95,8 +97,7 @@ const profileSlice = createSlice({
             name: "Retirement", 
             targetAmount: 20000000, 
             targetYear: state.currentAge + (state.retirementAge - state.currentAge), 
-            monthlyContribution: 0, 
-            investmentType: 'sip',
+            investmentPlans: [], // Initialize with empty array
             category: 'retirement'
           };
           break;
@@ -117,7 +118,7 @@ export const {
     addIncome, updateIncome, deleteIncome, 
     addExpense, updateExpense, deleteExpense, 
     addGoal, updateGoal, deleteGoal, 
-    setGoalInvestment, deleteGoalInvestment, addTemplateGoal,
+    addTemplateGoal,
     resetProfile
 } = profileSlice.actions;
 
@@ -132,7 +133,6 @@ export const selectTotalDebt = state => state.profile.totalDebt; // New selector
 export const selectIncomes = state => state.profile.incomes;
 export const selectProfileExpenses = state => state.profile.expenses;
 export const selectGoals = state => state.profile.goals;
-export const selectGoalInvestments = state => state.profile.goalInvestments || {};
 
 // Derived Selectors
 export const selectTotalMonthlyIncome = createSelector(
@@ -147,7 +147,9 @@ export const selectTotalMonthlyExpenses = createSelector(
 
 export const selectTotalMonthlyGoalContributions = createSelector(
     [selectGoals],
-    (goals) => goals.reduce((total, goal) => total + (goal.monthlyContribution || 0), 0)
+    (goals) => goals.reduce((total, goal) => 
+        total + (goal.investmentPlans || []).reduce((planTotal, plan) => planTotal + (plan.monthlyContribution || 0), 0)
+    , 0)
 );
 
 export const selectCurrentSurplus = createSelector(

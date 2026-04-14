@@ -22,6 +22,7 @@ export const SliderInput = ({
   tooltipText = "",
   showInput = true,
   color = "primary",
+  isInline = true,
 }) => {
   // Internal state for the slider's value during drag or text input
   const [internalValue, setInternalValue] = useState(Number(value) || 0);
@@ -62,98 +63,153 @@ export const SliderInput = ({
     onChange(newValue);
   };
 
-  return (
-    <Box sx={{ width: "100%", paddingX: 2 }}> {/* Added paddingX to the main Box */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
-          >
-            {label}
-          </Typography>
-          {tooltipText && (
-            <Tooltip title={tooltipText}>
-              <InfoIcon
-                fontSize="small"
-                sx={{
-                  color: isWarning ? "error.main" : "info.main",
-                  cursor: "help",
-                  opacity: 0.7,
-                }}
-              />
-            </Tooltip>
-          )}
-        </Box>
-        {showInput && (
-          <TextField
-            type="number"
-            value={internalValue} // Use internal state for TextField
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (["e", "E", "+", "-"].includes(e.key)) {
-                e.preventDefault();
-              }
-            }}
-            size="small"
-            inputProps={{
-              min,
-              max,
-              step,
-              style: {
-                MozAppearance: "textfield",
-                textAlign: "right",
-              },
-            }}
+  // --- Reusable Components for Conditional Rendering ---
+
+  const labelComponent = (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        flexShrink: 0, // Prevent label from shrinking
+      }}
+    >
+      <Typography
+        variant="subtitle2"
+        sx={{ fontWeight: 600, whiteSpace: "nowrap" }}
+      >
+        {label}
+      </Typography>
+      {tooltipText && (
+        <Tooltip title={tooltipText}>
+          <InfoIcon
+            fontSize="small"
             sx={{
-              marginLeft: "auto",
-              minWidth: 50,
-              "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
-                {
-                  display: "none",
-                },
+              color: isWarning ? "error.main" : "info.main",
+              cursor: "help",
+              opacity: 0.7,
             }}
-            error={isWarning}
           />
-        )}
-      </Box>
-
-      <Slider
-        value={internalValue} // Use internal state for Slider
-        onChange={handleSliderChange} // Update internal state during drag
-        onChangeCommitted={handleSliderChangeCommitted} // Update external state on commit
-        min={min}
-        max={max}
-        step={step}
-        marks={marks}
-        valueLabelDisplay="auto"
-        color={sliderColor}
-        sx={{
-          // Removed paddingX from here as it's now on the parent Box
-          "& .MuiSlider-track": {
-            backgroundColor: isWarning ? "error.main" : undefined,
-          },
-          "& .MuiSlider-thumb": {
-            backgroundColor: isWarning ? "error.main" : undefined,
-          },
-        }}
-      />
-
-      {isWarning && warningText && (
-        <Paper
-          sx={{
-            mt: 1.5,
-            p: 1.5,
-            backgroundColor: "#ffebee",
-            borderLeft: "4px solid #f44336",
-            borderRadius: 1,
-          }}
-        >
-          <Typography variant="body2" sx={{ color: "#c62828" }}>
-            {warningText}
-          </Typography>
-        </Paper>
+        </Tooltip>
       )}
+    </Box>
+  );
+
+  const sliderComponent = (
+    <Slider
+      value={internalValue}
+      onChange={handleSliderChange}
+      onChangeCommitted={handleSliderChangeCommitted}
+      min={min}
+      max={max}
+      step={step}
+      marks={marks}
+      valueLabelDisplay="auto"
+      color={sliderColor}
+      sx={{
+        flexGrow: isInline ? 1 : undefined, // Only grow when inline
+        "& .MuiSlider-track": {
+          backgroundColor: isWarning ? "error.main" : undefined,
+        },
+        "& .MuiSlider-thumb": {
+          backgroundColor: isWarning ? "error.main" : undefined,
+        },
+      }}
+    />
+  );
+
+  const inputComponent = showInput && (
+    <TextField
+      type="number"
+      value={internalValue}
+      onChange={handleInputChange}
+      onKeyDown={(e) => {
+        if (["e", "E", "+", "-"].includes(e.key)) {
+          e.preventDefault();
+        }
+      }}
+      size="small"
+      inputProps={{
+        min,
+        max,
+        step,
+        style: {
+          MozAppearance: "textfield",
+          textAlign: "right",
+        },
+      }}
+      sx={{
+        minWidth: 100,
+        "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button":
+          {
+            display: "none",
+          },
+      }}
+      error={isWarning}
+    />
+  );
+
+  const warningComponent = isWarning && warningText && (
+    <Paper
+      sx={{
+        mt: 1.5,
+        p: 1.5,
+        backgroundColor: "#ffebee",
+        borderLeft: "4px solid #f44336",
+        borderRadius: 1,
+        ...(isInline && {
+          position: "absolute",
+          width: "calc(100% - 32px)",
+          left: 16,
+          top: "100%",
+          zIndex: 1,
+        }),
+      }}
+    >
+      <Typography variant="body2" sx={{ color: "#c62828" }}>
+        {warningText}
+      </Typography>
+    </Paper>
+  );
+
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        paddingX: 2,
+        position: "relative", // Needed for absolute positioning of warning
+        ...(isInline
+          ? {
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 2, // Gap between label, slider, input
+            }
+          : {
+              display: "block",
+            }),
+      }}
+    >
+      {isInline ? (
+        // Inline layout: Label, Slider, Input
+        <>
+          {labelComponent}
+          {sliderComponent}
+          {inputComponent}
+        </>
+      ) : (
+        // Block layout: Label & Input (flex row), then Slider below
+        <>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+            {labelComponent}
+            {inputComponent && (
+              <Box sx={{ marginLeft: "auto" }}>{inputComponent}</Box>
+            )}
+          </Box>
+          {sliderComponent}
+        </>
+      )}
+      {warningComponent}
     </Box>
   );
 };

@@ -12,7 +12,8 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  DialogActions, // Import DialogActions for buttons
+  DialogActions,
+  Slide,
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -20,7 +21,6 @@ import EditableGoalItem from "../common/EditableGoalItem";
 import GoalForm from "./GoalForm";
 import {
   selectGoals,
-  selectGoalInvestments,
   selectConsiderInflation,
   selectCurrentAge,
   selectRetirementAge,
@@ -29,7 +29,7 @@ import {
   updateGoal,
   deleteGoal,
   setConsiderInflation,
-  setGoalInvestment,
+  // Removed specific investment plan actions as they are now part of goal update
   selectGeneralInflationRate,
   selectEducationInflationRate,
   selectCareerGrowthRate,
@@ -60,6 +60,8 @@ import {
   calculateStepUpSIP,
   calculateLumpsum,
 } from "../../utils/financialCalculations";
+import { TransitionProps } from "@mui/material/transitions";
+import CloseIcon from "@mui/icons-material/Close";
 
 const COLORS = [
   "#0088FE",
@@ -72,11 +74,22 @@ const COLORS = [
   "#ff7c7c",
 ];
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return (
+    <Slide
+      direction="up"
+      ref={ref}
+      {...props}
+      // timeout is in milliseconds (500ms = 0.5 seconds)
+      timeout={500}
+    />
+  );
+});
+
 export default function FutureGoalsTab() {
   const dispatch = useDispatch();
 
   const goals = useSelector(selectGoals) || [];
-  const goalInvestments = useSelector(selectGoalInvestments) || {};
   const considerInflation = useSelector(selectConsiderInflation) || false;
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
@@ -104,30 +117,30 @@ export default function FutureGoalsTab() {
     `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const currentYear = new Date().getFullYear();
 
-  // Helper function to calculate required investment for a goal
+  // Helper function to calculate required investment for a single plan
   const calculateRequiredInvestment = useCallback(
     (
       targetAmount,
       yearsToGoal,
-      investmentType,
+      investmentPlanType,
       expectedReturn,
       stepUpRate = 0,
     ) => {
-      if (yearsToGoal <= 0) return targetAmount;
+      if (yearsToGoal <= 0) return targetAmount; // Or 0 if it's a lumpsum and target is now
 
       const annualReturnRate = expectedReturn / 100;
 
-      if (investmentType === "sip") {
+      if (investmentPlanType === "sip") {
         return calculateSIP(targetAmount, yearsToGoal, annualReturnRate);
-      } else if (investmentType === "step_up_sip") {
+      } else if (investmentPlanType === "step_up_sip") {
         return calculateStepUpSIP(
           targetAmount,
           yearsToGoal,
           annualReturnRate,
           stepUpRate / 100,
         );
-      } else if (investmentType === "lumpsum") {
-        return 0;
+      } else if (investmentPlanType === "lumpsum") {
+        return 0; // Lumpsum doesn't have a monthly contribution
       }
       return 0;
     },
@@ -142,45 +155,56 @@ export default function FutureGoalsTab() {
   const handleModalSave = useCallback(() => {
     if (!currentGoalFormData) return;
 
-    const yearsToGoal = currentGoalFormData.targetYear - currentYear; // Use targetYear directly
-    const expectedReturn = currentGoalFormData.expectedReturn || 8; // Default if not set in form
-
-    let monthlyContribution = 0;
-    const investmentType = currentGoalFormData.investmentType || "sip";
-
-    monthlyContribution = calculateRequiredInvestment(
-      currentGoalFormData.targetAmount,
-      yearsToGoal,
-      investmentType,
-      expectedReturn,
-      currentGoalFormData.stepUpRate || 0,
-    );
-
     const goalToSave = {
       ...currentGoalFormData,
-      targetYear: currentGoalFormData.targetYear,
-      monthlyContribution: monthlyContribution,
-      investmentType: investmentType,
       category: currentGoalFormData.category || "general",
     };
 
+    // Calculate monthly contribution for each investment plan
+    const updatedInvestmentPlans = (goalToSave.investmentPlans || []).map(
+      (plan) => {
+        const yearsToGoal = goalToSave.targetYear - currentYear;
+        const expectedReturn = 12; // TODO: Make this configurable or part of the plan
+
+        let monthlyContribution = 0;
+        if (plan.type !== "lumpsum") {
+          monthlyContribution = calculateRequiredInvestment(
+            goalToSave.targetAmount,
+            yearsToGoal,
+            plan.type,
+            expectedReturn,
+            plan.stepUpRate,
+          );
+        }
+        return {
+          ...plan,
+          monthlyContribution: Math.round(monthlyContribution),
+        };
+      },
+    );
+
+    const finalGoal = {
+      ...goalToSave,
+      investmentPlans: updatedInvestmentPlans,
+    };
+
     if (editingGoal && editingGoal.id) {
-      dispatch(updateGoal({ ...goalToSave, id: editingGoal.id }));
+      dispatch(updateGoal({ ...finalGoal, id: editingGoal.id }));
     } else {
-      dispatch(addGoal({ ...goalToSave, id: Date.now() }));
+      dispatch(addGoal({ ...finalGoal, id: Date.now() }));
     }
     handleCloseModal();
   }, [
     dispatch,
     editingGoal,
+    currentGoalFormData,
     currentYear,
     calculateRequiredInvestment,
-    currentGoalFormData,
   ]);
 
   const handleOpenModalForEdit = useCallback((goal) => {
     setEditingGoal(goal);
-    setCurrentGoalFormData(goal); // Initialize form data with existing goal
+    setCurrentGoalFormData(goal); // Initialize form data with existing goal, including investmentPlans
     setModalTitle(`Edit ${goal.name}`);
     setOpenModal(true);
   }, []);
@@ -192,10 +216,8 @@ export default function FutureGoalsTab() {
       name: "",
       targetAmount: 0,
       targetYear: currentYear + 5, // Default to 5 years from now
-      investmentType: "sip",
-      stepUpRate: 0,
-      expectedReturn: 8,
       category: "general",
+      investmentPlans: [], // GoalForm's useEffect will add a default plan
     });
     setModalTitle("Add New Goal");
     setOpenModal(true);
@@ -234,13 +256,8 @@ export default function FutureGoalsTab() {
       name: "Retirement",
       targetAmount: targetAmount,
       targetYear: currentYear + (yearsToRetirement > 0 ? yearsToRetirement : 1),
-      expectedReturn: 8,
-      inflation: generalInflationRate * 100,
-      icon: "Elderly",
-      fdAmount: 0,
-      investmentType: "sip",
-      stepUpRate: 0,
       category: "retirement",
+      investmentPlans: [], // GoalForm's useEffect will add a default plan
     });
     setModalTitle("Add Retirement Goal"); // Set modal title
     setOpenModal(true);
@@ -267,13 +284,8 @@ export default function FutureGoalsTab() {
       name: "Child's Higher Education",
       targetAmount: Math.round(targetAmount),
       targetYear: currentYear + (yearsToCollege > 0 ? yearsToCollege : 1),
-      expectedReturn: 8,
-      inflation: educationInflationRate * 100,
-      icon: "School",
-      fdAmount: 0,
-      investmentType: "sip",
-      stepUpRate: 0,
       category: "education",
+      investmentPlans: [], // GoalForm's useEffect will add a default plan
     });
     setModalTitle("Add Child's Higher Education Goal"); // Set modal title
     setOpenModal(true);
@@ -293,13 +305,8 @@ export default function FutureGoalsTab() {
       name: "Emergency Fund",
       targetAmount: targetAmount,
       targetYear: currentYear + yearsToGoal,
-      expectedReturn: 6,
-      inflation: generalInflationRate * 100,
-      icon: "MedicalServices",
-      fdAmount: 0,
-      investmentType: "sip",
-      stepUpRate: 0,
       category: "safety",
+      investmentPlans: [], // GoalForm's useEffect will add a default plan
     });
     setModalTitle("Add Emergency Fund Goal"); // Set modal title
     setOpenModal(true);
@@ -307,44 +314,8 @@ export default function FutureGoalsTab() {
     profileExpenses,
     monthlyEmi,
     totalMonthlyGoalContributions,
-    generalInflationRate,
-    currentYear,
+    currentYear, // generalInflationRate was not used here, removed
   ]);
-
-  const handleInvestmentChange = useCallback(
-    (goalId, investmentData) => {
-      const goal = goals.find((g) => g.id === goalId);
-      if (!goal) return;
-
-      const yearsToGoal = goal.targetYear - currentYear;
-      let monthlyContribution = 0;
-
-      if (investmentData.investmentType === "lumpsum") {
-        monthlyContribution = 0;
-      } else {
-        monthlyContribution = calculateRequiredInvestment(
-          goal.targetAmount,
-          yearsToGoal,
-          investmentData.investmentType,
-          investmentData.expectedReturn,
-          investmentData.stepUpRate,
-        );
-      }
-
-      dispatch(
-        updateGoal({
-          ...goal,
-          monthlyContribution: monthlyContribution,
-          investmentType: investmentData.investmentType,
-          stepUpRate: investmentData.stepUpRate,
-          expectedReturn: investmentData.expectedReturn,
-        }),
-      );
-
-      dispatch(setGoalInvestment({ goalId, investmentData }));
-    },
-    [dispatch, goals, currentYear, calculateRequiredInvestment],
-  );
 
   const wealthData = useMemo(() => {
     const maxGoalYear = goals.reduce(
@@ -364,11 +335,19 @@ export default function FutureGoalsTab() {
 
     const data = [];
 
+    // Updated totalActiveGoalSips to sum contributions from all investment plans
     const totalActiveGoalSips = goals.reduce((acc, goal) => {
-      if (goal.investmentType !== "lumpsum" && goal.monthlyContribution > 0) {
-        return acc + goal.monthlyContribution;
-      }
-      return acc;
+      return (
+        acc +
+        (goal.investmentPlans || []).reduce((planAcc, plan) => {
+          // Only consider plans that are not lumpsum and have a monthly contribution
+          if (plan.type !== "lumpsum" && plan.monthlyContribution > 0) {
+            // Changed investmentType to type
+            return planAcc + plan.monthlyContribution;
+          }
+          return planAcc;
+        }, 0)
+      );
     }, 0);
 
     let currentMonthlyIncome = totalMonthlyIncome;
@@ -466,7 +445,6 @@ export default function FutureGoalsTab() {
     totalMonthlyIncome,
     profileExpenses,
     monthlyEmi,
-    totalMonthlyGoalContributions,
     careerGrowthRate,
     realValueToggle,
     considerInflation,
@@ -596,10 +574,11 @@ export default function FutureGoalsTab() {
                   considerInflation={considerInflation}
                   onEdit={handleOpenModalForEdit} // Pass the new handler
                   onDelete={(id) => dispatch(deleteGoal(id))}
-                  onInvestmentChange={handleInvestmentChange}
-                  investmentAmount={
-                    goalInvestments[g.id]?.monthlyInvestment || 0
-                  }
+                  // Removed onInvestmentChange prop
+                  investmentAmount={(g.investmentPlans || []).reduce(
+                    (sum, plan) => sum + (plan.monthlyContribution || 0),
+                    0,
+                  )}
                 />
               ))
             ) : (
@@ -735,7 +714,11 @@ export default function FutureGoalsTab() {
                               g.targetYear - currentYear,
                             )
                           : g.targetAmount,
-                      monthlyContribution: g.monthlyContribution || 0,
+                      // monthlyContribution now sums all plans
+                      monthlyContribution: (g.investmentPlans || []).reduce(
+                        (sum, plan) => sum + (plan.monthlyContribution || 0),
+                        0,
+                      ),
                       year: g.targetYear,
                     }))}
                     margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -769,7 +752,11 @@ export default function FutureGoalsTab() {
                         name="Inflation-Adjusted"
                       />
                     )}
-                    {goals.some((g) => (g.monthlyContribution || 0) > 0) && (
+                    {goals.some((g) =>
+                      (g.investmentPlans || []).some(
+                        (plan) => (plan.monthlyContribution || 0) > 0,
+                      ),
+                    ) && (
                       <Bar
                         dataKey="monthlyContribution"
                         fill={COLORS[2]}
@@ -799,8 +786,15 @@ export default function FutureGoalsTab() {
         onClose={handleCloseModal}
         maxWidth="sm"
         fullWidth
+        slots={{
+          transition: Transition,
+        }}
+        fullScreen
       >
-        <DialogTitle>{modalTitle}</DialogTitle>
+        <DialogTitle>
+          {modalTitle}{" "}
+          <CloseIcon onClick={handleCloseModal} sx={{ float: "right" }} />
+        </DialogTitle>
 
         <DialogContent dividers>
           {currentGoalFormData && ( // Only render GoalForm if there's data

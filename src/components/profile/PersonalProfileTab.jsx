@@ -32,14 +32,15 @@ import {
   updateExpense,
   setCurrentAge,
   setRetirementAge,
-  selectTotalMonthlyIncome, // Import new selector
-  selectTotalMonthlyExpenses, // Import new selector
-  selectCurrentSurplus, // Import new selector
-  selectCareerGrowthRate, // Changed from selectExpectedAnnualSalaryHike
-  setCareerGrowthRate, // Changed from setExpectedAnnualSalaryHike
+  selectTotalMonthlyIncome,
+  selectTotalMonthlyExpenses,
+  selectCurrentSurplus,
+  selectCareerGrowthRate,
+  setCareerGrowthRate,
+  selectTotalMonthlyGoalContributions, // Import the new selector
 } from "../../store/profileSlice";
 import { selectCurrency } from "../../store/emiSlice";
-import { selectCalculatedValues } from "../../utils/emiCalculator"; // Corrected import path
+import { selectCalculatedValues } from "../../utils/emiCalculator";
 import {
   PieChart,
   Pie,
@@ -59,24 +60,24 @@ export default function PersonalProfileTab() {
   const expenses = useSelector(selectProfileExpenses) || [];
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
-  const careerGrowthRate = useSelector(selectCareerGrowthRate); // Get hike rate
+  const careerGrowthRate = useSelector(selectCareerGrowthRate);
 
-  const { emi: monthlyEmi } = useSelector(selectCalculatedValues); // Get EMI from emiSlice
+  const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
   const currency = useSelector(selectCurrency);
 
-  // Use derived selectors for consistency
   const totalIncome = useSelector(selectTotalMonthlyIncome);
   const totalProfileExpenses = useSelector(selectTotalMonthlyExpenses);
+  const totalMonthlyGoalContributions = useSelector(selectTotalMonthlyGoalContributions); // Get total goal contributions
   const investableSurplus = useSelector(selectCurrentSurplus);
 
-  // totalMonthlyPayment now only refers to the EMI part, as other expenses are in profileSlice
   const totalMonthlyPayment = monthlyEmi;
 
-  const totalExpensesIncludingLoan = totalProfileExpenses + (monthlyEmi || 0); // Ensure monthlyEmi defaults to 0 for calculation
+  // Include goal contributions in total expenses for budget calculation
+  const totalExpensesIncludingLoanAndGoals = totalProfileExpenses + (monthlyEmi || 0) + totalMonthlyGoalContributions;
 
   const isBudgetExceeded = investableSurplus < 0;
   const budgetWarning = isBudgetExceeded
-    ? `Your spending (${currency}${totalExpensesIncludingLoan.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) exceeds income (${currency}${totalIncome.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) by ${currency}${Math.abs(investableSurplus).toLocaleString("en-IN", { maximumFractionDigits: 0 })}. Consider reducing expenses or increasing income.`
+    ? `Your spending (${currency}${totalExpensesIncludingLoanAndGoals.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) exceeds income (${currency}${totalIncome.toLocaleString("en-IN", { maximumFractionDigits: 0 })}) by ${currency}${Math.abs(investableSurplus).toLocaleString("en-IN", { maximumFractionDigits: 0 })}. Consider reducing expenses or increasing income.`
     : "";
 
   const [newIncome, setNewIncome] = useState({
@@ -99,7 +100,7 @@ export default function PersonalProfileTab() {
           id: Date.now(),
           name: newIncome.name,
           amount: Number(newIncome.amount),
-          type: "monthly", // Assuming all added incomes are monthly for now
+          type: "monthly",
           frequency: newIncome.frequency,
         }),
       );
@@ -114,7 +115,7 @@ export default function PersonalProfileTab() {
           id: Date.now(),
           name: newExpense.name,
           amount: Number(newExpense.amount),
-          type: "monthly", // Assuming all added expenses are monthly for now
+          type: "monthly",
           category: newExpense.category,
           frequency: newExpense.frequency,
         }),
@@ -151,24 +152,37 @@ export default function PersonalProfileTab() {
           .reduce((acc, curr) => acc + curr.amount, 0),
       ),
     },
-    { name: "Loan EMIs", value: monthlyEmi || 0 }, // Ensure monthlyEmi defaults to 0 for chart
+    { name: "Loan EMIs", value: monthlyEmi || 0 },
     {
       name: "Future Wealth (Goals)",
-      value: useSelector((state) =>
-        state.profile.goals.reduce(
-          (acc, curr) => acc + curr.monthlyContribution,
-          0,
-        ),
-      ),
+      value: totalMonthlyGoalContributions, // Use the new selector
     },
     {
       name: "Surplus",
       value: investableSurplus > 0 ? investableSurplus : 0,
     },
-  ].filter((item) => item.value > 0); // Filter out zero values for cleaner chart
+  ].filter((item) => item.value > 0);
 
   const formatCurrency = (val) =>
-    `${currency}${Number(val || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`; // Ensure val defaults to 0
+    `${currency}${Number(val || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+  // Handler for clicking on Home Loan EMI
+  const handleHomeLoanEmiClick = () => {
+    alert("Navigating to Home Loan EMI edit mode (requires further implementation)");
+    // In a real application, you would navigate to the EMI calculator or a specific edit section
+  };
+
+  // Handler for clicking on Goal Contributions
+  const handleGoalContributionsClick = () => {
+    alert("Navigating to Future Goals tab to edit investment plans (requires further implementation)");
+    // In a real application, you would navigate to the Future Goals tab and potentially open the relevant goal's modal
+  };
+
+  // Dummy delete handler for read-only items that don't have direct deletion here
+  const handleReadOnlyDelete = (id) => {
+    alert(`Deletion of item with ID ${id} is not directly supported from this view.`);
+    // This would typically be handled by the component that manages the source of this read-only item
+  };
 
   return (
     <Grid container spacing={2}>
@@ -375,6 +389,7 @@ export default function PersonalProfileTab() {
           {monthlyEmi > 0 && (
             <ExpenseReadOnlyItem
               item={{
+                id: "home-loan-emi", // Unique ID for this item
                 name: "Home Loan EMI",
                 amount: monthlyEmi,
                 frequency: "monthly",
@@ -390,9 +405,35 @@ export default function PersonalProfileTab() {
                 return "success.main";
               }}
               formatCurrency={formatCurrency}
-              onDelete={() => {}} // Read only
-              setIsEditing={() => {}} // Read only
+              onConfirmDelete={handleReadOnlyDelete} // Use the dummy handler for now
+              deletionImpactMessage="Deleting Home Loan EMI will remove it from your expenses and cash flow calculations. To adjust the EMI, please use the EMI Calculator tab."
               isReadOnly={true}
+              onClick={handleHomeLoanEmiClick} // Make it clickable
+            />
+          )}
+          {totalMonthlyGoalContributions > 0 && (
+            <ExpenseReadOnlyItem
+              item={{
+                id: "goal-contributions", // Unique ID for this item
+                name: "Goal Contributions",
+                amount: totalMonthlyGoalContributions,
+                frequency: "monthly",
+              }}
+              currency={currency}
+              isExpense={true}
+              totalIncome={totalIncome}
+              expenseRatio={(totalMonthlyGoalContributions / totalIncome) * 100}
+              getExpenseColor={() => {
+                const ratio = (totalMonthlyGoalContributions / totalIncome) * 100;
+                if (ratio > 40) return "error.main";
+                if (ratio > 30) return "warning.main";
+                return "success.main";
+              }}
+              formatCurrency={formatCurrency}
+              onConfirmDelete={handleReadOnlyDelete} // Use the dummy handler for now
+              deletionImpactMessage="Deleting Goal Contributions will remove all associated monthly investments from your expenses. To stop contributing to a specific goal, please edit it in the Future Goals tab."
+              isReadOnly={true}
+              onClick={handleGoalContributionsClick} // Make it clickable
             />
           )}
           {expenses &&
@@ -432,7 +473,7 @@ export default function PersonalProfileTab() {
                 fontSize: isBudgetExceeded ? "1.2rem" : "1rem",
               }}
             >
-              {formatCurrency(totalExpensesIncludingLoan.toFixed(0))}
+              {formatCurrency(totalExpensesIncludingLoanAndGoals.toFixed(0))}
             </Typography>
           </Box>
         </Paper>

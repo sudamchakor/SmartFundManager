@@ -290,7 +290,7 @@ export const EditableGoalItem = ({
             variant="caption"
             sx={{ color: "#1b5e20", fontWeight: 600 }}
           >
-            💰 Active Investment: {formatCurrency(investmentAmount)}/month ({goal.investmentType === 'step_up_sip' ? `Step-Up SIP @ ${goal.stepUpRate}%` : goal.investmentType.toUpperCase()})
+            💰 Active Investment: {formatCurrency(investmentAmount)}/month ({goal.investmentType === 'step_up_sip' ? `Step-Up SIP @ ${goal.stepUpRate}%` : (goal.investmentType || '').toUpperCase()})
           </Typography>
         </Box>
       )}
