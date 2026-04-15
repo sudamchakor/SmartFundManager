@@ -281,23 +281,25 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
       return;
     }
 
-    let plansToCalculate = editedGoal.investmentPlans;
     const totalTimePeriod = targetYear - currentYear;
 
-    // If no plans are defined, generate some default ones with suitable initial amounts
-    if (plansToCalculate.length === 0) {
-      const newPlans = [
-        getDefaultPlanState("sip", targetAmount, totalTimePeriod),
-        getDefaultPlanState("lumpsum", targetAmount, totalTimePeriod),
-        getDefaultPlanState("fd", targetAmount, totalTimePeriod),
-      ];
-      // Update the editedGoal state with these newly generated plans
-      setEditedGoal((prev) => ({
-        ...prev,
-        investmentPlans: newPlans,
-      }));
-      plansToCalculate = newPlans; // Use the newly generated plans for calculation
-    }
+    // Always generate a new set of plans with all available types
+    const newPlans = [
+      getDefaultPlanState("sip", targetAmount, totalTimePeriod),
+      getDefaultPlanState("lumpsum", targetAmount, totalTimePeriod),
+      getDefaultPlanState("stepUpSip", targetAmount, totalTimePeriod),
+      getDefaultPlanState("swp", targetAmount, totalTimePeriod),
+      getDefaultPlanState("fd", targetAmount, totalTimePeriod),
+    ];
+
+    // Update the editedGoal state with these newly generated plans
+    setEditedGoal((prev) => ({
+      ...prev,
+      investmentPlans: newPlans,
+    }));
+
+    // Use the newly generated plans for calculation
+    const plansToCalculate = newPlans;
 
     const updatedInvestmentPlans = plansToCalculate.map((plan) => {
       let result = {};
