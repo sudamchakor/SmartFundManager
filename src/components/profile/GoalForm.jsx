@@ -62,6 +62,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
   const formatAmount = (amount) =>
     (amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
 
+  // This function now ONLY creates the default structure, without calculations.
   const getDefaultPlanState = (type, targetAmount = 0, timePeriod = 10) => {
     const defaultTimePeriodFromGoal = goal?.targetYear
       ? goal.targetYear - currentYear
@@ -71,58 +72,44 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
       timePeriod > 0 ? timePeriod : defaultTimePeriodFromGoal,
     );
 
-    // Calculate a base amount for initial suggestions, ensuring a minimum of 500
-    // These are heuristics to provide a reasonable starting point for the user
     const baseAmountForSip = Math.max(
       500,
       Math.round(targetAmount / (effectiveTimePeriod * 12 * 2)),
-    ); // Aim for SIP to cover half of target over time
-    const baseAmountForLumpsum = Math.max(500, Math.round(targetAmount / 2)); // Aim for lumpsum to cover half of target
-    const baseAmountForFd = Math.max(500, Math.round(targetAmount / 2)); // Aim for FD to cover half of target
+    );
+    const baseAmountForLumpsum = Math.max(500, Math.round(targetAmount / 2));
+    const baseAmountForFd = Math.max(500, Math.round(targetAmount / 2));
 
     let plan = {};
-    let monthlyContribution = 0; // Initialize monthlyContribution
 
     switch (type) {
       case "sip":
         plan = {
-          id: Date.now().toString(),
-          type: "sip",
           monthlyInvestment: baseAmountForSip,
           expectedReturnRate: 12,
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
-        monthlyContribution = baseAmountForSip;
         break;
       case "lumpsum":
         plan = {
-          id: Date.now().toString(),
-          type: "lumpsum",
           totalInvestment: baseAmountForLumpsum,
           expectedReturnRate: 12,
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
-        monthlyContribution = 0;
         break;
       case "stepUpSip":
         plan = {
-          id: Date.now().toString(),
-          type: "stepUpSip",
-          monthlyInvestment: baseAmountForSip, // Using SIP base for step-up
+          monthlyInvestment: baseAmountForSip,
           stepUpPercentage: 10,
           expectedReturnRate: 12,
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
-        monthlyContribution = baseAmountForSip;
         break;
       case "swp":
         plan = {
-          id: Date.now().toString(),
-          type: "swp",
-          totalInvestment: baseAmountForLumpsum, // Using lumpsum base for SWP
+          totalInvestment: baseAmountForLumpsum,
           withdrawalPerMonth: Math.max(
             500,
             Math.round(baseAmountForLumpsum / (effectiveTimePeriod * 12)),
@@ -131,42 +118,35 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
-        monthlyContribution = 0;
         break;
       case "fd":
         plan = {
-          id: Date.now().toString(),
-          type: "fd",
           principalAmount: baseAmountForFd,
           interestRate: 7,
           timePeriod: effectiveTimePeriod,
           compoundingFrequency: "annually",
-          isSafe: true, // FD is generally considered safe
+          isSafe: true,
         };
-        monthlyContribution = 0;
         break;
       default:
         plan = {
-          id: Date.now().toString(),
-          type: "sip",
           monthlyInvestment: baseAmountForSip,
           expectedReturnRate: 12,
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
-        monthlyContribution = baseAmountForSip;
         break;
     }
-    return { ...plan, details: generatePlanSummary(plan), monthlyContribution };
+    return { id: Date.now().toString(), type, ...plan };
   };
 
-  // Helper function to calculate results for a single plan
+  // This function takes a plan and returns it with all calculated values.
   const calculatePlanResults = (plan) => {
     let result = {};
     let investedAmount = 0;
     let estimatedReturns = 0;
     let totalValue = 0;
-    let monthlyContribution = 0; // Initialize monthlyContribution for calculation
+    let monthlyContribution = 0;
 
     switch (plan.type) {
       case "sip":
@@ -175,9 +155,6 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           plan.expectedReturnRate,
           plan.timePeriod,
         );
-        investedAmount = result.investedAmount;
-        estimatedReturns = result.estimatedReturns;
-        totalValue = result.totalValue;
         monthlyContribution = plan.monthlyInvestment;
         break;
       case "lumpsum":
@@ -186,10 +163,6 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           plan.expectedReturnRate,
           plan.timePeriod,
         );
-        investedAmount = result.investedAmount;
-        estimatedReturns = result.estimatedReturns;
-        totalValue = result.totalValue;
-        monthlyContribution = 0;
         break;
       case "stepUpSip":
         result = calculateStepUpSip(
@@ -198,9 +171,6 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           plan.timePeriod,
           plan.stepUpPercentage,
         );
-        investedAmount = result.investedAmount;
-        estimatedReturns = result.estimatedReturns;
-        totalValue = result.totalValue;
         monthlyContribution = plan.monthlyInvestment;
         break;
       case "swp":
@@ -210,10 +180,6 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           plan.timePeriod,
           plan.withdrawalPerMonth,
         );
-        investedAmount = result.principal; // For SWP, principal is the invested amount
-        estimatedReturns = result.totalWithdrawn - result.principal; // Returns are total withdrawn minus principal
-        totalValue = result.totalValue; // Remaining balance
-        monthlyContribution = 0;
         break;
       case "fd":
         result = calculateFd(
@@ -222,22 +188,23 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           plan.timePeriod,
           plan.compoundingFrequency,
         );
-        investedAmount = result.investedAmount;
-        estimatedReturns = result.estimatedReturns;
-        totalValue = result.totalValue;
-        monthlyContribution = 0;
         break;
       default:
         break;
     }
 
+    investedAmount = result.investedAmount || result.principal || 0;
+    estimatedReturns = result.estimatedReturns || 0;
+    totalValue = result.totalValue || 0;
+
     return {
       ...plan,
-      ...result, // Spread result to include calculated values
       investedAmount,
       estimatedReturns,
       totalValue,
-      monthlyContribution, // Add monthlyContribution here
+      monthlyContribution,
+      amount: totalValue, // This is the crucial field for the parent component
+      details: generatePlanSummary({ ...plan, ...result }),
     };
   };
 
@@ -250,24 +217,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
     if (goal && goal.investmentPlans && goal.investmentPlans.length > 0) {
       return {
         ...goal,
-        investmentPlans: goal.investmentPlans.map((plan) => {
-          const planWithDetails = {
-            ...plan,
-            details: generatePlanSummary(plan),
-          };
-          return calculatePlanResults(planWithDetails);
-        }),
-      };
-    } else if (goal && goal.investmentType) {
-      // If an old goal has investmentType, convert it to a plan
-      const defaultPlan = getDefaultPlanState(
-        goal.investmentType,
-        initialTargetAmount,
-        initialTimePeriod,
-      );
-      return {
-        ...goal,
-        investmentPlans: [calculatePlanResults(defaultPlan)],
+        investmentPlans: goal.investmentPlans.map(calculatePlanResults),
       };
     }
     const defaultPlan = getDefaultPlanState(
@@ -288,8 +238,6 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
   const [overallROI, setOverallROI] = useState(null);
 
   useEffect(() => {
-    // This effect ensures that if the 'goal' prop changes, the editedGoal state is updated.
-    // It also handles the conversion of old 'investmentType' to new 'investmentPlans' structure.
     setEditedGoal((prevGoal) => {
       const currentTargetAmount = goal?.targetAmount || 0;
       const currentTimePeriod = goal?.targetYear
@@ -300,23 +248,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
       if (goal && goal.investmentPlans && goal.investmentPlans.length > 0) {
         newEditedGoal = {
           ...goal,
-          investmentPlans: goal.investmentPlans.map((plan) => {
-            const planWithDetails = {
-              ...plan,
-              details: generatePlanSummary(plan),
-            };
-            return calculatePlanResults(planWithDetails);
-          }),
-        };
-      } else if (goal && goal.investmentType) {
-        const defaultPlan = getDefaultPlanState(
-          goal.investmentType,
-          currentTargetAmount,
-          currentTimePeriod,
-        );
-        newEditedGoal = {
-          ...goal,
-          investmentPlans: [calculatePlanResults(defaultPlan)],
+          investmentPlans: goal.investmentPlans.map(calculatePlanResults),
         };
       } else {
         const defaultPlan = getDefaultPlanState(
@@ -331,7 +263,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
       }
       return newEditedGoal;
     });
-  }, [goal, currentYear]); // Added currentYear to dependency array
+  }, [goal, currentYear]);
 
   useEffect(() => {
     onSave(editedGoal);
@@ -342,14 +274,14 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
     const currentTimePeriod = editedGoal.targetYear
       ? editedGoal.targetYear - currentYear
       : 10;
+    const newPlan = getDefaultPlanState(
+      "sip",
+      currentTargetAmount,
+      currentTimePeriod,
+    );
     setEditedGoal((prev) => ({
       ...prev,
-      investmentPlans: [
-        ...prev.investmentPlans,
-        calculatePlanResults(
-          getDefaultPlanState("sip", currentTargetAmount, currentTimePeriod),
-        ),
-      ],
+      investmentPlans: [...prev.investmentPlans, calculatePlanResults(newPlan)],
     }));
   };
 
@@ -366,10 +298,8 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
     setEditedGoal((prev) => {
       const updatedPlans = prev.investmentPlans.map((plan) => {
         if (plan.id === id) {
-          let updatedPlan = { ...plan, [field]: value };
-
+          let updatedPlan;
           if (field === "type") {
-            // When type changes, get default values for the new type
             const currentTargetAmount = prev.targetAmount || 0;
             const currentTimePeriod = prev.targetYear
               ? prev.targetYear - currentYear
@@ -379,16 +309,11 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
               currentTargetAmount,
               currentTimePeriod,
             );
-            // Merge new default values, but keep the original ID
-            updatedPlan = { ...newDefaultPlan, id: plan.id, type: value };
+            updatedPlan = { ...newDefaultPlan, id: plan.id };
+          } else {
+            updatedPlan = { ...plan, [field]: value };
           }
-
-          // Recalculate details string and full summary after updating the plan
-          const planWithDetails = {
-            ...updatedPlan,
-            details: generatePlanSummary(updatedPlan),
-          };
-          return calculatePlanResults(planWithDetails);
+          return calculatePlanResults(updatedPlan);
         }
         return plan;
       });
@@ -405,74 +330,17 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
 
     const totalTimePeriod = targetYear - currentYear;
 
-    // Always generate a new set of plans with all available types
-    const newPlans = [
-      getDefaultPlanState("sip", targetAmount, totalTimePeriod),
-      getDefaultPlanState("lumpsum", targetAmount, totalTimePeriod),
-      getDefaultPlanState("stepUpSip", targetAmount, totalTimePeriod),
-      getDefaultPlanState("swp", targetAmount, totalTimePeriod),
-      getDefaultPlanState("fd", targetAmount, totalTimePeriod),
-    ];
-
-    // Calculate results for each new plan
-    const updatedInvestmentPlans = newPlans.map((plan) =>
-      calculatePlanResults(plan),
+    const planTypes = ["sip", "lumpsum", "stepUpSip", "swp", "fd"];
+    const newPlans = planTypes.map((type) =>
+      getDefaultPlanState(type, targetAmount, totalTimePeriod),
     );
 
-    // Update the editedGoal state with these newly generated plans
+    const updatedInvestmentPlans = newPlans.map(calculatePlanResults);
+
     setEditedGoal((prev) => ({
       ...prev,
       investmentPlans: updatedInvestmentPlans,
     }));
-
-    // Now, aggregate totals and prepare data for GeneratedInvestmentPlans component
-    const generatedPlansForSummary = [];
-    let calculatedTotalInvestedAmount = 0;
-    let calculatedTotalEstimatedReturns = 0;
-    let calculatedTotalCurrentValue = 0;
-
-    updatedInvestmentPlans.forEach((plan) => {
-      // Only aggregate if calculation was successful (plan.investedAmount exists)
-      if (plan.investedAmount !== undefined) {
-        const planResult = {
-          id: plan.id,
-          type: plan.type,
-          name: plan.type.toUpperCase(),
-          investedAmount: plan.investedAmount,
-          estimatedReturns: plan.estimatedReturns,
-          totalValue: plan.totalValue,
-          details: plan.details,
-          isSafe: plan.isSafe,
-          principal: plan.principal, // For SWP
-          totalWithdrawn: plan.totalWithdrawn, // For SWP
-        };
-        generatedPlansForSummary.push(planResult);
-
-        if (plan.type === "swp") {
-          calculatedTotalInvestedAmount += plan.principal || 0;
-          calculatedTotalCurrentValue += plan.totalValue || 0;
-        } else {
-          calculatedTotalInvestedAmount += plan.investedAmount || 0;
-          calculatedTotalEstimatedReturns += plan.estimatedReturns || 0;
-          calculatedTotalCurrentValue += plan.totalValue || 0;
-        }
-      }
-    });
-
-    setGeneratedInvestmentPlans(generatedPlansForSummary); // Update the state for the summary component
-    setTotalInvestedAmount(calculatedTotalInvestedAmount);
-    setTotalEstimatedReturns(calculatedTotalEstimatedReturns);
-    setTotalCurrentValue(calculatedTotalCurrentValue);
-
-    if (calculatedTotalInvestedAmount > 0) {
-      const roi =
-        ((calculatedTotalCurrentValue - calculatedTotalInvestedAmount) /
-          calculatedTotalInvestedAmount) *
-        100;
-      setOverallROI(roi);
-    } else {
-      setOverallROI(null);
-    }
   };
 
   const totalTimePeriod = editedGoal.targetYear

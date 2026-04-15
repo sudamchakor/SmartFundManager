@@ -38,7 +38,7 @@ import {
   selectCareerGrowthRate,
   setCareerGrowthRate,
   selectTotalMonthlyGoalContributions,
-  selectGoalsWithMonthlyContributions, // Import the new selector
+  selectIndividualGoalInvestmentContributions, // Import the new selector
 } from "../../store/profileSlice";
 import { selectCurrency } from "../../store/emiSlice";
 import { selectCalculatedValues } from "../../utils/emiCalculator";
@@ -69,7 +69,7 @@ export default function PersonalProfileTab({ onEditGoal }) { // Add onEditGoal p
   const totalIncome = useSelector(selectTotalMonthlyIncome);
   const totalProfileExpenses = useSelector(selectTotalMonthlyExpenses);
   const totalMonthlyGoalContributions = useSelector(selectTotalMonthlyGoalContributions);
-  const goalsWithContributions = useSelector(selectGoalsWithMonthlyContributions); // Use the new selector
+  const individualGoalInvestments = useSelector(selectIndividualGoalInvestmentContributions); // Use the new selector
   const investableSurplus = useSelector(selectCurrentSurplus);
 
   const totalMonthlyPayment = monthlyEmi;
@@ -407,37 +407,29 @@ export default function PersonalProfileTab({ onEditGoal }) { // Add onEditGoal p
               onClick={handleHomeLoanEmiClick} // Make it clickable
             />
           )}
-          {/* Render individual goal contributions */}
-          {goalsWithContributions.map((goal) => {
-            if (goal.monthlyContribution > 0) {
-              return (
-                <ExpenseReadOnlyItem
-                  key={`goal-${goal.id}`}
-                  item={{
-                    id: `goal-${goal.id}`,
-                    name: `${goal.name} Contribution`,
-                    amount: goal.monthlyContribution,
-                    frequency: "monthly",
-                  }}
-                  currency={currency}
-                  isExpense={true}
-                  totalIncome={totalIncome}
-                  expenseRatio={(goal.monthlyContribution / totalIncome) * 100}
-                  getExpenseColor={() => {
-                    const ratio = (goal.monthlyContribution / totalIncome) * 100;
-                    if (ratio > 40) return "error.main";
-                    if (ratio > 30) return "warning.main";
-                    return "success.main";
-                  }}
-                  formatCurrency={formatCurrency}
-                  onConfirmDelete={handleReadOnlyDelete} // Goals are not directly deletable from here
-                  deletionImpactMessage={`To stop contributing to "${goal.name}", please edit or delete the goal in the Future Goals tab.`}
-                  isReadOnly={true}
-                  onClick={() => onEditGoal(goal.id)} // Pass goal ID to parent for editing
-                />
-              );
-            }
-            return null;
+          {/* Render individual goal investment contributions */}
+          {individualGoalInvestments.map((investment) => {
+            return (
+              <ExpenseReadOnlyItem
+                key={investment.id}
+                item={investment}
+                currency={currency}
+                isExpense={true}
+                totalIncome={totalIncome}
+                expenseRatio={(investment.amount / totalIncome) * 100}
+                getExpenseColor={() => {
+                  const ratio = (investment.amount / totalIncome) * 100;
+                  if (ratio > 40) return "error.main";
+                  if (ratio > 30) return "warning.main";
+                  return "success.main";
+                }}
+                formatCurrency={formatCurrency}
+                onConfirmDelete={handleReadOnlyDelete} // Investments are not directly deletable from here
+                deletionImpactMessage={`To stop this investment, please edit or delete the associated goal in the Future Goals tab.`}
+                isReadOnly={true}
+                onClick={() => onEditGoal(investment.goalId)} // Pass goal ID to parent for editing
+              />
+            );
           })}
 
           {expenses &&

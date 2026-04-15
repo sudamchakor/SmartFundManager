@@ -27,8 +27,6 @@ import {
   updateGoal,
   deleteGoal,
   setConsiderInflation,
-  setGoalInvestmentExpense, // Import the new action
-  // Removed specific investment plan actions as they are now part of goal update
   selectGeneralInflationRate,
   selectEducationInflationRate,
   selectCareerGrowthRate,
@@ -77,7 +75,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
       direction="up"
       ref={ref}
       {...other}
-      // timeout is in milliseconds (500ms = 0.5 seconds)
       timeout={500}
     >
       {children}
@@ -85,7 +82,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   );
 });
 
-export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditId prop
+export default function FutureGoalsTab({ goalToEditId }) {
   const dispatch = useDispatch();
 
   const goals = useSelector(selectGoals) || [];
@@ -106,17 +103,15 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
 
   const [realValueToggle, setRealValueToggle] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [editingGoal, setEditingGoal] = useState(null); // Store the goal object being edited
-  const [modalTitle, setModalTitle] = useState("Add New Goal"); // New state for modal title
+  const [editingGoal, setEditingGoal] = useState(null);
+  const [modalTitle, setModalTitle] = useState("Add New Goal");
 
-  // State to hold the form data from GoalForm before saving
   const [currentGoalFormData, setCurrentGoalFormData] = useState(null);
 
   const formatCurrency = (val) =>
     `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const currentYear = new Date().getFullYear();
 
-  // Effect to handle goalToEditId prop changes
   useEffect(() => {
     if (goalToEditId) {
       const goal = goals.find((g) => g.id === goalToEditId);
@@ -124,116 +119,34 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
         handleOpenModalForEdit(goal);
       }
     }
-  }, [goalToEditId, goals]); // Depend on goalToEditId and goals
-
-  // Helper function to calculate required investment for a single plan
-  const calculateRequiredInvestment = useCallback(
-    (
-      targetAmount,
-      yearsToGoal,
-      investmentPlanType,
-      expectedReturn,
-      stepUpRate = 0,
-    ) => {
-      if (yearsToGoal <= 0) return targetAmount; // Or 0 if it's a lumpsum and target is now
-
-      const annualReturnRate = expectedReturn / 100;
-
-      if (investmentPlanType === "sip") {
-        return calculateSIP(targetAmount, yearsToGoal, annualReturnRate);
-      } else if (investmentPlanType === "step_up_sip") {
-        return calculateStepUpSIP(
-          targetAmount,
-          yearsToGoal,
-          annualReturnRate,
-          stepUpRate / 100,
-        );
-      } else if (investmentPlanType === "lumpsum") {
-        return 0; // Lumpsum doesn't have a monthly contribution
-      }
-      return 0;
-    },
-    [],
-  );
+  }, [goalToEditId, goals]);
 
   const handleGoalFormChange = useCallback((goalData) => {
-    // This function is called by GoalForm whenever its internal state changes
     setCurrentGoalFormData(goalData);
   }, []);
 
   const handleModalSave = useCallback(() => {
     if (!currentGoalFormData) return;
 
-    const goalToSave = {
+    // THE FIX: Trust the data from GoalForm.jsx completely. No more recalculations here.
+    // The `currentGoalFormData` already has the correctly calculated `monthlyContribution` for each plan.
+    const finalGoal = {
       ...currentGoalFormData,
       category: currentGoalFormData.category || "general",
     };
 
-    // Calculate monthly contribution for each investment plan
-    const updatedInvestmentPlans = (goalToSave.investmentPlans || []).map(
-      (plan) => {
-        const yearsToGoal = goalToSave.targetYear - currentYear;
-        const expectedReturn = 12; // TODO: Make this configurable or part of the plan
-
-        let monthlyContribution = 0;
-        if (plan.type !== "lumpsum") {
-          monthlyContribution = calculateRequiredInvestment(
-            goalToSave.targetAmount,
-            yearsToGoal,
-            plan.type,
-            expectedReturn,
-            plan.stepUpRate,
-          );
-        }
-        return {
-          ...plan,
-          monthlyContribution: Math.round(monthlyContribution),
-        };
-      },
-    );
-
-    const finalGoal = {
-      ...goalToSave,
-      investmentPlans: updatedInvestmentPlans,
-    };
-
-    let dispatchedGoalId;
     if (editingGoal && editingGoal.id) {
       dispatch(updateGoal({ ...finalGoal, id: editingGoal.id }));
-      dispatchedGoalId = editingGoal.id;
     } else {
-      const newGoalId = Date.now();
-      dispatch(addGoal({ ...finalGoal, id: newGoalId }));
-      dispatchedGoalId = newGoalId;
+      // For new goals, ensure a unique ID is set.
+      dispatch(addGoal({ ...finalGoal, id: Date.now() }));
     }
-
-    // Calculate total monthly contribution for the goal
-    const totalMonthlyContribution = (finalGoal.investmentPlans || []).reduce(
-      (sum, plan) => sum + (plan.monthlyContribution || 0),
-      0,
-    );
-
-    // Dispatch action to update expenses with the goal's investment contribution
-    dispatch(
-      setGoalInvestmentExpense({
-        goalId: dispatchedGoalId,
-        goalName: finalGoal.name,
-        monthlyContribution: totalMonthlyContribution,
-      }),
-    );
-
     handleCloseModal();
-  }, [
-    dispatch,
-    editingGoal,
-    currentGoalFormData,
-    currentYear,
-    calculateRequiredInvestment,
-  ]);
+  }, [dispatch, editingGoal, currentGoalFormData]);
 
   const handleOpenModalForEdit = useCallback((goal) => {
     setEditingGoal(goal);
-    setCurrentGoalFormData(goal); // Initialize form data with existing goal, including investmentPlans
+    setCurrentGoalFormData(goal);
     setModalTitle(`Edit ${goal.name}`);
     setOpenModal(true);
   }, []);
@@ -241,12 +154,11 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
   const handleOpenModalForNew = useCallback(() => {
     setEditingGoal(null);
     setCurrentGoalFormData({
-      // Default values for a new goal
       name: "",
       targetAmount: 0,
-      targetYear: currentYear + 5, // Default to 5 years from now
+      targetYear: currentYear + 5,
       category: "general",
-      investmentPlans: [], // GoalForm's useEffect will add a default plan
+      investmentPlans: [],
     });
     setModalTitle("Add New Goal");
     setOpenModal(true);
@@ -262,9 +174,7 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
   const applyRetirementGoal = useCallback(() => {
     const yearsToRetirement = retirementAge - currentAge;
     if (yearsToRetirement < 0) {
-      alert(
-        "Retirement age is in the past. Please adjust your retirement age.",
-      );
+      alert("Retirement age is in the past. Please adjust your retirement age.");
       return;
     }
 
@@ -280,15 +190,15 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
         targetAmount * Math.pow(1 + generalInflationRate, yearsToRetirement);
     }
 
-    setEditingGoal(null); // Ensure it's treated as a new goal
+    setEditingGoal(null);
     setCurrentGoalFormData({
       name: "Retirement",
       targetAmount: targetAmount,
       targetYear: currentYear + (yearsToRetirement > 0 ? yearsToRetirement : 1),
       category: "retirement",
-      investmentPlans: [], // GoalForm's useEffect will add a default plan
+      investmentPlans: [],
     });
-    setModalTitle("Add Retirement Goal"); // Set modal title
+    setModalTitle("Add Retirement Goal");
     setOpenModal(true);
   }, [
     retirementAge,
@@ -300,7 +210,7 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
   ]);
 
   const applyEducationGoal = useCallback(() => {
-    const yearsToCollege = 18; // Assuming child is 0 and college starts at 18
+    const yearsToCollege = 18;
     let targetAmount = 5000000;
 
     if (considerInflation && yearsToCollege > 0) {
@@ -308,15 +218,15 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
         targetAmount * Math.pow(1 + educationInflationRate, yearsToCollege);
     }
 
-    setEditingGoal(null); // Ensure it's treated as a new goal
+    setEditingGoal(null);
     setCurrentGoalFormData({
       name: "Child's Higher Education",
       targetAmount: Math.round(targetAmount),
       targetYear: currentYear + (yearsToCollege > 0 ? yearsToCollege : 1),
       category: "education",
-      investmentPlans: [], // GoalForm's useEffect will add a default plan
+      investmentPlans: [],
     });
-    setModalTitle("Add Child's Higher Education Goal"); // Set modal title
+    setModalTitle("Add Child's Higher Education Goal");
     setOpenModal(true);
   }, [considerInflation, educationInflationRate, currentYear]);
 
@@ -329,21 +239,21 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
 
     const yearsToGoal = 1;
 
-    setEditingGoal(null); // Ensure it's treated as a new goal
+    setEditingGoal(null);
     setCurrentGoalFormData({
       name: "Emergency Fund",
       targetAmount: targetAmount,
       targetYear: currentYear + yearsToGoal,
       category: "safety",
-      investmentPlans: [], // GoalForm's useEffect will add a default plan
+      investmentPlans: [],
     });
-    setModalTitle("Add Emergency Fund Goal"); // Set modal title
+    setModalTitle("Add Emergency Fund Goal");
     setOpenModal(true);
   }, [
     profileExpenses,
     monthlyEmi,
     totalMonthlyGoalContributions,
-    currentYear, // generalInflationRate was not used here, removed
+    currentYear,
   ]);
 
   const wealthData = useMemo(() => {
@@ -364,14 +274,11 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
 
     const data = [];
 
-    // Updated totalActiveGoalSips to sum contributions from all investment plans
     const totalActiveGoalSips = goals.reduce((acc, goal) => {
       return (
         acc +
         (goal.investmentPlans || []).reduce((planAcc, plan) => {
-          // Only consider plans that are not lumpsum and have a monthly contribution
           if (plan.type !== "lumpsum" && plan.monthlyContribution > 0) {
-            // Changed investmentType to type
             return planAcc + plan.monthlyContribution;
           }
           return planAcc;
@@ -493,8 +400,6 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
       <Grid item xs={12}>
         <Paper sx={{ p: 3, mb: 3 }}>
           <Grid container spacing={2} sx={{ mb: 2 }}>
-            {" "}
-            {/* Removed alignItems="center" */}
             <Grid item xs={12}>
               <Typography
                 variant="h6"
@@ -562,7 +467,6 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
         </Paper>
       </Grid>
       <Grid item xs={12} md={4}>
-        {/* Your Goals Section */}
         <Grid item xs={12}>
           <Paper sx={{ p: 3 }}>
             <Box
@@ -601,9 +505,8 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
                   currency={currency}
                   currentYear={currentYear}
                   considerInflation={considerInflation}
-                  onEdit={handleOpenModalForEdit} // Pass the new handler
+                  onEdit={handleOpenModalForEdit}
                   onDelete={(id) => dispatch(deleteGoal(id))}
-                  // Removed onInvestmentChange prop
                   investmentAmount={(g.investmentPlans || []).reduce(
                     (sum, plan) => sum + (plan.monthlyContribution || 0),
                     0,
@@ -743,7 +646,6 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
                               g.targetYear - currentYear,
                             )
                           : g.targetAmount,
-                      // monthlyContribution now sums all plans
                       monthlyContribution: (g.investmentPlans || []).reduce(
                         (sum, plan) => sum + (plan.monthlyContribution || 0),
                         0,
@@ -809,7 +711,6 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
         </Grid>
       </Grid>
 
-      {/* GoalForm Dialog */}
       <Dialog
         open={openModal}
         onClose={handleCloseModal}
@@ -829,12 +730,11 @@ export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditI
         </DialogTitle>
 
         <DialogContent dividers>
-          {currentGoalFormData && ( // Only render GoalForm if there's data
+          {currentGoalFormData && (
             <GoalForm
-              goal={currentGoalFormData} // Pass the current form data
+              goal={currentGoalFormData}
               currentYear={currentYear}
-              onSave={handleGoalFormChange} // GoalForm updates its internal state, then passes it up
-              onCancel={handleCloseModal}
+              onSave={handleGoalFormChange}
             />
           )}
         </DialogContent>

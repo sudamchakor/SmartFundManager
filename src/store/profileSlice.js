@@ -65,38 +65,8 @@ const profileSlice = createSlice({
     },
     deleteGoal: (state, action) => { 
         state.goals = state.goals.filter(g => g.id !== action.payload); 
-        // Also remove the corresponding investment expense
-        state.expenses = state.expenses.filter(e => e.id !== `goal-investment-${action.payload}`);
     },
     
-    // New reducer to handle goal investment expenses
-    setGoalInvestmentExpense: (state, action) => {
-      const { goalId, goalName, monthlyContribution } = action.payload;
-      const expenseId = `goal-investment-${goalId}`;
-      const existingExpenseIndex = state.expenses.findIndex(e => e.id === expenseId);
-
-      if (monthlyContribution > 0) {
-        const newExpense = {
-          id: expenseId,
-          name: `Investment for ${goalName}`,
-          amount: monthlyContribution,
-          type: 'monthly',
-          category: 'investment', // A new category for investments
-          frequency: 'monthly',
-        };
-        if (existingExpenseIndex !== -1) {
-          state.expenses[existingExpenseIndex] = newExpense;
-        } else {
-          state.expenses.push(newExpense);
-        }
-      } else {
-        // If monthly contribution is 0 or less, remove the expense if it exists
-        if (existingExpenseIndex !== -1) {
-          state.expenses.splice(existingExpenseIndex, 1);
-        }
-      }
-    },
-
     addTemplateGoal: (state, action) => { // New reducer for template goals
       const { type, monthlyExpenses } = action.payload;
       let newGoal = {};
@@ -150,7 +120,6 @@ export const {
     addIncome, updateIncome, deleteIncome, 
     addExpense, updateExpense, deleteExpense, 
     addGoal, updateGoal, deleteGoal, 
-    setGoalInvestmentExpense, // Export the new action
     addTemplateGoal,
     resetProfile
 } = profileSlice.actions;
@@ -185,7 +154,45 @@ export const selectTotalMonthlyGoalContributions = createSelector(
     , 0)
 );
 
-// New selector: selectGoalsWithMonthlyContributions
+// Selector to get individual investment plan contributions
+export const selectIndividualGoalInvestmentContributions = createSelector(
+  [selectGoals],
+  (goals) => {
+    const contributions = [];
+    goals.forEach(goal => {
+      (goal.investmentPlans || []).forEach((plan, index) => {
+        // Removed the filter: if (plan.monthlyContribution > 0)
+        let planTypeName = "";
+        switch (plan.type) {
+          case "sip":
+            planTypeName = "SIP";
+            break;
+          case "step_up_sip":
+            planTypeName = `Step-up SIP (Step-up: ${plan.stepUpRate || 0}%)`;
+            break;
+          case "lumpsum":
+            planTypeName = "Lumpsum"; // Lumpsum plans usually don't have monthly contributions, but including for completeness
+            break;
+          default:
+            planTypeName = "Investment Plan";
+        }
+        contributions.push({
+          id: `goal-${goal.id}-plan-${index}`, // Unique ID for each plan
+          name: `${goal.name} (${planTypeName})`,
+          amount: plan.monthlyContribution,
+          type: 'monthly',
+          category: 'investment',
+          frequency: 'monthly',
+          goalId: goal.id, // Keep goalId for potential future use (e.g., linking back to goal)
+        });
+      });
+    });
+    return contributions;
+  }
+);
+
+
+// New selector: selectGoalsWithMonthlyContributions (This one aggregates per goal, keeping it for now as it's used elsewhere)
 export const selectGoalsWithMonthlyContributions = createSelector(
   [selectGoals],
   (goals) => goals.map(goal => ({
