@@ -81,6 +81,8 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
     const baseAmountForFd = Math.max(500, Math.round(targetAmount / 2)); // Aim for FD to cover half of target
 
     let plan = {};
+    let monthlyContribution = 0; // Initialize monthlyContribution
+
     switch (type) {
       case "sip":
         plan = {
@@ -91,6 +93,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
+        monthlyContribution = baseAmountForSip;
         break;
       case "lumpsum":
         plan = {
@@ -101,6 +104,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
+        monthlyContribution = 0;
         break;
       case "stepUpSip":
         plan = {
@@ -112,6 +116,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
+        monthlyContribution = baseAmountForSip;
         break;
       case "swp":
         plan = {
@@ -126,6 +131,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
+        monthlyContribution = 0;
         break;
       case "fd":
         plan = {
@@ -137,6 +143,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           compoundingFrequency: "annually",
           isSafe: true, // FD is generally considered safe
         };
+        monthlyContribution = 0;
         break;
       default:
         plan = {
@@ -147,9 +154,10 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
           timePeriod: effectiveTimePeriod,
           isSafe: false,
         };
+        monthlyContribution = baseAmountForSip;
         break;
     }
-    return { ...plan, details: generatePlanSummary(plan) };
+    return { ...plan, details: generatePlanSummary(plan), monthlyContribution };
   };
 
   // Helper function to calculate results for a single plan
@@ -158,6 +166,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
     let investedAmount = 0;
     let estimatedReturns = 0;
     let totalValue = 0;
+    let monthlyContribution = 0; // Initialize monthlyContribution for calculation
 
     switch (plan.type) {
       case "sip":
@@ -169,6 +178,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
         investedAmount = result.investedAmount;
         estimatedReturns = result.estimatedReturns;
         totalValue = result.totalValue;
+        monthlyContribution = plan.monthlyInvestment;
         break;
       case "lumpsum":
         result = calculateLumpsum(
@@ -179,6 +189,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
         investedAmount = result.investedAmount;
         estimatedReturns = result.estimatedReturns;
         totalValue = result.totalValue;
+        monthlyContribution = 0;
         break;
       case "stepUpSip":
         result = calculateStepUpSip(
@@ -190,6 +201,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
         investedAmount = result.investedAmount;
         estimatedReturns = result.estimatedReturns;
         totalValue = result.totalValue;
+        monthlyContribution = plan.monthlyInvestment;
         break;
       case "swp":
         result = calculateSwp(
@@ -201,6 +213,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
         investedAmount = result.principal; // For SWP, principal is the invested amount
         estimatedReturns = result.totalWithdrawn - result.principal; // Returns are total withdrawn minus principal
         totalValue = result.totalValue; // Remaining balance
+        monthlyContribution = 0;
         break;
       case "fd":
         result = calculateFd(
@@ -212,6 +225,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
         investedAmount = result.investedAmount;
         estimatedReturns = result.estimatedReturns;
         totalValue = result.totalValue;
+        monthlyContribution = 0;
         break;
       default:
         break;
@@ -223,6 +237,7 @@ export const GoalForm = ({ goal, currentYear, onSave }) => {
       investedAmount,
       estimatedReturns,
       totalValue,
+      monthlyContribution, // Add monthlyContribution here
     };
   };
 

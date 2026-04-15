@@ -63,8 +63,40 @@ const profileSlice = createSlice({
         const index = state.goals.findIndex(g => g.id === action.payload.id);
         if(index !== -1) state.goals[index] = action.payload;
     },
-    deleteGoal: (state, action) => { state.goals = state.goals.filter(g => g.id !== action.payload); },
+    deleteGoal: (state, action) => { 
+        state.goals = state.goals.filter(g => g.id !== action.payload); 
+        // Also remove the corresponding investment expense
+        state.expenses = state.expenses.filter(e => e.id !== `goal-investment-${action.payload}`);
+    },
     
+    // New reducer to handle goal investment expenses
+    setGoalInvestmentExpense: (state, action) => {
+      const { goalId, goalName, monthlyContribution } = action.payload;
+      const expenseId = `goal-investment-${goalId}`;
+      const existingExpenseIndex = state.expenses.findIndex(e => e.id === expenseId);
+
+      if (monthlyContribution > 0) {
+        const newExpense = {
+          id: expenseId,
+          name: `Investment for ${goalName}`,
+          amount: monthlyContribution,
+          type: 'monthly',
+          category: 'investment', // A new category for investments
+          frequency: 'monthly',
+        };
+        if (existingExpenseIndex !== -1) {
+          state.expenses[existingExpenseIndex] = newExpense;
+        } else {
+          state.expenses.push(newExpense);
+        }
+      } else {
+        // If monthly contribution is 0 or less, remove the expense if it exists
+        if (existingExpenseIndex !== -1) {
+          state.expenses.splice(existingExpenseIndex, 1);
+        }
+      }
+    },
+
     addTemplateGoal: (state, action) => { // New reducer for template goals
       const { type, monthlyExpenses } = action.payload;
       let newGoal = {};
@@ -118,6 +150,7 @@ export const {
     addIncome, updateIncome, deleteIncome, 
     addExpense, updateExpense, deleteExpense, 
     addGoal, updateGoal, deleteGoal, 
+    setGoalInvestmentExpense, // Export the new action
     addTemplateGoal,
     resetProfile
 } = profileSlice.actions;
@@ -150,6 +183,16 @@ export const selectTotalMonthlyGoalContributions = createSelector(
     (goals) => goals.reduce((total, goal) => 
         total + (goal.investmentPlans || []).reduce((planTotal, plan) => planTotal + (plan.monthlyContribution || 0), 0)
     , 0)
+);
+
+// New selector: selectGoalsWithMonthlyContributions
+export const selectGoalsWithMonthlyContributions = createSelector(
+  [selectGoals],
+  (goals) => goals.map(goal => ({
+    id: goal.id,
+    name: goal.name,
+    monthlyContribution: (goal.investmentPlans || []).reduce((total, plan) => total + (plan.monthlyContribution || 0), 0)
+  }))
 );
 
 export const selectCurrentSurplus = createSelector(

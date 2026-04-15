@@ -45,9 +45,14 @@ export default function UserProfile() {
   const tabParam = searchParams.get("tab");
 
   const [tabValue, setTabValue] = useState(() => getTabIndex(tabParam));
+  const [goalToEditId, setGoalToEditId] = useState(null); // New state for goal editing
 
   useEffect(() => {
     setTabValue(getTabIndex(tabParam));
+    // If we switch to goals tab, clear goalToEditId if it's not explicitly set by a click
+    if (tabParam !== "goals") {
+      setGoalToEditId(null);
+    }
   }, [tabParam]);
 
   const handleTabChange = (event, newValue) => {
@@ -55,6 +60,12 @@ export default function UserProfile() {
     if (newValue === 1) newTabName = "goals";
     if (newValue === 2) newTabName = "settings";
     navigate(`/profile?tab=${newTabName}`);
+    setGoalToEditId(null); // Clear goalToEditId when changing tabs
+  };
+
+  const handleEditGoal = (goalId) => {
+    setGoalToEditId(goalId);
+    navigate(`/profile?tab=goals`); // Switch to Future Goals tab
   };
 
   // Use new selectors for surplus and debt-free countdown
@@ -89,12 +100,12 @@ export default function UserProfile() {
 
       {/* Tab 1: Personal Profile */}
       <CustomTabPanel value={tabValue} index={0}>
-        <PersonalProfileTab />
+        <PersonalProfileTab onEditGoal={handleEditGoal} /> {/* Pass the handler */}
       </CustomTabPanel>
 
       {/* Tab 2: Future Goals */}
       <CustomTabPanel value={tabValue} index={1}>
-        <FutureGoalsTab />
+        <FutureGoalsTab goalToEditId={goalToEditId} /> {/* Pass goalToEditId */}
       </CustomTabPanel>
 
       {/* Tab 3: Settings */}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -7,7 +7,6 @@ import {
   FormControlLabel,
   Switch,
   Button,
-  Divider,
   Alert,
   Dialog,
   DialogContent,
@@ -16,7 +15,6 @@ import {
   Slide,
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import EditableGoalItem from "../common/EditableGoalItem";
 import GoalForm from "./GoalForm";
 import {
@@ -29,6 +27,7 @@ import {
   updateGoal,
   deleteGoal,
   setConsiderInflation,
+  setGoalInvestmentExpense, // Import the new action
   // Removed specific investment plan actions as they are now part of goal update
   selectGeneralInflationRate,
   selectEducationInflationRate,
@@ -41,7 +40,6 @@ import { selectCurrency } from "../../store/emiSlice";
 import { selectCalculatedValues } from "../../utils/emiCalculator";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  LineChart,
   Line,
   BarChart,
   Bar,
@@ -58,9 +56,7 @@ import {
 import {
   calculateSIP,
   calculateStepUpSIP,
-  calculateLumpsum,
 } from "../../utils/financialCalculations";
-import { TransitionProps } from "@mui/material/transitions";
 import CloseIcon from "@mui/icons-material/Close";
 
 const COLORS = [
@@ -75,18 +71,21 @@ const COLORS = [
 ];
 
 const Transition = React.forwardRef(function Transition(props, ref) {
+  const { children, ...other } = props;
   return (
     <Slide
       direction="up"
       ref={ref}
-      {...props}
+      {...other}
       // timeout is in milliseconds (500ms = 0.5 seconds)
       timeout={500}
-    />
+    >
+      {children}
+    </Slide>
   );
 });
 
-export default function FutureGoalsTab() {
+export default function FutureGoalsTab({ goalToEditId }) { // Accept goalToEditId prop
   const dispatch = useDispatch();
 
   const goals = useSelector(selectGoals) || [];
@@ -116,6 +115,16 @@ export default function FutureGoalsTab() {
   const formatCurrency = (val) =>
     `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const currentYear = new Date().getFullYear();
+
+  // Effect to handle goalToEditId prop changes
+  useEffect(() => {
+    if (goalToEditId) {
+      const goal = goals.find((g) => g.id === goalToEditId);
+      if (goal) {
+        handleOpenModalForEdit(goal);
+      }
+    }
+  }, [goalToEditId, goals]); // Depend on goalToEditId and goals
 
   // Helper function to calculate required investment for a single plan
   const calculateRequiredInvestment = useCallback(
@@ -188,11 +197,31 @@ export default function FutureGoalsTab() {
       investmentPlans: updatedInvestmentPlans,
     };
 
+    let dispatchedGoalId;
     if (editingGoal && editingGoal.id) {
       dispatch(updateGoal({ ...finalGoal, id: editingGoal.id }));
+      dispatchedGoalId = editingGoal.id;
     } else {
-      dispatch(addGoal({ ...finalGoal, id: Date.now() }));
+      const newGoalId = Date.now();
+      dispatch(addGoal({ ...finalGoal, id: newGoalId }));
+      dispatchedGoalId = newGoalId;
     }
+
+    // Calculate total monthly contribution for the goal
+    const totalMonthlyContribution = (finalGoal.investmentPlans || []).reduce(
+      (sum, plan) => sum + (plan.monthlyContribution || 0),
+      0,
+    );
+
+    // Dispatch action to update expenses with the goal's investment contribution
+    dispatch(
+      setGoalInvestmentExpense({
+        goalId: dispatchedGoalId,
+        goalName: finalGoal.name,
+        monthlyContribution: totalMonthlyContribution,
+      }),
+    );
+
     handleCloseModal();
   }, [
     dispatch,

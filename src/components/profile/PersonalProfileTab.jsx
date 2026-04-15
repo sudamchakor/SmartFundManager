@@ -37,7 +37,8 @@ import {
   selectCurrentSurplus,
   selectCareerGrowthRate,
   setCareerGrowthRate,
-  selectTotalMonthlyGoalContributions, // Import the new selector
+  selectTotalMonthlyGoalContributions,
+  selectGoalsWithMonthlyContributions, // Import the new selector
 } from "../../store/profileSlice";
 import { selectCurrency } from "../../store/emiSlice";
 import { selectCalculatedValues } from "../../utils/emiCalculator";
@@ -53,7 +54,7 @@ import ExpenseReadOnlyItem from "../common/ExpenseReadOnlyItem";
 
 const COLORS = ["#ff6b6b", "#4ecdc4", "#9c27b0", "#2ecc71"];
 
-export default function PersonalProfileTab() {
+export default function PersonalProfileTab({ onEditGoal }) { // Add onEditGoal prop
   const dispatch = useDispatch();
 
   const incomes = useSelector(selectIncomes) || [];
@@ -67,7 +68,8 @@ export default function PersonalProfileTab() {
 
   const totalIncome = useSelector(selectTotalMonthlyIncome);
   const totalProfileExpenses = useSelector(selectTotalMonthlyExpenses);
-  const totalMonthlyGoalContributions = useSelector(selectTotalMonthlyGoalContributions); // Get total goal contributions
+  const totalMonthlyGoalContributions = useSelector(selectTotalMonthlyGoalContributions);
+  const goalsWithContributions = useSelector(selectGoalsWithMonthlyContributions); // Use the new selector
   const investableSurplus = useSelector(selectCurrentSurplus);
 
   const totalMonthlyPayment = monthlyEmi;
@@ -155,7 +157,7 @@ export default function PersonalProfileTab() {
     { name: "Loan EMIs", value: monthlyEmi || 0 },
     {
       name: "Future Wealth (Goals)",
-      value: totalMonthlyGoalContributions, // Use the new selector
+      value: totalMonthlyGoalContributions,
     },
     {
       name: "Surplus",
@@ -170,12 +172,6 @@ export default function PersonalProfileTab() {
   const handleHomeLoanEmiClick = () => {
     alert("Navigating to Home Loan EMI edit mode (requires further implementation)");
     // In a real application, you would navigate to the EMI calculator or a specific edit section
-  };
-
-  // Handler for clicking on Goal Contributions
-  const handleGoalContributionsClick = () => {
-    alert("Navigating to Future Goals tab to edit investment plans (requires further implementation)");
-    // In a real application, you would navigate to the Future Goals tab and potentially open the relevant goal's modal
   };
 
   // Dummy delete handler for read-only items that don't have direct deletion here
@@ -411,31 +407,39 @@ export default function PersonalProfileTab() {
               onClick={handleHomeLoanEmiClick} // Make it clickable
             />
           )}
-          {totalMonthlyGoalContributions > 0 && (
-            <ExpenseReadOnlyItem
-              item={{
-                id: "goal-contributions", // Unique ID for this item
-                name: "Goal Contributions",
-                amount: totalMonthlyGoalContributions,
-                frequency: "monthly",
-              }}
-              currency={currency}
-              isExpense={true}
-              totalIncome={totalIncome}
-              expenseRatio={(totalMonthlyGoalContributions / totalIncome) * 100}
-              getExpenseColor={() => {
-                const ratio = (totalMonthlyGoalContributions / totalIncome) * 100;
-                if (ratio > 40) return "error.main";
-                if (ratio > 30) return "warning.main";
-                return "success.main";
-              }}
-              formatCurrency={formatCurrency}
-              onConfirmDelete={handleReadOnlyDelete} // Use the dummy handler for now
-              deletionImpactMessage="Deleting Goal Contributions will remove all associated monthly investments from your expenses. To stop contributing to a specific goal, please edit it in the Future Goals tab."
-              isReadOnly={true}
-              onClick={handleGoalContributionsClick} // Make it clickable
-            />
-          )}
+          {/* Render individual goal contributions */}
+          {goalsWithContributions.map((goal) => {
+            if (goal.monthlyContribution > 0) {
+              return (
+                <ExpenseReadOnlyItem
+                  key={`goal-${goal.id}`}
+                  item={{
+                    id: `goal-${goal.id}`,
+                    name: `${goal.name} Contribution`,
+                    amount: goal.monthlyContribution,
+                    frequency: "monthly",
+                  }}
+                  currency={currency}
+                  isExpense={true}
+                  totalIncome={totalIncome}
+                  expenseRatio={(goal.monthlyContribution / totalIncome) * 100}
+                  getExpenseColor={() => {
+                    const ratio = (goal.monthlyContribution / totalIncome) * 100;
+                    if (ratio > 40) return "error.main";
+                    if (ratio > 30) return "warning.main";
+                    return "success.main";
+                  }}
+                  formatCurrency={formatCurrency}
+                  onConfirmDelete={handleReadOnlyDelete} // Goals are not directly deletable from here
+                  deletionImpactMessage={`To stop contributing to "${goal.name}", please edit or delete the goal in the Future Goals tab.`}
+                  isReadOnly={true}
+                  onClick={() => onEditGoal(goal.id)} // Pass goal ID to parent for editing
+                />
+              );
+            }
+            return null;
+          })}
+
           {expenses &&
             expenses.map((exp) => {
               return (
