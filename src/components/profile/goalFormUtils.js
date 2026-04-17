@@ -6,201 +6,149 @@ import {
   calculateFd,
 } from "./investmentCalculations";
 
-// Helper function to generate plan summary
-export const generatePlanSummary = (plan) => {
-  const formatAmount = (amount) =>
-    (amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 });
-  const formatRate = (rate) => rate || 0;
-  const formatTime = (time) => time || 0;
-
-  switch (plan.type) {
-    case "sip":
-      return `Monthly ₹${formatAmount(plan.monthlyInvestment)} for ${formatTime(
-        plan.timePeriod,
-      )} years @ ${formatRate(plan.expectedReturnRate)}% p.a.`;
-    case "lumpsum":
-      return `One-time ₹${formatAmount(
-        plan.totalInvestment,
-      )} for ${formatTime(plan.timePeriod)} years @ ${formatRate(
-        plan.expectedReturnRate,
-      )}% p.a.`;
-    case "stepUpSip":
-      return `Monthly ₹${formatAmount(
-        plan.monthlyInvestment,
-      )} with ${formatRate(
-        plan.stepUpPercentage,
-      )}% annual step-up for ${formatTime(
-        plan.timePeriod,
-      )} years @ ${formatRate(plan.expectedReturnRate)}% p.a.`;
-    case "swp":
-      return `Start with ₹${formatAmount(
-        plan.totalInvestment,
-      )}, withdraw ₹${formatAmount(
-        plan.withdrawalPerMonth,
-      )}/month for ${formatTime(plan.timePeriod)} years @ ${formatRate(
-        plan.expectedReturnRate,
-      )}% p.a.`;
-    case "fd":
-      return `One-time ₹${formatAmount(
-        plan.principalAmount,
-      )} for ${formatTime(plan.timePeriod)} years @ ${formatRate(
-        plan.interestRate,
-      )}% p.a. (${plan.compoundingFrequency} Compounded)`;
-    default:
-      return "Unknown Plan Type";
-  }
-};
-
-// This function now ONLY creates the default structure, without calculations.
-export const getDefaultPlanState = (
-  type,
-  targetAmount = 0,
-  timePeriod = 10,
-  currentYear,
-  goal,
-) => {
-  const defaultTimePeriodFromGoal = goal?.targetYear
-    ? goal.targetYear - currentYear
-    : 10;
-  const effectiveTimePeriod = Math.max(
-    1,
-    timePeriod > 0 ? timePeriod : defaultTimePeriodFromGoal,
-  );
-
-  const baseAmountForSip = Math.max(
-    500,
-    Math.round(targetAmount / (effectiveTimePeriod * 12 * 2)),
-  );
-  const baseAmountForLumpsum = Math.max(500, Math.round(targetAmount / 2));
-  const baseAmountForFd = Math.max(500, Math.round(targetAmount / 2));
-
-  let plan = {};
-
-  switch (type) {
-    case "sip":
-      plan = {
-        monthlyInvestment: baseAmountForSip,
-        expectedReturnRate: 12,
-        timePeriod: effectiveTimePeriod,
-        isSafe: false,
-      };
-      break;
-    case "lumpsum":
-      plan = {
-        totalInvestment: baseAmountForLumpsum,
-        expectedReturnRate: 12,
-        timePeriod: effectiveTimePeriod,
-        isSafe: false,
-      };
-      break;
-    case "stepUpSip":
-      plan = {
-        monthlyInvestment: baseAmountForSip,
-        stepUpPercentage: 10,
-        expectedReturnRate: 12,
-        timePeriod: effectiveTimePeriod,
-        isSafe: false,
-      };
-      break;
-    case "swp":
-      plan = {
-        totalInvestment: baseAmountForLumpsum,
-        withdrawalPerMonth: Math.max(
-          500,
-          Math.round(baseAmountForLumpsum / (effectiveTimePeriod * 12)),
-        ),
-        expectedReturnRate: 8,
-        timePeriod: effectiveTimePeriod,
-        isSafe: false,
-      };
-      break;
-    case "fd":
-      plan = {
-        principalAmount: baseAmountForFd,
-        interestRate: 7,
-        timePeriod: effectiveTimePeriod,
-        compoundingFrequency: "annually",
-        isSafe: true,
-      };
-      break;
-    default:
-      plan = {
-        monthlyInvestment: baseAmountForSip,
-        expectedReturnRate: 12,
-        timePeriod: effectiveTimePeriod,
-        isSafe: false,
-      };
-      break;
-  }
-  return { id: Date.now().toString(), type, ...plan };
-};
-
-// This function takes a plan and returns it with all calculated values.
+// Helper function to perform calculations for a single plan
 export const calculatePlanResults = (plan) => {
-  let result = {};
-  let investedAmount = 0;
-  let estimatedReturns = 0;
-  let totalValue = 0;
-  let monthlyContribution = 0;
+  let calculatedResult = {
+    investedAmount: 0,
+    estimatedReturns: 0,
+    totalValue: 0,
+    timePeriod: plan.timePeriod || 0,
+    details: plan.details || "",
+  };
 
-  switch (plan.type) {
+  // Create a mutable copy of the plan to update its details string
+  const updatedPlanDetails = { ...plan };
+
+  // Ensure numeric values for calculations
+  const monthlyInvestment = Number(updatedPlanDetails.monthlyInvestment) || 0;
+  const totalInvestment = Number(updatedPlanDetails.totalInvestment) || 0;
+  const expectedReturnRate = Number(updatedPlanDetails.expectedReturnRate) || 0;
+  const timePeriod = Number(updatedPlanDetails.timePeriod) || 0;
+  const stepUpPercentage = Number(updatedPlanDetails.stepUpPercentage) || 0;
+  const withdrawalPerMonth = Number(updatedPlanDetails.withdrawalPerMonth) || 0;
+  const principalAmount = Number(updatedPlanDetails.principalAmount) || 0;
+  const interestRate = Number(updatedPlanDetails.interestRate) || 0;
+  const compoundingFrequency = updatedPlanDetails.compoundingFrequency || "annually";
+
+  switch (updatedPlanDetails.type) {
     case "sip":
-      result = calculateSip(
-        plan.monthlyInvestment,
-        plan.expectedReturnRate,
-        plan.timePeriod,
+      calculatedResult = calculateSip(
+        monthlyInvestment,
+        expectedReturnRate,
+        timePeriod
       );
-      monthlyContribution = plan.monthlyInvestment;
+      updatedPlanDetails.details = `SIP: ₹${monthlyInvestment.toLocaleString()} for ${timePeriod} years @ ${expectedReturnRate}%`;
       break;
     case "lumpsum":
-      result = calculateLumpsum(
-        plan.totalInvestment,
-        plan.expectedReturnRate,
-        plan.timePeriod,
+      calculatedResult = calculateLumpsum(
+        totalInvestment,
+        expectedReturnRate,
+        timePeriod
       );
-      monthlyContribution = plan.totalInvestment / (plan.timePeriod * 12);
+      updatedPlanDetails.details = `Lumpsum: ₹${totalInvestment.toLocaleString()} for ${timePeriod} years @ ${expectedReturnRate}%`;
       break;
     case "stepUpSip":
-      result = calculateStepUpSip(
-        plan.monthlyInvestment,
-        plan.expectedReturnRate,
-        plan.timePeriod,
-        plan.stepUpPercentage,
+      calculatedResult = calculateStepUpSip(
+        monthlyInvestment,
+        expectedReturnRate,
+        timePeriod,
+        stepUpPercentage
       );
-      monthlyContribution = plan.monthlyInvestment;
+      updatedPlanDetails.details = `Step-Up SIP: ₹${monthlyInvestment.toLocaleString()} with ${stepUpPercentage}% step-up for ${timePeriod} years @ ${expectedReturnRate}%`;
       break;
     case "swp":
-      result = calculateSwp(
-        plan.totalInvestment,
-        plan.expectedReturnRate,
-        plan.timePeriod,
-        plan.withdrawalPerMonth,
+      calculatedResult = calculateSwp(
+        totalInvestment,
+        withdrawalPerMonth,
+        expectedReturnRate,
+        timePeriod
       );
+      updatedPlanDetails.details = `SWP: Withdraw ₹${withdrawalPerMonth.toLocaleString()} from ₹${totalInvestment.toLocaleString()} for ${timePeriod} years @ ${expectedReturnRate}%`;
       break;
     case "fd":
-      result = calculateFd(
-        plan.principalAmount,
-        plan.interestRate,
-        plan.timePeriod,
-        plan.compoundingFrequency,
+      calculatedResult = calculateFd(
+        principalAmount,
+        interestRate,
+        timePeriod,
+        compoundingFrequency
       );
-      monthlyContribution = plan.principalAmount / (plan.timePeriod * 12);
+      updatedPlanDetails.details = `FD: ₹${principalAmount.toLocaleString()} for ${timePeriod} years @ ${interestRate}% (${compoundingFrequency})`;
       break;
     default:
       break;
   }
-
-  investedAmount = result.investedAmount || result.principal || 0;
-  estimatedReturns = result.estimatedReturns || 0;
-  totalValue = result.totalValue || 0;
 
   return {
-    ...plan,
-    investedAmount,
-    estimatedReturns,
-    totalValue,
-    monthlyContribution,
-    amount: totalValue, // This is the crucial field for the parent component
-    details: generatePlanSummary({ ...plan, ...result }),
+    ...updatedPlanDetails,
+    investedAmount: calculatedResult.investedAmount,
+    estimatedReturns: calculatedResult.estimatedReturns,
+    totalValue: calculatedResult.totalValue,
+    timePeriod: calculatedResult.timePeriod,
   };
+};
+
+// Helper function to get default state for a new plan, potentially with inverse calculation
+export const getDefaultPlanState = (
+  type,
+  targetAmountForPlan, // This is the target future value for this specific plan
+  timePeriod,
+  currentYear,
+  goal // The parent goal object, useful for default rates
+) => {
+  const id = Date.now();
+  const expectedReturnRate = goal?.expectedReturnRate || 12; // Default for equity-linked
+  const interestRate = goal?.interestRate || 7; // Default for FD
+  const compoundingFrequency = goal?.compoundingFrequency || "annually";
+
+  let newPlan = {
+    id,
+    type,
+    investedAmount: 0,
+    estimatedReturns: 0,
+    totalValue: 0,
+    timePeriod: timePeriod > 0 ? timePeriod : 10, // Ensure positive time period
+    details: "",
+    isSafe: false,
+    // Default values for all types
+    monthlyInvestment: 5000, // Default for SIP/Step-Up SIP
+    totalInvestment: 100000, // Default for Lumpsum/SWP
+    expectedReturnRate: expectedReturnRate,
+    stepUpPercentage: 5,
+    withdrawalPerMonth: 1000, // Default for SWP
+    principalAmount: 100000, // Default for FD
+    interestRate: interestRate,
+    compoundingFrequency: compoundingFrequency,
+  };
+
+  // Perform inverse calculations to set initial investment amounts to meet targetAmountForPlan
+  const nMonths = newPlan.timePeriod * 12;
+  const monthlyRate = expectedReturnRate / 12 / 100;
+  const annualRate = expectedReturnRate / 100;
+  const fdAnnualRate = interestRate / 100;
+
+  if (targetAmountForPlan > 0 && newPlan.timePeriod > 0) {
+    switch (type) {
+      case "sip":
+        if (monthlyRate > 0) {
+          const factor = ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) * (1 + monthlyRate);
+          newPlan.monthlyInvestment = Math.round(targetAmountForPlan / factor);
+        }
+        break;
+      case "lumpsum":
+        newPlan.totalInvestment = Math.round(targetAmountForPlan / Math.pow(1 + annualRate, newPlan.timePeriod));
+        break;
+      case "fd":
+        newPlan.principalAmount = Math.round(targetAmountForPlan / Math.pow(1 + fdAnnualRate, newPlan.timePeriod));
+        break;
+      // Step-Up SIP and SWP inverse calculations are more complex and are not directly implemented here.
+      // They will use their default investment amounts.
+    }
+  }
+
+  // Ensure investment amounts are non-negative
+  newPlan.monthlyInvestment = Math.max(0, newPlan.monthlyInvestment);
+  newPlan.totalInvestment = Math.max(0, newPlan.totalInvestment);
+  newPlan.principalAmount = Math.max(0, newPlan.principalAmount);
+
+  return newPlan;
 };

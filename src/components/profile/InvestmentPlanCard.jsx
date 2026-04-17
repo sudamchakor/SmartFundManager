@@ -24,14 +24,7 @@ const InvestmentPlanCard = ({
   formatAmount,
   targetAmount, // Add targetAmount to props
 }) => {
-  // This function is called by child calculators to signal that a recalculation is needed.
-  // It works by calling the parent's handlePlanChange function, which in turn
-  // triggers the calculatePlanResults function in the useGoalForm hook.
-  const handleCalculate = () => {
-    // We pass the current plan type to trigger the change handler.
-    // This forces a recalculation of the plan's values.
-    handlePlanChange(plan.id, "type", plan.type);
-  };
+  // The onCalculate prop is no longer needed as handlePlanChange already triggers recalculations.
 
   return (
     <Box sx={{ border: "1px solid #ddd", p: 2, mb: 2, borderRadius: 2 }}>
@@ -128,7 +121,7 @@ const InvestmentPlanCard = ({
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }
-            onCalculate={handleCalculate}
+            onCalculate={() => {}}
           />
         )}
         {plan.type === "lumpsum" && (
@@ -137,7 +130,7 @@ const InvestmentPlanCard = ({
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }
-            onCalculate={handleCalculate}
+            onCalculate={() => {}}
           />
         )}
         {plan.type === "stepUpSip" && (
@@ -146,7 +139,7 @@ const InvestmentPlanCard = ({
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }
-            onCalculate={handleCalculate}
+            onCalculate={() => {}}
           />
         )}
         {plan.type === "swp" && (
@@ -155,7 +148,7 @@ const InvestmentPlanCard = ({
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }
-            onCalculate={handleCalculate}
+            onCalculate={() => {}}
           />
         )}
         {plan.type === "fd" && (
@@ -164,7 +157,7 @@ const InvestmentPlanCard = ({
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }
-            onCalculate={handleCalculate}
+            onCalculate={() => {}}
           />
         )}
       </Box>
