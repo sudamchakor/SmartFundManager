@@ -15,10 +15,10 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles"; // Import useTheme
 import InfoIcon from "@mui/icons-material/Info";
-import EditableIncomeExpenseItem from "../common/EditableIncomeExpenseItem";
+import EditableIncomeExpenseItem from "../../../components/common/EditableIncomeExpenseItem";
 import BasicInfoDisplay from "./BasicInfoDisplay";
 import BasicInfoEdit from "./BasicInfoEdit";
-import SliderInput from "../common/SliderInput";
+import SliderInput from "../../../components/common/SliderInput";
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectIncomes,
@@ -40,9 +40,9 @@ import {
   setCareerGrowthRate,
   selectTotalMonthlyGoalContributions,
   selectIndividualGoalInvestmentContributions, // Import the new selector
-} from "../../store/profileSlice";
-import { selectCurrency } from "../../store/emiSlice";
-import { selectCalculatedValues } from "../../utils/emiCalculator";
+} from "../../../store/profileSlice";
+import { selectCurrency } from "../../../store/emiSlice";
+import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
 import {
   PieChart,
   Pie,
@@ -56,7 +56,7 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import ExpenseReadOnlyItem from "../common/ExpenseReadOnlyItem";
+import ExpenseReadOnlyItem from "../../../components/common/ExpenseReadOnlyItem";
  
 const PIE_CHART_COLORS = ["#ff6b6b", "#4ecdc4", "#9c27b0", "#2ecc71", "#f1c40f"];
 

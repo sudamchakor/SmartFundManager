@@ -9,11 +9,11 @@ import {
   resetProfile,
   selectCurrentSurplus, // Import new selector
   selectDebtFreeCountdown, // Import new selector
-} from "../store/profileSlice";
-import { selectCurrency } from "../store/emiSlice"; // Only need currency now
-import PersonalProfileTab from "../components/profile/PersonalProfileTab";
-import FutureGoalsTab from "../components/profile/FutureGoalsTab";
-import Settings from "../components/Settings";
+} from "../../store/profileSlice";
+import { selectCurrency } from "../../store/emiSlice"; // Only need currency now
+import PersonalProfileTab from "./components/PersonalProfileTab";
+import FutureGoalsTab from "./components/FutureGoalsTab";
+import Settings from "./Settings";
 import OnboardingModal from "./OnboardingModal";
 
 function CustomTabPanel(props) {

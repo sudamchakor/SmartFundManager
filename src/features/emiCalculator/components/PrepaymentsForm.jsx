@@ -1,8 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import { Box, Typography, Grid, Paper, CircularProgress } from "@mui/material";
-import { useEmiContext } from "../context/EmiContext";
-import { AmountInput, DatePickerInput } from "./common/CommonComponents";
+import { useEmiContext } from "../../../context/EmiContext";
+import { AmountInput, DatePickerInput } from "../../../components/common/CommonComponents";
 // import { useDispatch } from "react-redux"; // Remove useDispatch
 // import { updatePrepayments as reduxUpdatePrepayments } from "../store/emiSlice"; // Remove reduxUpdatePrepayments
 

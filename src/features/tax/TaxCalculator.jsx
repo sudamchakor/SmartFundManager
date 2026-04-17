@@ -2,9 +2,9 @@ import React from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { Box, CssBaseline } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { selectThemeMode } from '../store/emiSlice';
-import { themes } from '../components/ThemeSelector';
-import TaxDashboard from '../components/TaxDashboard';
+import { selectThemeMode } from '../../store/emiSlice';
+import { themes } from '../../components/common/ThemeSelector';
+import TaxDashboard from './TaxDashboard';
 
 const TaxCalculator = () => {
   const themeMode = useSelector(selectThemeMode);

@@ -1,6 +1,6 @@
 import React from "react";
 import { Grid, TextField, Button } from "@mui/material";
-import SliderInput from "../common/SliderInput";
+import SliderInput from "../../../components/common/SliderInput";
 import InvestmentSummary from "./InvestmentSummary";
 
 const GoalFormHeader = ({

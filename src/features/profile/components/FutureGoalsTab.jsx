@@ -15,7 +15,7 @@ import {
   Slide,
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import EditableGoalItem from "../common/EditableGoalItem";
+import EditableGoalItem from "../../../components/common/EditableGoalItem";
 import GoalForm from "./GoalForm";
 import {
   selectGoals,
@@ -33,9 +33,9 @@ import {
   selectCurrentSurplus,
   selectTotalMonthlyIncome,
   selectTotalMonthlyGoalContributions,
-} from "../../store/profileSlice";
-import { selectCurrency } from "../../store/emiSlice";
-import { selectCalculatedValues } from "../../utils/emiCalculator";
+} from "../../../store/profileSlice";
+import { selectCurrency } from "../../../store/emiSlice";
+import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Line,
@@ -54,7 +54,7 @@ import {
 import {
   calculateSIP,
   calculateStepUpSIP,
-} from "../../utils/financialCalculations";
+} from "../../../utils/financialCalculations";
 import CloseIcon from "@mui/icons-material/Close";
 
 const COLORS = [

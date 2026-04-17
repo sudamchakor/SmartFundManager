@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Box, Button, Paper, Typography } from "@mui/material";
-import SliderInput from "../common/SliderInput";
+import SliderInput from "../../../components/common/SliderInput";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 

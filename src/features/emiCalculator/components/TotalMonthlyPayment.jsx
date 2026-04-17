@@ -5,7 +5,7 @@ import {
   selectExpenses,
   selectPrepayments,
   selectCurrency,
-} from "../store/emiSlice";
+} from "../../../store/emiSlice";
 import { selectCalculatedValues } from "../utils/emiCalculator"; // Corrected import path
 import { useTheme } from "@mui/material/styles";
 import "./TotalMonthlyPayment.scss";

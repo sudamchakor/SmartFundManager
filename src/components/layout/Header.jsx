@@ -29,7 +29,7 @@ import {
   setThemeMode,
   resetEmiState,
 } from "../../store/emiSlice";
-import { selectCalculatedValues } from "../../utils/emiCalculator"; // Corrected import path
+import { selectCalculatedValues } from "../../features/emiCalculator/utils/emiCalculator"; // Corrected import path
 import { useSnackbar } from "notistack";
 import storage from "redux-persist/lib/storage"; // Import storage
 import "./Header.css";

@@ -10,8 +10,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useEmiContext } from "../context/EmiContext";
-import { themes } from "../components/ThemeSelector";
+import { useEmiContext } from "../../context/EmiContext";
+import { themes } from "../../components/common/ThemeSelector";
 
 // Custom Styled Slider
 const BrandSlider = styled(Slider)(({ theme: muiTheme }) => ({

@@ -22,7 +22,7 @@ import {
   changeLoanUnit as reduxChangeLoanUnit, // Import Redux action
   changeExpenseUnit as reduxChangeExpenseUnit, // Import Redux action
 } from "../store/emiSlice";
-import { selectCalculatedValues } from "../utils/emiCalculator"; // Import from emiCalculator.js
+import { selectCalculatedValues } from "../features/emiCalculator/utils/emiCalculator"; // Import from emiCalculator.js
 import dayjs from "dayjs";
 
 // Create the Context

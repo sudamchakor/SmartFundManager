@@ -6,14 +6,14 @@ import App from "./App";
 // 1. Mock the Pages and Components
 // We mock these so we are only testing App.jsx's routing and layout, not the children's logic.
 jest.mock("./components/layout/Header", () => () => <div data-testid="mock-header">Header</div>);
-jest.mock("./pages/Home", () => () => <div data-testid="mock-home">Home</div>);
-jest.mock("./pages/Calculator", () => () => <div data-testid="mock-calculator">Calculator</div>);
-jest.mock("./pages/UserProfile", () => () => <div data-testid="mock-user-profile">UserProfile</div>);
-jest.mock("./pages/CreditCardEmiCalculator", () => () => <div data-testid="mock-cc-emi">CreditCardEmiCalculator</div>);
-jest.mock("./pages/InvestmentCalculator", () => () => <div data-testid="mock-investment">InvestmentCalculator</div>);
-jest.mock("./pages/PersonalLoanCalculator", () => () => <div data-testid="mock-personal-loan">PersonalLoanCalculator</div>);
-jest.mock("./pages/FAQ", () => () => <div data-testid="mock-faq">FAQ</div>);
-jest.mock("./pages/TaxCalculator", () => () => <div data-testid="mock-tax-calculator">TaxCalculator</div>);
+jest.mock("./features/home/Home", () => () => <div data-testid="mock-home">Home</div>);
+jest.mock("./features/emiCalculator/Calculator", () => () => <div data-testid="mock-calculator">Calculator</div>);
+jest.mock("./features/profile/UserProfile", () => () => <div data-testid="mock-user-profile">UserProfile</div>);
+jest.mock("./features/creditCard/CreditCardEmiCalculator", () => () => <div data-testid="mock-cc-emi">CreditCardEmiCalculator</div>);
+jest.mock("./features/investment/InvestmentCalculator", () => () => <div data-testid="mock-investment">InvestmentCalculator</div>);
+jest.mock("./features/personalLoan/PersonalLoanCalculator", () => () => <div data-testid="mock-personal-loan">PersonalLoanCalculator</div>);
+jest.mock("./features/faq/FAQ", () => () => <div data-testid="mock-faq">FAQ</div>);
+jest.mock("./features/tax/TaxCalculator", () => () => <div data-testid="mock-tax-calculator">TaxCalculator</div>);
 
 // 2. Mock Providers and Store
 // This prevents real persistence and Redux configurations from failing in the test environment.
@@ -95,7 +95,7 @@ describe("App Component", () => {
       // Suppress React's intentional error logging during this specific test
       const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
       
-      const FAQMock = require("./pages/FAQ");
+      const FAQMock = require("./features/faq/FAQ");
       FAQMock.mockImplementationOnce(() => {
         throw new Error("Intentional Test Error");
       });

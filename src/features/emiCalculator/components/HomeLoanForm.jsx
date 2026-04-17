@@ -2,12 +2,12 @@ import React from "react";
 import styled from "styled-components";
 import { Box, Paper, Typography, Grid, Divider } from "@mui/material";
 import { useEmiContext } from "../../../context/EmiContext";
-import { AmountInput, AmountWithUnitInput, DatePickerInput } from "../../common/CommonComponents";
+import { AmountInput, AmountWithUnitInput, DatePickerInput } from "../../../components/common/CommonComponents";
 import {
   convertAmount,
   convertTenure,
   convertYearlyPaymentIncrease,
-} from "../../../utils/emiCalculator"; // Import conversion helpers
+} from "../utils/emiCalculator"; // Import conversion helpers
 
 const StyledPaper = styled(Paper)`
   padding: 24px;

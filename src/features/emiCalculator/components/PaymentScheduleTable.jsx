@@ -12,7 +12,7 @@ import {
   Box,
   Skeleton,
 } from "@mui/material";
-import { useEmiContext } from "../context/EmiContext";
+import { useEmiContext } from "../../../context/EmiContext";
 import { useTheme } from "@mui/material/styles";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";

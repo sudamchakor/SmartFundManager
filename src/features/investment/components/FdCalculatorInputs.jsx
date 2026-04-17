@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography, MenuItem, TextField } from "@mui/material";
-import SliderInput from "../../common/SliderInput";
+import SliderInput from "../../../components/common/SliderInput";
 
 const FdCalculatorInputs = ({
   principalAmount,

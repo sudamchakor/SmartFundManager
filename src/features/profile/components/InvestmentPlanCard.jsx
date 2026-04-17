@@ -11,11 +11,11 @@ import {
   Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SipCalculatorForm from "../calculators/investment/SipCalculatorForm";
-import LumpsumCalculatorForm from "../calculators/investment/LumpsumCalculatorForm";
-import StepUpSipCalculatorForm from "../calculators/investment/StepUpSipCalculatorForm";
-import SwpCalculatorForm from "../calculators/investment/SwpCalculatorForm";
-import FdCalculatorForm from "../calculators/investment/FdCalculatorForm";
+import SipCalculatorForm from "../../investment/components/SipCalculatorForm";
+import LumpsumCalculatorForm from "../../investment/components/LumpsumCalculatorForm";
+import StepUpSipCalculatorForm from "../../investment/components/StepUpSipCalculatorForm";
+import SwpCalculatorForm from "../../investment/components/SwpCalculatorForm";
+import FdCalculatorForm from "../../investment/components/FdCalculatorForm";
 
 const InvestmentPlanCard = ({
   plan,

@@ -11,23 +11,22 @@ import store, { persistor } from "./store";
 import { selectThemeMode } from "./store/emiSlice";
 import { EmiProvider } from "./context/EmiContext";
 
-// Components
+// Layout & Common
 import Header from "./components/layout/Header";
-import Calculator from "./pages/Calculator";
-import Home from "./pages/Home";
-import FAQ from "./pages/FAQ";
-import { themes } from "./components/ThemeSelector";
-import UserProfile from "./pages/UserProfile";
+import { themes } from "./components/common/ThemeSelector";
 
-// New Calculator Pages
-import CreditCardEmiCalculator from "./pages/CreditCardEmiCalculator";
-import PersonalLoanCalculator from "./pages/PersonalLoanCalculator";
-import InvestmentCalculator from "./pages/InvestmentCalculator";
-import TaxCalculator from "./pages/TaxCalculator";
+// Feature Pages
+import Home from "./features/home/Home";
+import Calculator from "./features/emiCalculator/Calculator";
+import UserProfile from "./features/profile/UserProfile";
+import CreditCardEmiCalculator from "./features/creditCard/CreditCardEmiCalculator";
+import InvestmentCalculator from "./features/investment/InvestmentCalculator";
+import PersonalLoanCalculator from "./features/personalLoan/PersonalLoanCalculator";
+import TaxCalculator from "./features/tax/TaxCalculator";
+import FAQ from "./features/faq/FAQ";
 
 // Styles
 import "./App.css";
-// import FdCalculatorForm from "./components/calculators/investment/FdCalculatorForm"; // This import is no longer needed here
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {

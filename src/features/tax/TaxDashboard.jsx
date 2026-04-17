@@ -10,8 +10,8 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SettingsIcon from '@mui/icons-material/Settings';
-import DataCard from './common/DataCard';
-import ExemptionRow from './common/ExemptionRow';
+import DataCard from '../../components/common/DataCard';
+import ExemptionRow from '../../components/common/ExemptionRow';
 import {
   updateMonthData,
   populateRowFromFirstMonth,
@@ -29,8 +29,8 @@ import {
   selectAge,
   selectCalculatedSalary,
   selectTaxComparison,
-} from '../store/taxSlice';
-import '../styles/taxCalculator.css';
+} from '../../store/taxSlice';
+import './taxCalculator.css';
 
 const TaxDashboard = () => {
   const dispatch = useDispatch();
@@ -555,4 +555,3 @@ const TaxDashboard = () => {
 };
 
 export default TaxDashboard;
-

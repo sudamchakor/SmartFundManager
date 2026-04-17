@@ -1,14 +1,14 @@
 import React from "react";
 import { Grid, Box, Paper, Typography } from "@mui/material";
-import HomeLoanForm from "../components/calculators/homeLoan/HomeLoanForm";
-import PrepaymentsForm from "../components/PrepaymentsForm";
-import PaymentScheduleTable from "../components/PaymentScheduleTable";
-import TotalMonthlyPayment from "../components/TotalMonthlyPayment";
+import HomeLoanForm from "./components/HomeLoanForm";
+import PrepaymentsForm from "./components/PrepaymentsForm";
+import PaymentScheduleTable from "./components/PaymentScheduleTable";
+import TotalMonthlyPayment from "./components/TotalMonthlyPayment";
 import "./Calculator.scss";
 import { useSelector } from "react-redux"; // Import useSelector
-import { selectCalculatedValues } from "../utils/emiCalculator"; // Import selectCalculatedValues from emiCalculator
-import PieChartComponent from "../components/charts/PieChartComponent";
-import BarChartComponent from "../components/charts/BarChartComponent";
+import { selectCalculatedValues } from "./utils/emiCalculator"; // Import selectCalculatedValues from emiCalculator
+import PieChartComponent from "../../components/charts/PieChartComponent";
+import BarChartComponent from "../../components/charts/BarChartComponent";
 import styled from "styled-components";
 
 const SectionContainer = styled(Box)`
