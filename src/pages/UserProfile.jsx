@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Box, Tabs, Tab, Typography, Button } from "@mui/material";
+import { Box, Tabs, Tab, Typography, Alert, Link } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
@@ -14,6 +14,7 @@ import { selectCurrency } from "../store/emiSlice"; // Only need currency now
 import PersonalProfileTab from "../components/profile/PersonalProfileTab";
 import FutureGoalsTab from "../components/profile/FutureGoalsTab";
 import Settings from "../components/Settings";
+import OnboardingModal from "./OnboardingModal";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -46,6 +47,8 @@ export default function UserProfile() {
 
   const [tabValue, setTabValue] = useState(() => getTabIndex(tabParam));
   const [goalToEditId, setGoalToEditId] = useState(null); // New state for goal editing
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [isProfileCreated, setIsProfileCreated] = useState(localStorage.getItem("isProfileCreated") === "true");
 
   useEffect(() => {
     setTabValue(getTabIndex(tabParam));
@@ -68,6 +71,11 @@ export default function UserProfile() {
     navigate(`/profile?tab=goals`); // Switch to Future Goals tab
   };
 
+  const handleOnboardingClose = () => {
+    setOnboardingOpen(false);
+    setIsProfileCreated(localStorage.getItem("isProfileCreated") === "true");
+  };
+
   // Use new selectors for surplus and debt-free countdown
   const investableSurplus = useSelector(selectCurrentSurplus);
   const debtFreeCountdown = useSelector(selectDebtFreeCountdown);
@@ -78,6 +86,15 @@ export default function UserProfile() {
 
   return (
     <Box sx={{ width: "100%", pb: 8 }}>
+      {!isProfileCreated && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Your profile is not created. Please{" "}
+          <Link component="button" variant="inherit" onClick={() => setOnboardingOpen(true)} sx={{ fontWeight: 'bold', verticalAlign: 'baseline' }}>
+            create profile
+          </Link>
+          .
+        </Alert>
+      )}
       <Box
         sx={{
           borderBottom: 1,
@@ -112,6 +129,8 @@ export default function UserProfile() {
       <CustomTabPanel value={tabValue} index={2}>
         <Settings />
       </CustomTabPanel>
+
+      <OnboardingModal open={onboardingOpen} onClose={handleOnboardingClose} />
 
       {/* Persistent Impact Banner */}
       <Box

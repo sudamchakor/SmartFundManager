@@ -33,7 +33,6 @@ import { selectCalculatedValues } from "../../utils/emiCalculator"; // Corrected
 import { useSnackbar } from "notistack";
 import storage from "redux-persist/lib/storage"; // Import storage
 import "./Header.css";
-import OnboardingModal from "../../pages/OnboardingModal";
 
 const calculators = [
   {
@@ -81,7 +80,6 @@ const Header = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const handleExport = (event) => {
     const value = event.target.value;
@@ -135,6 +133,7 @@ const Header = () => {
     dispatch(resetEmiState()); // Reset the Redux state for emi slice
     await storage.removeItem("persist:app_v1"); // Clear the persisted state from localStorage
     localStorage.removeItem("hasOnboarded"); // Allow onboarding to show again
+    localStorage.removeItem("isProfileCreated"); // Reset profile created flag
 
     enqueueSnackbar("All the local data has been reset.", {
       variant: "success",
@@ -251,9 +250,6 @@ const Header = () => {
               open={Boolean(profileAnchorEl)}
               onClose={handleProfileMenuClose}
             >
-              <MenuItem onClick={() => { setOnboardingOpen(true); handleProfileMenuClose(); }}>
-                Create Profile
-              </MenuItem>
               <MenuItem onClick={() => handleProfileSelect("personal")}>
                 Personal Profile
               </MenuItem>
@@ -268,7 +264,6 @@ const Header = () => {
             </Menu>
           </Box>
         </Box>
-        <OnboardingModal open={onboardingOpen} onClose={() => setOnboardingOpen(false)} />
       </Toolbar>
     </AppBar>
   );
