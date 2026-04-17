@@ -83,7 +83,6 @@ export const calculatePlanResults = (plan) => {
     investedAmount: calculatedResult.investedAmount,
     estimatedReturns: calculatedResult.estimatedReturns,
     totalValue: calculatedResult.totalValue,
-    timePeriod: calculatedResult.timePeriod,
   };
 };
 

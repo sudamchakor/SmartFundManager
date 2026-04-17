@@ -183,26 +183,43 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
       return;
     }
 
-    // When generating plans, each plan should aim for an equal portion of the target amount
     const portionOfTarget = targetAmount / numberOfPlans;
 
-    // Generate plans, where each plan aims for a portion of the target amount
-    const newPlans = accumulatingPlanTypes.map((type) =>
-      getDefaultPlanState(
-        type,
-        portionOfTarget, // Pass the portion of the target amount to each plan
-        totalTimePeriod,
-        currentYear,
-        editedGoal,
-      ),
-    );
+    // Generate and calculate the first N-1 plans
+    const firstPlansRaw = accumulatingPlanTypes
+      .slice(0, -1)
+      .map((type) =>
+        getDefaultPlanState(
+          type,
+          portionOfTarget,
+          totalTimePeriod,
+          currentYear,
+          editedGoal
+        )
+      );
+    const calculatedFirstPlans = firstPlansRaw.map(calculatePlanResults);
 
-    const updatedInvestmentPlans = newPlans.map(calculatePlanResults);
+    // Calculate the total value from the first N-1 plans and determine the remainder for the last plan
+    const totalFromFirstPlans = calculateTotalFutureValue(calculatedFirstPlans);
+    const remainingTarget = targetAmount - totalFromFirstPlans;
+    const lastPlanType = accumulatingPlanTypes[numberOfPlans - 1];
+
+    // Generate and calculate the last plan to precisely meet the remaining target
+    const lastPlanRaw = getDefaultPlanState(
+      lastPlanType,
+      remainingTarget,
+      totalTimePeriod,
+      currentYear,
+      editedGoal
+    );
+    const calculatedLastPlan = calculatePlanResults(lastPlanRaw);
+
+    const updatedInvestmentPlans = [...calculatedFirstPlans, calculatedLastPlan];
 
     setEditedGoal(prevGoal => {
       return { ...prevGoal, investmentPlans: updatedInvestmentPlans };
     });
-  }, [editedGoal, currentYear]);
+  }, [editedGoal, currentYear, calculateTotalFutureValue]);
 
   const handleSaveGoal = useCallback(() => {
     onSave(editedGoal);
