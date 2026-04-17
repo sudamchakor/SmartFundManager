@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -11,11 +11,7 @@ import {
 const StepUpSipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) => {
   const { monthlyInvestment, stepUpPercentage, expectedReturnRate, timePeriod } = sharedState;
 
-  useEffect(() => {
-    calculateStepUpSip();
-  }, [monthlyInvestment, stepUpPercentage, expectedReturnRate, timePeriod]);
-
-  const calculateStepUpSip = () => {
+  const calculateStepUpSip = useCallback(() => {
     let currentMonthlySIP = monthlyInvestment;
     const i = expectedReturnRate / 100 / 12; // Monthly rate of return
     
@@ -52,9 +48,14 @@ const StepUpSipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange
       investedAmount: Math.round(totalInvestedAmount),
       estimatedReturns: Math.round(estimatedReturns),
       totalValue: Math.round(finalCorpus),
-      chartData: chartData
+      chartData: chartData,
+      totalWithdrawn: 0
     });
-  };
+  }, [monthlyInvestment, stepUpPercentage, expectedReturnRate, timePeriod, onCalculate]);
+
+  useEffect(() => {
+    calculateStepUpSip();
+  }, [calculateStepUpSip]);
 
   return (
     <Box>

@@ -73,7 +73,6 @@ const InvestmentCalculator = () => {
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
     navigate(TAB_ROUTES[newValue]);
-    console.log("sudam", newValue, TAB_ROUTES);
     // We intentionally DO NOT reset the data or shared state here
     // so that the other forms can use the derived amounts.
   };
@@ -169,15 +168,16 @@ const InvestmentCalculator = () => {
                 </Typography>
 
                 {investmentData.totalValue > 0 ||
+                tabIndex === 2 ||
                 tabIndex === 3 ||
-                tabIndex === 4 ? ( // Added tabIndex 4 for FD
+                tabIndex === 4 ? ( // Added tabIndex 2, 3, 4 for calculators
                   <Box sx={{ flexGrow: 1 }}>
                     <Grid container spacing={2} sx={{ mb: 4 }}>
                       <Grid item xs={12} sm={4}>
                         <Box textAlign="center">
                           <Typography variant="body2" color="textSecondary">
                             {tabIndex === 3
-                              ? "Total Investment"
+                              ? "Invested Amount"
                               : "Total Investment"}
                           </Typography>
                           <Typography variant="h6">
