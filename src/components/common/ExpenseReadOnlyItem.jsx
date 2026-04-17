@@ -50,7 +50,8 @@ const ExpenseReadOnlyItem = (props) => {
   };
 
   const handleConfirmDelete = () => {
-    onConfirmDelete(item.id); // Call the provided confirmation handler
+    if (onConfirmDelete) onConfirmDelete(item.id); // Call the provided confirmation handler
+    else if (onDelete) onDelete(item.id); // Fallback to standard onDelete prop
     handleCloseConfirmDelete();
   };
 
@@ -140,7 +141,7 @@ const ExpenseReadOnlyItem = (props) => {
               </IconButton>
             )}
             {/* Always show delete for read-only items if onDelete is provided */}
-            {onConfirmDelete && (
+          {(onConfirmDelete || onDelete) && (
               <IconButton
                 size="small"
                 onClick={handleDeleteClick}
