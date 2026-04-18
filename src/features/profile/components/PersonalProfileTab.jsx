@@ -61,8 +61,9 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  AreaChart,
-  Area,
+  ComposedChart,
+  Bar,
+  Line,
 } from "recharts";
 import ExpenseReadOnlyItem from "../../../components/common/ExpenseReadOnlyItem";
  
@@ -285,62 +286,87 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const projectionYears = retirementAge > currentAge ? retirementAge - currentAge : 0;
   const endProjectionYear = currentYear + projectionYears;
 
-  let loanTenureMonths = 0; 
-  if (emiState && emiState.tenure) {
+  let loanTenureMonths = 0;
+  let emiStartYear = currentYear;
+  let emiStartMonth = new Date().getMonth();
+
+  if (emiState?.loanDetails) {
+    loanTenureMonths = emiState.loanDetails.tenureUnit === 'years' ? Number(emiState.loanDetails.loanTenure) * 12 : Number(emiState.loanDetails.loanTenure);
+    const startDate = dayjs(emiState.loanDetails.startDate);
+    if (startDate.isValid()) {
+      emiStartYear = startDate.year();
+      emiStartMonth = startDate.month();
+    }
+  } else if (emiState && emiState.tenure) {
     loanTenureMonths = emiState.tenureType === 'years' ? Number(emiState.tenure) * 12 : Number(emiState.tenure);
   }
+
+  const absoluteStartMonth = emiStartYear * 12 + emiStartMonth;
+  const absoluteEndMonth = absoluteStartMonth + loanTenureMonths;
 
   const projectionData = [];
   if (projectionYears > 0) {
     for (let year = currentYear; year <= endProjectionYear; year++) {
       const yearsFromNow = year - currentYear;
 
-      // Calculate monthly income for this year
-      let monthIncome = 0;
+      // Calculate annual income for this year
+      let annualIncome = 0;
+      let hasActiveIncome = false;
+
       incomes.forEach((inc) => {
         const start = inc.startYear || currentYear;
         const end = inc.endYear || currentYear + 10;
         if (year >= start && year <= end) {
-          let monthlyAmount = inc.amount;
-          if (inc.frequency === 'yearly') monthlyAmount /= 12;
-          else if (inc.frequency === 'quarterly') monthlyAmount /= 3;
+          hasActiveIncome = true;
+          let yearlyAmount = Number(inc.amount) || 0;
+
+          if (inc.frequency === 'monthly') yearlyAmount *= 12;
+          else if (inc.frequency === 'quarterly') yearlyAmount *= 4;
 
           const activeYears = year - Math.max(start, currentYear);
           if (activeYears > 0) {
             if (careerGrowthType === 'percentage') {
-                monthlyAmount *= Math.pow(1 + careerGrowthRate, activeYears);
-            } else {
-                monthlyAmount += (careerGrowthRate / 12) * activeYears;
+                yearlyAmount *= Math.pow(1 + careerGrowthRate, activeYears);
             }
           }
-          monthIncome += monthlyAmount;
+          annualIncome += yearlyAmount;
         }
       });
 
-      // Calculate monthly expenses for this year
-      let monthExpense = 0;
+      // Apply fixed career growth once per year to the total annual income
+      if (careerGrowthType === 'fixed' && hasActiveIncome) {
+         const activeYears = year - currentYear;
+         if (activeYears > 0) {
+            annualIncome += careerGrowthRate * activeYears;
+         }
+      }
+
+      // Calculate annual expenses for this year
+      let annualExpense = 0;
 
       // 1. Regular Expenses
       expenses.forEach((exp) => {
         const start = exp.startYear || currentYear;
         const end = exp.endYear || currentYear + 10;
         if (year >= start && year <= end) {
-          let monthlyAmount = exp.amount;
-          if (exp.frequency === 'yearly') monthlyAmount /= 12;
-          else if (exp.frequency === 'quarterly') monthlyAmount /= 3;
-          monthExpense += monthlyAmount;
+          let yearlyAmount = Number(exp.amount) || 0;
+          if (exp.frequency === 'monthly') yearlyAmount *= 12;
+          else if (exp.frequency === 'quarterly') yearlyAmount *= 4;
+          annualExpense += yearlyAmount;
         }
       });
 
       // 2. Home Loan EMI
       let activeEmiMonths = 0;
-      for (let m = 0; m < 12; m++) {
-        const monthIndex = (year - currentYear) * 12 + m;
-        if (monthIndex < loanTenureMonths) {
-          activeEmiMonths++;
+      if (loanTenureMonths > 0) {
+        for (let m = 0; m < 12; m++) {
+          const absoluteCurrentMonth = year * 12 + m;
+          if (absoluteCurrentMonth >= absoluteStartMonth && absoluteCurrentMonth < absoluteEndMonth) {
+            activeEmiMonths++;
+          }
         }
       }
-      monthExpense += (monthlyEmi || 0) * (activeEmiMonths / 12);
+      annualExpense += (monthlyEmi || 0) * activeEmiMonths;
 
       // 3. Goal Contributions
       individualGoalInvestments.forEach((inv) => {
@@ -349,26 +375,28 @@ export default function PersonalProfileTab({ onEditGoal }) {
         const end = inv.endYear || (start + Math.max(planDuration, 0));
 
         if (year >= start && year <= end) {
-          let monthlyAmount = inv.amount;
+          let yearlyAmount = Number(inv.amount) || 0;
+
+          if (inv.frequency === 'monthly') yearlyAmount *= 12;
+          else if (inv.frequency === 'quarterly') yearlyAmount *= 4;
 
           if (inv.type === 'step_up_sip' || inv.investmentType === 'step_up_sip') {
              const stepUpRate = inv.stepUpRate ? (inv.stepUpRate / 100) : 0;
              const activeYears = year - start;
              if (activeYears > 0) {
-                 monthlyAmount *= Math.pow(1 + stepUpRate, activeYears);
+                 yearlyAmount *= Math.pow(1 + stepUpRate, activeYears);
              }
           }
 
-          if (inv.frequency === 'yearly') monthlyAmount /= 12;
-          else if (inv.frequency === 'quarterly') monthlyAmount /= 3;
-          monthExpense += monthlyAmount;
+          annualExpense += yearlyAmount;
         }
       });
 
       projectionData.push({
         year: year,
-        Income: Math.round(monthIncome),
-        Expenses: Math.round(monthExpense),
+        Income: Math.round(annualIncome),
+        Expenses: Math.round(annualExpense),
+        Surplus: Math.round(annualIncome - annualExpense),
       });
     }
   }
@@ -932,10 +960,10 @@ export default function PersonalProfileTab({ onEditGoal }) {
       <Grid item xs={12}>
         <Paper sx={{ p: 3, height: "100%" }}>
           <Typography variant="h6" align="center" gutterBottom>
-            Projected Monthly Income vs. Expenses Until Retirement
+            Projected Annual Income vs. Expenses Until Retirement
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart
+            <ComposedChart
               data={projectionData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
@@ -944,27 +972,10 @@ export default function PersonalProfileTab({ onEditGoal }) {
               <YAxis tickFormatter={(val) => formatCurrency(val)} />
               <RechartsTooltip formatter={(value, name) => [formatCurrency(value), name]} />
               <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="Income" 
-                name="Projected Income" 
-                stroke={theme.palette.success.main} 
-                fill={theme.palette.success.main}
-                fillOpacity={0.3}
-                strokeWidth={2} 
-                dot={false} 
-              />
-              <Area 
-                type="monotone" 
-                dataKey="Expenses" 
-                name="Projected Expenses" 
-                stroke={theme.palette.error.main} 
-                fill={theme.palette.error.main}
-                fillOpacity={0.3}
-                strokeWidth={2} 
-                dot={false} 
-              />
-            </AreaChart>
+              <Bar dataKey="Income" name="Annual Income" fill={theme.palette.success.main} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Expenses" name="Annual Expenses" fill={theme.palette.error.main} radius={[4, 4, 0, 0]} />
+              <Line type="monotone" dataKey="Surplus" name="Surplus" stroke={theme.palette.primary.main} strokeWidth={2} />
+            </ComposedChart>
           </ResponsiveContainer>
         </Paper>
       </Grid>
