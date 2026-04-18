@@ -28,8 +28,8 @@ const InvestmentPlanCard = ({
 
   return (
     <Box sx={{ border: "1px solid #ddd", p: 2, mb: 2, borderRadius: 2 }}>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={6}>
+      <Grid container spacing={2} alignItems="center" justifyContent="space-between">
+        <Grid item xs={10} sm={6}>
           <FormControl fullWidth size="small">
             <InputLabel>Plan Type</InputLabel>
             <Select
@@ -46,7 +46,7 @@ const InvestmentPlanCard = ({
           </FormControl>
         </Grid>
 
-        <Grid item xs={12} sm={2} sx={{ textAlign: "right" }}>
+        <Grid item>
           <IconButton
             aria-label="delete"
             onClick={() => handleRemovePlan(plan.id)}

@@ -17,6 +17,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import WarningIcon from "@mui/icons-material/Warning";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 import SliderInput from "./SliderInput";
 import ExpnseReadOnlyItem from "./ExpenseReadOnlyItem";
 
@@ -34,6 +36,8 @@ export const EditableIncomeExpenseItem = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedItem, setEditedItem] = useState(item);
+  const [startYearOpen, setStartYearOpen] = useState(false);
+  const [endYearOpen, setEndYearOpen] = useState(false);
 
   const currentYear = new Date().getFullYear();
 
@@ -132,24 +136,32 @@ export const EditableIncomeExpenseItem = ({
             </Select>
           </FormControl>
             )}
-        <SliderInput
-          label="Start Year"
-          value={Number(editedItem.startYear) || currentYear}
-          onChange={(val) => setEditedItem({ ...editedItem, startYear: val })}
-          min={currentYear - 50}
-          max={currentYear + 50}
-          step={1}
-          showInput={true}
-        />
-        <SliderInput
-          label="End Year"
-          value={Number(editedItem.endYear) || currentYear + 10}
-          onChange={(val) => setEditedItem({ ...editedItem, endYear: val })}
-          min={Number(editedItem.startYear) || currentYear}
-          max={currentYear + 50}
-          step={1}
-          showInput={true}
-        />
+            <DatePicker
+              label="Start Year"
+              views={['year', 'month']}
+              openTo="month"
+              open={startYearOpen}
+              onOpen={() => setStartYearOpen(true)}
+              onClose={() => setStartYearOpen(false)}
+              value={dayjs(`${Number(editedItem.startYear) || currentYear}-01-01`)}
+              onChange={(newValue) => setEditedItem({ ...editedItem, startYear: newValue ? newValue.year() : currentYear })}
+              slotProps={{ textField: { size: 'small', fullWidth: true, onClick: () => setStartYearOpen(true) } }}
+              minDate={dayjs(`${currentYear - 50}-01-01`)}
+              maxDate={dayjs(`${currentYear + 50}-12-31`)}
+            />
+            <DatePicker
+              label="End Year"
+              views={['year', 'month']}
+              openTo="month"
+              open={endYearOpen}
+              onOpen={() => setEndYearOpen(true)}
+              onClose={() => setEndYearOpen(false)}
+              value={dayjs(`${Number(editedItem.endYear) || currentYear + 10}-01-01`)}
+              onChange={(newValue) => setEditedItem({ ...editedItem, endYear: newValue ? newValue.year() : currentYear + 10 })}
+              slotProps={{ textField: { size: 'small', fullWidth: true, onClick: () => setEndYearOpen(true) } }}
+              minDate={dayjs(`${Number(editedItem.startYear) || currentYear}-01-01`)}
+              maxDate={dayjs(`${currentYear + 50}-12-31`)}
+            />
             <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
               <IconButton size="small" onClick={handleSave} color="success">
                 <SaveIcon fontSize="small" />

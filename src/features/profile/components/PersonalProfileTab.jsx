@@ -15,10 +15,13 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles"; // Import useTheme
 import InfoIcon from "@mui/icons-material/Info";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
 import EditableIncomeExpenseItem from "../../../components/common/EditableIncomeExpenseItem";
 import BasicInfoDisplay from "./BasicInfoDisplay";
 import BasicInfoEdit from "./BasicInfoEdit";
 import SliderInput from "../../../components/common/SliderInput";
+import { AmountWithUnitInput } from "../../../components/common/CommonComponents";
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectIncomes,
@@ -53,8 +56,8 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
 } from "recharts";
 import ExpenseReadOnlyItem from "../../../components/common/ExpenseReadOnlyItem";
  
@@ -69,9 +72,12 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const expenses = useSelector(selectProfileExpenses) || [];
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
-  const careerGrowthRate = useSelector(selectCareerGrowthRate);
+  const careerGrowthRaw = useSelector(selectCareerGrowthRate);
+  const careerGrowthRate = typeof careerGrowthRaw === 'object' ? careerGrowthRaw.value : (careerGrowthRaw || 0);
+  const careerGrowthType = typeof careerGrowthRaw === 'object' ? careerGrowthRaw.type : 'percentage';
 
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
+  const emiState = useSelector((state) => state.emi || state.emiCalculator || {});
   const currency = useSelector(selectCurrency);
 
   const totalIncome = useSelector(selectTotalMonthlyIncome);
@@ -108,6 +114,10 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const [editingBasicInfo, setEditingBasicInfo] = useState(false);
   const [editingIncomeId, setEditingIncomeId] = useState(null);
   const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [incomeStartYearOpen, setIncomeStartYearOpen] = useState(false);
+  const [incomeEndYearOpen, setIncomeEndYearOpen] = useState(false);
+  const [expenseStartYearOpen, setExpenseStartYearOpen] = useState(false);
+  const [expenseEndYearOpen, setExpenseEndYearOpen] = useState(false);
 
   const handleEditIncome = (income) => {
     setEditingIncomeId(income.id);
@@ -264,57 +274,90 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const projectionYears = retirementAge > currentAge ? retirementAge - currentAge : 0;
   const endProjectionYear = currentYear + projectionYears;
 
-  // Calculate constant annual expenses (EMI + Goals) that are assumed to be ongoing
-  const annualEmi = (monthlyEmi || 0) * 12;
-  const annualGoalContributions = individualGoalInvestments.reduce((acc, inv) => {
-    let amount = inv.amount;
-    if (inv.frequency === 'monthly') {
-      amount *= 12;
-    } else if (inv.frequency === 'quarterly') {
-      amount *= 4;
-    }
-    // Assuming 'yearly' frequency is already an annual amount
-    return acc + amount;
-  }, 0);
-
-  const constantAnnualExpenses = annualEmi + annualGoalContributions;
+  let loanTenureMonths = 0; 
+  if (emiState && emiState.tenure) {
+    loanTenureMonths = emiState.tenureType === 'years' ? Number(emiState.tenure) * 12 : Number(emiState.tenure);
+  }
 
   const projectionData = [];
   if (projectionYears > 0) {
     for (let year = currentYear; year <= endProjectionYear; year++) {
       const yearsFromNow = year - currentYear;
 
-      // Calculate income for this year
-      let yearIncome = 0;
+      // Calculate monthly income for this year
+      let monthIncome = 0;
       incomes.forEach((inc) => {
         const start = inc.startYear || currentYear;
         const end = inc.endYear || currentYear + 10;
         if (year >= start && year <= end) {
-          let annualAmount = inc.amount;
-          if (inc.frequency === 'monthly') annualAmount *= 12;
-          else if (inc.frequency === 'quarterly') annualAmount *= 4;
-          yearIncome += annualAmount;
+          let monthlyAmount = inc.amount;
+          if (inc.frequency === 'yearly') monthlyAmount /= 12;
+          else if (inc.frequency === 'quarterly') monthlyAmount /= 3;
+
+          const activeYears = year - Math.max(start, currentYear);
+          if (activeYears > 0) {
+            if (careerGrowthType === 'percentage') {
+                monthlyAmount *= Math.pow(1 + careerGrowthRate, activeYears);
+            } else {
+                monthlyAmount += (careerGrowthRate / 12) * activeYears;
+            }
+          }
+          monthIncome += monthlyAmount;
         }
       });
-      yearIncome = yearIncome * Math.pow(1 + careerGrowthRate, yearsFromNow);
 
-      // Calculate expenses for this year
-      let yearExpense = constantAnnualExpenses;
+      // Calculate monthly expenses for this year
+      let monthExpense = 0;
+
+      // 1. Regular Expenses
       expenses.forEach((exp) => {
         const start = exp.startYear || currentYear;
         const end = exp.endYear || currentYear + 10;
         if (year >= start && year <= end) {
-          let annualAmount = exp.amount;
-          if (exp.frequency === 'monthly') annualAmount *= 12;
-          else if (exp.frequency === 'quarterly') annualAmount *= 4;
-          yearExpense += annualAmount;
+          let monthlyAmount = exp.amount;
+          if (exp.frequency === 'yearly') monthlyAmount /= 12;
+          else if (exp.frequency === 'quarterly') monthlyAmount /= 3;
+          monthExpense += monthlyAmount;
+        }
+      });
+
+      // 2. Home Loan EMI
+      let activeEmiMonths = 0;
+      for (let m = 0; m < 12; m++) {
+        const monthIndex = (year - currentYear) * 12 + m;
+        if (monthIndex < loanTenureMonths) {
+          activeEmiMonths++;
+        }
+      }
+      monthExpense += (monthlyEmi || 0) * (activeEmiMonths / 12);
+
+      // 3. Goal Contributions
+      individualGoalInvestments.forEach((inv) => {
+        const start = inv.startYear || currentYear;
+        const planDuration = inv.timePeriod || (inv.targetYear ? inv.targetYear - start : 10);
+        const end = inv.endYear || (start + Math.max(planDuration, 0));
+
+        if (year >= start && year <= end) {
+          let monthlyAmount = inv.amount;
+
+          if (inv.type === 'step_up_sip' || inv.investmentType === 'step_up_sip') {
+             const stepUpRate = inv.stepUpRate ? (inv.stepUpRate / 100) : 0;
+             const activeYears = year - start;
+             if (activeYears > 0) {
+                 monthlyAmount *= Math.pow(1 + stepUpRate, activeYears);
+             }
+          }
+
+          if (inv.frequency === 'yearly') monthlyAmount /= 12;
+          else if (inv.frequency === 'quarterly') monthlyAmount /= 3;
+          monthExpense += monthlyAmount;
         }
       });
 
       projectionData.push({
         year: year,
-        Income: yearIncome,
-        Expenses: yearExpense,
+        Income: Math.round(monthIncome),
+        Expenses: Math.round(monthExpense),
       });
     }
   }
@@ -420,29 +463,37 @@ export default function PersonalProfileTab({ onEditGoal }) {
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={4}>
-                <SliderInput
+                <DatePicker
                   label="Start Year"
-                  value={newIncome.startYear}
-                  onChange={(val) =>
-                    setNewIncome({ ...newIncome, startYear: val })
+                  views={['year', 'month']}
+                  openTo="month"
+                  open={incomeStartYearOpen}
+                  onOpen={() => setIncomeStartYearOpen(true)}
+                  onClose={() => setIncomeStartYearOpen(false)}
+                  value={dayjs(`${newIncome.startYear}-01-01`)}
+                  onChange={(newValue) =>
+                    setNewIncome({ ...newIncome, startYear: newValue ? newValue.year() : currentYear })
                   }
-                  min={currentYear}
-                  max={currentYear + 50}
-                  step={1}
-                  showInput={true}
+                  slotProps={{ textField: { size: 'small', fullWidth: true, onClick: () => setIncomeStartYearOpen(true) } }}
+                  minDate={dayjs(`${currentYear}-01-01`)}
+                  maxDate={dayjs(`${currentYear + 50}-12-31`)}
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <SliderInput
+                <DatePicker
                   label="End Year"
-                  value={newIncome.endYear}
-                  onChange={(val) =>
-                    setNewIncome({ ...newIncome, endYear: val })
+                  views={['year', 'month']}
+                  openTo="month"
+                  open={incomeEndYearOpen}
+                  onOpen={() => setIncomeEndYearOpen(true)}
+                  onClose={() => setIncomeEndYearOpen(false)}
+                  value={dayjs(`${newIncome.endYear}-01-01`)}
+                  onChange={(newValue) =>
+                    setNewIncome({ ...newIncome, endYear: newValue ? newValue.year() : currentYear + 10 })
                   }
-                  min={newIncome.startYear}
-                  max={currentYear + 50}
-                  step={1}
-                  showInput={true}
+                  slotProps={{ textField: { size: 'small', fullWidth: true, onClick: () => setIncomeEndYearOpen(true) } }}
+                  minDate={dayjs(`${newIncome.startYear}-01-01`)}
+                  maxDate={dayjs(`${currentYear + 50}-12-31`)}
                 />
               </Grid>
               <Grid
@@ -485,17 +536,31 @@ export default function PersonalProfileTab({ onEditGoal }) {
               gap: 1,
             }}
           >
-            Career Growth
+            Career Growth (Year-on-Year)
           </Typography>
-          <SliderInput
-            label="Expected Annual Salary Hike (%)"
-            value={(careerGrowthRate * 100).toFixed(2)}
-            onChange={(val) => dispatch(setCareerGrowthRate(val / 100))}
-            min={0}
-            max={30}
-            step={0.1}
-            showInput={true}
-            unit="%"
+          <AmountWithUnitInput
+            label="Expected Annual Salary Hike"
+            value={careerGrowthType === 'percentage' ? (careerGrowthRate * 100).toFixed(2) : careerGrowthRate}
+            onAmountChange={(e) => {
+              const val = Number(e.target.value);
+              dispatch(setCareerGrowthRate({
+                type: careerGrowthType,
+                value: careerGrowthType === 'percentage' ? val / 100 : val
+              }));
+            }}
+            unitValue={careerGrowthType === 'percentage' ? '%' : currency}
+            onUnitChange={(e) => {
+              const newUnit = e.target.value;
+              const newType = newUnit === '%' ? 'percentage' : 'fixed';
+              dispatch(setCareerGrowthRate({
+                type: newType,
+                value: newType === 'percentage' ? 0.1 : 50000
+              }));
+            }}
+            unitOptions={[
+              { value: '%', label: '%' },
+              { value: currency, label: currency }
+            ]}
           />
         </Paper>
       </Grid>
@@ -749,29 +814,37 @@ export default function PersonalProfileTab({ onEditGoal }) {
                 </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
-                <SliderInput
+                <DatePicker
                   label="Start Year"
-                  value={newExpense.startYear}
-                  onChange={(val) =>
-                    setNewExpense({ ...newExpense, startYear: val })
+                  views={['year', 'month']}
+                  openTo="month"
+                  open={expenseStartYearOpen}
+                  onOpen={() => setExpenseStartYearOpen(true)}
+                  onClose={() => setExpenseStartYearOpen(false)}
+                  value={dayjs(`${newExpense.startYear}-01-01`)}
+                  onChange={(newValue) =>
+                    setNewExpense({ ...newExpense, startYear: newValue ? newValue.year() : currentYear })
                   }
-                  min={currentYear}
-                  max={currentYear + 50}
-                  step={1}
-                  showInput={true}
+                  slotProps={{ textField: { size: 'small', fullWidth: true, onClick: () => setExpenseStartYearOpen(true) } }}
+                  minDate={dayjs(`${currentYear}-01-01`)}
+                  maxDate={dayjs(`${currentYear + 50}-12-31`)}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <SliderInput
+                <DatePicker
                   label="End Year"
-                  value={newExpense.endYear}
-                  onChange={(val) =>
-                    setNewExpense({ ...newExpense, endYear: val })
+                  views={['year', 'month']}
+                  openTo="month"
+                  open={expenseEndYearOpen}
+                  onOpen={() => setExpenseEndYearOpen(true)}
+                  onClose={() => setExpenseEndYearOpen(false)}
+                  value={dayjs(`${newExpense.endYear}-01-01`)}
+                  onChange={(newValue) =>
+                    setNewExpense({ ...newExpense, endYear: newValue ? newValue.year() : currentYear + 10 })
                   }
-                  min={newExpense.startYear}
-                  max={currentYear + 50}
-                  step={1}
-                  showInput={true}
+                  slotProps={{ textField: { size: 'small', fullWidth: true, onClick: () => setExpenseEndYearOpen(true) } }}
+                  minDate={dayjs(`${newExpense.startYear}-01-01`)}
+                  maxDate={dayjs(`${currentYear + 50}-12-31`)}
                 />
               </Grid>
               <Grid
@@ -793,10 +866,10 @@ export default function PersonalProfileTab({ onEditGoal }) {
       <Grid item xs={12}>
         <Paper sx={{ p: 3, height: "100%" }}>
           <Typography variant="h6" align="center" gutterBottom>
-            Projected Annual Income vs. Expenses Until Retirement
+            Projected Monthly Income vs. Expenses Until Retirement
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart
+            <AreaChart
               data={projectionData}
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
@@ -805,9 +878,27 @@ export default function PersonalProfileTab({ onEditGoal }) {
               <YAxis tickFormatter={(val) => formatCurrency(val)} />
               <RechartsTooltip formatter={(value, name) => [formatCurrency(value), name]} />
               <Legend />
-              <Line type="monotone" dataKey="Income" name="Projected Income" stroke={theme.palette.success.main} strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="Expenses" name="Projected Expenses" stroke={theme.palette.error.main} strokeWidth={2} dot={false} />
-            </LineChart>
+              <Area 
+                type="monotone" 
+                dataKey="Income" 
+                name="Projected Income" 
+                stroke={theme.palette.success.main} 
+                fill={theme.palette.success.main}
+                fillOpacity={0.3}
+                strokeWidth={2} 
+                dot={false} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="Expenses" 
+                name="Projected Expenses" 
+                stroke={theme.palette.error.main} 
+                fill={theme.palette.error.main}
+                fillOpacity={0.3}
+                strokeWidth={2} 
+                dot={false} 
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </Paper>
       </Grid>

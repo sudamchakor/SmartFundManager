@@ -92,11 +92,14 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const profileExpenses = useSelector(selectProfileExpenses) || [];
   const generalInflationRate = useSelector(selectGeneralInflationRate) || 0;
   const educationInflationRate = useSelector(selectEducationInflationRate) || 0;
-  const careerGrowthRate = useSelector(selectCareerGrowthRate) || 0;
+  const careerGrowthRaw = useSelector(selectCareerGrowthRate);
+  const careerGrowthRate = typeof careerGrowthRaw === 'object' ? careerGrowthRaw.value : (careerGrowthRaw || 0);
+  const careerGrowthType = typeof careerGrowthRaw === 'object' ? careerGrowthRaw.type : 'percentage';
   const totalMonthlyIncome = useSelector(selectTotalMonthlyIncome) || 0;
   const totalMonthlyGoalContributions =
     useSelector(selectTotalMonthlyGoalContributions) || 0;
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
+  const emiState = useSelector((state) => state.emi || state.emiCalculator || {});
   const currency = useSelector(selectCurrency);
 
   const currentSurplus = useSelector(selectCurrentSurplus) || 0;
@@ -286,13 +289,24 @@ export default function FutureGoalsTab({ goalToEditId }) {
     let currentMonthlyOutflowExcludingGoals =
       profileExpenses.reduce((acc, exp) => acc + exp.amount, 0) + monthlyEmi;
 
+    let loanTenureMonths = 0;
+    if (emiState && emiState.tenure) {
+      loanTenureMonths = emiState.tenureType === 'years' ? Number(emiState.tenure) * 12 : Number(emiState.tenure);
+    }
+
     for (let year = currentYear; year <= endYear; year++) {
       const yearsFromNow = year - currentYear;
       const annualInvestmentReturn = 0.08;
       const annualBonusReturn = 0.02;
 
+      let previousYearMonthlyIncome = currentMonthlyIncome;
+
       if (yearsFromNow > 0 && yearsFromNow % 1 === 0) {
-        currentMonthlyIncome *= 1 + careerGrowthRate;
+        if (careerGrowthType === 'percentage') {
+            currentMonthlyIncome *= 1 + careerGrowthRate;
+        } else {
+            currentMonthlyIncome += (careerGrowthRate / 12);
+        }
       }
 
       const annualInvestableSurplus =
@@ -305,10 +319,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
         currentMarketGains = currentTotalWealth * annualInvestmentReturn;
 
         const incomeIncreaseThisYear =
-          currentMonthlyIncome * 12 -
-          totalMonthlyIncome *
-            Math.pow(1 + careerGrowthRate, yearsFromNow - 1) *
-            12;
+          (currentMonthlyIncome - previousYearMonthlyIncome) * 12;
         currentBonusGains = incomeIncreaseThisYear * annualBonusReturn;
 
         currentPrincipalInvested = annualInvestableSurplus;
@@ -342,7 +353,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
           currentBonusGains / Math.pow(1 + generalInflationRate, yearsFromNow);
       }
 
-      const cumulativeLoanCost = monthlyEmi * Math.min(yearsFromNow * 12, 240);
+      const cumulativeLoanCost = monthlyEmi * Math.min(yearsFromNow * 12, loanTenureMonths);
 
       const totalGoalsThisYear = goals.reduce((sum, g) => {
         if (g.targetYear === year) {
@@ -377,7 +388,9 @@ export default function FutureGoalsTab({ goalToEditId }) {
     totalMonthlyIncome,
     profileExpenses,
     monthlyEmi,
+    emiState,
     careerGrowthRate,
+    careerGrowthType,
     realValueToggle,
     considerInflation,
     generalInflationRate,
