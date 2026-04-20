@@ -3,14 +3,14 @@ import { Box } from "@mui/material";
 import StepUpSipCalculatorInputs from "./StepUpSipCalculatorInputs"; // Import the new input component
 
 const StepUpSipCalculator = ({ onCalculate, sharedState, onSharedStateChange }) => {
-  const { monthlyInvestment, stepUpPercentage, expectedReturnRate, timePeriod } = sharedState;
+  const { monthlyContribution, stepUpPercentage, expectedReturnRate, timePeriod } = sharedState; // Changed to monthlyContribution
 
   useEffect(() => {
     calculateStepUpSip();
-  }, [monthlyInvestment, stepUpPercentage, expectedReturnRate, timePeriod]);
+  }, [monthlyContribution, stepUpPercentage, expectedReturnRate, timePeriod]); // Changed to monthlyContribution
 
   const calculateStepUpSip = () => {
-    let currentMonthlySIP = monthlyInvestment;
+    let currentMonthlySIP = monthlyContribution; // Changed to monthlyContribution
     const i = expectedReturnRate / 100 / 12; // Monthly rate of return
     
     let totalInvestedAmount = 0;
@@ -53,7 +53,7 @@ const StepUpSipCalculator = ({ onCalculate, sharedState, onSharedStateChange }) 
   return (
     <Box>
       <StepUpSipCalculatorInputs
-        monthlyInvestment={monthlyInvestment}
+        monthlyContribution={monthlyContribution} // Changed to monthlyContribution
         stepUpPercentage={stepUpPercentage}
         expectedReturnRate={expectedReturnRate}
         timePeriod={timePeriod}

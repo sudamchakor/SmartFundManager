@@ -46,10 +46,11 @@ const InvestmentPlanCard = ({
 
       let monthlyContribution = 0;
       if (plan.type === "sip" || plan.type === "stepUpSip") {
+        // Prioritize results.monthlyContribution from the calculator forms
         monthlyContribution =
-          plan.monthlyInvestment ??
+          results.monthlyContribution ?? // Changed from monthlyInvestment
+          plan.monthlyContribution ?? // Changed from monthlyInvestment
           plan.amount ??
-          results.monthlyInvestment ??
           0;
       }
 
@@ -69,12 +70,11 @@ const InvestmentPlanCard = ({
     [
       plan.id,
       plan.type,
-      plan.monthlyInvestment,
+      plan.monthlyContribution, // Changed from monthlyInvestment
       plan.amount,
       plan.investedAmount,
       plan.estimatedReturns,
       plan.totalValue,
-      plan.monthlyContribution,
       handlePlanChange,
     ]
   );
@@ -175,6 +175,7 @@ const InvestmentPlanCard = ({
               handlePlanChange(plan.id, field, value)
             }
             onCalculate={handleCalculate}
+            targetAmount={targetAmount}
           />
         )}
         {plan.type === "lumpsum" && (
@@ -184,6 +185,7 @@ const InvestmentPlanCard = ({
               handlePlanChange(plan.id, field, value)
             }
             onCalculate={handleCalculate}
+            targetAmount={targetAmount}
           />
         )}
         {plan.type === "stepUpSip" && (
@@ -193,6 +195,7 @@ const InvestmentPlanCard = ({
               handlePlanChange(plan.id, field, value)
             }
             onCalculate={handleCalculate}
+            targetAmount={targetAmount}
           />
         )}
         {plan.type === "swp" && (
@@ -202,6 +205,7 @@ const InvestmentPlanCard = ({
               handlePlanChange(plan.id, field, value)
             }
             onCalculate={handleCalculate}
+            targetAmount={targetAmount}
           />
         )}
         {plan.type === "fd" && (
@@ -211,6 +215,7 @@ const InvestmentPlanCard = ({
               handlePlanChange(plan.id, field, value)
             }
             onCalculate={handleCalculate}
+            targetAmount={targetAmount}
           />
         )}
       </Box>

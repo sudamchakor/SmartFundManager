@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 
 const StepUpSipCalculatorInputs = ({
-  monthlyInvestment,
+  monthlyContribution, // Changed from monthlyInvestment
   stepUpPercentage,
   expectedReturnRate,
   timePeriod,
@@ -26,8 +26,8 @@ const StepUpSipCalculatorInputs = ({
           <Typography gutterBottom>Monthly Investment</Typography>
           <TextField
             size="small"
-            value={monthlyInvestment}
-            onChange={(e) => onSharedStateChange("monthlyInvestment", Number(e.target.value))}
+            value={monthlyContribution} // Changed from monthlyInvestment
+            onChange={(e) => onSharedStateChange("monthlyContribution", Number(e.target.value))} // Changed from monthlyInvestment
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>,
             }}
@@ -35,11 +35,11 @@ const StepUpSipCalculatorInputs = ({
           />
         </Grid>
         <Slider
-          value={monthlyInvestment}
+          value={monthlyContribution} // Changed from monthlyInvestment
           min={500}
           max={100000}
           step={500}
-          onChange={(e, val) => onSharedStateChange("monthlyInvestment", val)}
+          onChange={(e, val) => onSharedStateChange("monthlyContribution", val)} // Changed from monthlyInvestment
           valueLabelDisplay="auto"
         />
       </Box>

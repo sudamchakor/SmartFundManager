@@ -3,14 +3,14 @@ import { Box } from "@mui/material";
 import SipCalculatorInputs from "./SipCalculatorInputs"; // Import the new input component
 
 const SipCalculator = ({ onCalculate, sharedState, onSharedStateChange }) => {
-  const { monthlyInvestment, expectedReturnRate, timePeriod } = sharedState;
+  const { monthlyContribution, expectedReturnRate, timePeriod } = sharedState; // Changed to monthlyContribution
 
   useEffect(() => {
     calculateSip();
-  }, [monthlyInvestment, expectedReturnRate, timePeriod]);
+  }, [monthlyContribution, expectedReturnRate, timePeriod]); // Changed to monthlyContribution
 
   const calculateSip = () => {
-    const P = monthlyInvestment;
+    const P = monthlyContribution; // Changed to monthlyContribution
     const years = timePeriod;
     const annualRate = expectedReturnRate / 100;
 
@@ -60,7 +60,7 @@ const SipCalculator = ({ onCalculate, sharedState, onSharedStateChange }) => {
   return (
     <Box>
       <SipCalculatorInputs
-        monthlyInvestment={monthlyInvestment}
+        monthlyContribution={monthlyContribution} // Changed to monthlyContribution
         expectedReturnRate={expectedReturnRate}
         timePeriod={timePeriod}
         onSharedStateChange={onSharedStateChange}

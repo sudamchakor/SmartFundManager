@@ -137,6 +137,8 @@ export const getDefaultPlanState = (
           const factor = ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) * (1 + monthlyRate);
           newPlan.monthlyContribution = Math.round(targetAmountForPlan / factor);
         }
+        // Ensure a minimum monthly contribution for SIP
+        newPlan.monthlyContribution = Math.max(500, newPlan.monthlyContribution);
         break;
       case "lumpsum":
         newPlan.totalInvestment = Math.round(targetAmountForPlan / Math.pow(1 + annualRate, newPlan.timePeriod));
@@ -144,13 +146,22 @@ export const getDefaultPlanState = (
       case "fd":
         newPlan.principalAmount = Math.round(targetAmountForPlan / Math.pow(1 + fdAnnualRate, newPlan.timePeriod));
         break;
-      // Step-Up SIP and SWP inverse calculations are more complex and are not directly implemented here.
-      // They will use their default investment amounts.
+      case "stepUpSip":
+        // Approximate inverse calculation for Step-Up SIP
+        // Use SIP inverse calculation as a starting point for monthly contribution
+        if (monthlyRate > 0) {
+          const factor = ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) * (1 + monthlyRate);
+          newPlan.monthlyContribution = Math.round(targetAmountForPlan / factor);
+        }
+        // Ensure a minimum contribution for step-up SIP
+        newPlan.monthlyContribution = Math.max(500, newPlan.monthlyContribution);
+        break;
+      // SWP inverse calculations are not directly implemented here as it's a withdrawal plan.
     }
   }
 
-  // Ensure investment amounts are non-negative
-  newPlan.monthlyContribution = Math.max(0, newPlan.monthlyContribution);
+  // Ensure investment amounts are non-negative (already handled by Math.max(500, ...))
+  // newPlan.monthlyContribution = Math.max(0, newPlan.monthlyContribution);
   newPlan.totalInvestment = Math.max(0, newPlan.totalInvestment);
   newPlan.principalAmount = Math.max(0, newPlan.principalAmount);
 

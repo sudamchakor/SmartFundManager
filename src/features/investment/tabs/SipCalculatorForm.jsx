@@ -10,29 +10,22 @@ import {
 import { calculateSIP } from "../../../utils/financialCalculations"; // Import the utility function
 
 const SipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) => {
-  const { monthlyInvestment, expectedReturnRate, timePeriod } = sharedState;
+  const { monthlyContribution, expectedReturnRate, timePeriod } = sharedState; // Changed to monthlyContribution
 
   useEffect(() => {
     calculateSip();
-  }, [monthlyInvestment, expectedReturnRate, timePeriod]);
+  }, [monthlyContribution, expectedReturnRate, timePeriod]); // Changed to monthlyContribution
 
   const calculateSip = () => {
-    const P = monthlyInvestment;
+    const P = monthlyContribution; // Changed to monthlyContribution
     const years = timePeriod;
     const annualRate = expectedReturnRate / 100;
-
-    // Calculate total future value using the utility function
-    // Note: calculateSIP returns the *monthly contribution needed* for a target.
-    // Here, we have the monthly contribution and need the *future value*.
-    // So we need to reverse the formula or use a future value of SIP formula.
-    // Let's implement FV of SIP here directly for consistency with the chart data generation.
 
     const n = years * 12; // Total number of months
     const i = annualRate / 12; // Monthly rate of return
 
     let totalValue = 0;
     if (i > 0) {
-      // FV = P * ({[1 + i]^n - 1} / i) * (1 + i) - SIP at beginning of period
       totalValue = P * ((Math.pow(1 + i, n) - 1) / i) * (1 + i);
     } else {
       totalValue = P * n; // Simple sum if rate is 0
@@ -68,6 +61,7 @@ const SipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
       investedAmount: Math.round(investedAmount),
       estimatedReturns: Math.round(estimatedReturns),
       totalValue: Math.round(totalValue),
+      monthlyContribution: monthlyContribution, // Changed to monthlyContribution
       chartData: chartData
     });
   };
@@ -83,8 +77,8 @@ const SipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
           <Typography gutterBottom>Monthly Investment</Typography>
           <TextField
             size="small"
-            value={monthlyInvestment}
-            onChange={(e) => onSharedStateChange("monthlyInvestment", Number(e.target.value))}
+            value={monthlyContribution} // Changed to monthlyContribution
+            onChange={(e) => onSharedStateChange("monthlyContribution", Number(e.target.value))} // Changed to monthlyContribution
             InputProps={{
               startAdornment: <InputAdornment position="start">₹</InputAdornment>,
             }}
@@ -93,11 +87,11 @@ const SipCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
           />
         </Grid>
         <Slider
-          value={monthlyInvestment}
+          value={monthlyContribution} // Changed to monthlyContribution
           min={500}
           max={100000}
           step={500}
-          onChange={(e, val) => onSharedStateChange("monthlyInvestment", val)}
+          onChange={(e, val) => onSharedStateChange("monthlyContribution", val)} // Changed to monthlyContribution
           valueLabelDisplay="auto"
         />
       </Box>
