@@ -1,0 +1,9 @@
+/* Default Light Theme */
+:root {
+  --primary-color: #2a9d8f;
+  --secondary-color: #264653;
+  --background-color: #fefae0;
+  --surface-color: #ffffff;
+  --text-primary-color: #264653;
+  --text-secondary-color: #577590;
+}

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import "./index.css";
-import "./common.css";
+import "./styles/global.css"; // Updated import
+import "./styles/theme.css"; // New import
 import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 
