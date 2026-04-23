@@ -55,14 +55,24 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
   const careerGrowthRaw = useSelector(selectCareerGrowthRate);
-  const careerGrowthRate = typeof careerGrowthRaw === 'object' ? careerGrowthRaw.value : (careerGrowthRaw || 0);
-  const careerGrowthType = typeof careerGrowthRaw === 'object' ? careerGrowthRaw.type : 'percentage';
+  const careerGrowthRate =
+    typeof careerGrowthRaw === "object"
+      ? careerGrowthRaw.value
+      : careerGrowthRaw || 0;
+  const careerGrowthType =
+    typeof careerGrowthRaw === "object" ? careerGrowthRaw.type : "percentage";
 
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
-  const emiState = useSelector((state) => state.emi || state.emiCalculator || {});
+  const emiState = useSelector(
+    (state) => state.emi || state.emiCalculator || {},
+  );
 
-  const totalMonthlyGoalContributions = useSelector(selectTotalMonthlyGoalContributions);
-  const individualGoalInvestments = useSelector(selectIndividualGoalInvestmentContributions);
+  const totalMonthlyGoalContributions = useSelector(
+    selectTotalMonthlyGoalContributions,
+  );
+  const individualGoalInvestments = useSelector(
+    selectIndividualGoalInvestmentContributions,
+  );
   const investableSurplus = useSelector(selectCurrentSurplus);
   const goals = useSelector(selectGoals) || [];
 
@@ -177,6 +187,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
               position: "fixed",
               bottom: 16,
               right: 16,
+              zIndex: 99999, // Added zIndex
             }}
             onClick={handleOpenMenu}
           >
@@ -187,16 +198,20 @@ export default function PersonalProfileTab({ onEditGoal }) {
             open={Boolean(anchorEl)}
             onClose={handleCloseMenu}
             anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
+              vertical: "top",
+              horizontal: "right",
             }}
             transformOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
+              vertical: "bottom",
+              horizontal: "right",
             }}
           >
-            <MenuItem onClick={() => handleOpenModal('income')}>Add Income</MenuItem>
-            <MenuItem onClick={() => handleOpenModal('expense')}>Add Expense</MenuItem>
+            <MenuItem onClick={() => handleOpenModal("income")}>
+              Add Income
+            </MenuItem>
+            <MenuItem onClick={() => handleOpenModal("expense")}>
+              Add Expense
+            </MenuItem>
           </Menu>
         </>
       )}
@@ -210,14 +225,23 @@ export default function PersonalProfileTab({ onEditGoal }) {
         <Box sx={modalStyle}>
           {/* The Typography and Button are still direct children of the Box,
               but the IncomeSection/ExpenseSection will now handle their own Paper styling. */}
-          <Typography id="add-item-modal-title" variant="h6" component="h2" gutterBottom>
-            {modalType === 'income' ? 'Add New Income' : 'Add New Expense'}
+          <Typography
+            id="add-item-modal-title"
+            variant="h6"
+            component="h2"
+            gutterBottom
+          >
+            {modalType === "income" ? "Add New Income" : "Add New Expense"}
           </Typography>
-          {modalType === 'income' && (
+          {modalType === "income" && (
             <IncomeSection isModal={true} onCloseModal={handleCloseModal} />
           )}
-          {modalType === 'expense' && (
-            <ExpenseSection isModal={true} onCloseModal={handleCloseModal} onEditGoal={onEditGoal} />
+          {modalType === "expense" && (
+            <ExpenseSection
+              isModal={true}
+              onCloseModal={handleCloseModal}
+              onEditGoal={onEditGoal}
+            />
           )}
           <Button onClick={handleCloseModal} sx={{ mt: 2 }}>
             Close
