@@ -11,6 +11,7 @@ import { selectThemeMode } from "./store/emiSlice";
 
 // Layout & Common
 import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer"; // Import the Footer component
 import { themes } from "./components/common/ThemeSelector";
 
 // Feature Pages
@@ -22,6 +23,9 @@ import PersonalLoanCalculator from "./pages/PersonalLoanCalculator";
 import TaxCalculator from "./pages/TaxCalculator";
 import FAQ from "./pages/FAQ";
 import InvestmentCalculator from "./pages/InvestmentCalculator";
+import PrivacyPolicy from "./pages/PrivacyPolicy"; // Import PrivacyPolicy
+import TermsOfService from "./pages/TermsOfService"; // Import TermsOfService
+import ContactUs from "./pages/ContactUs"; // Import ContactUs
 
 // Styles
 import "./App.css";
@@ -141,8 +145,12 @@ const AppContent = () => {
             <Route path="/personal-loan" element={<PersonalLoanCalculator />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/tax-calculator" element={<TaxCalculator />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* New route */}
+            <Route path="/terms-of-service" element={<TermsOfService />} /> {/* New route */}
+            <Route path="/contact-us" element={<ContactUs />} /> {/* New route */}
           </Routes>
         </Box>
+        <Footer /> {/* Add the Footer component here */}
       </Box>
     </ThemeProvider>
   );
