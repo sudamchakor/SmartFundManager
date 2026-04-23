@@ -8,7 +8,12 @@ const Footer = () => {
       sx={{
         py: 3,
         px: 2,
-        mt: "auto",
+        width: "100%", // Ensure it spans the full width
+        position: "fixed", // Fix the position
+        bottom: 0, // Align to the bottom
+        left: 0, // Align to the left
+        right: 0, // Align to the right
+        zIndex: 1100, // Ensure it's above other content, similar to AppBar's default zIndex
         backgroundColor: (theme) =>
           theme.palette.mode === "light"
             ? theme.palette.grey[200]
@@ -16,7 +21,13 @@ const Footer = () => {
         textAlign: "center",
       }}
     >
-      <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 1 }}>
+      <Stack
+        direction="row"
+        spacing={2}
+        justifyContent="center"
+        flexWrap="wrap" // Added for mobile-friendliness
+        sx={{ mb: 1 }}
+      >
         <Link
           color="inherit"
           href="/emiCalculator/privacy-policy"

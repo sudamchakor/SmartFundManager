@@ -10,13 +10,14 @@ import {
   FormControl,
   IconButton,
   Divider,
-  Drawer, // New import
-  List, // New import
-  ListItem, // New import
-  ListItemButton, // New import
-  ListItemIcon, // New import
-  ListItemText, // New import
-  useMediaQuery, // New import
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useMediaQuery,
+  Collapse,
 } from "@mui/material";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -26,13 +27,15 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import MoneyIcon from "@mui/icons-material/Money";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import MenuIcon from "@mui/icons-material/Menu"; // New import
-import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // For Export
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline"; // For FAQ
-import PersonIcon from "@mui/icons-material/Person"; // For Personal Profile
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents"; // For Future Goals
-import SettingsIcon from "@mui/icons-material/Settings"; // For Settings
-import RestartAltIcon from "@mui/icons-material/RestartAlt"; // For Reset Data
+import MenuIcon from "@mui/icons-material/Menu";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import PersonIcon from "@mui/icons-material/Person";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import SettingsIcon from "@mui/icons-material/Settings";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
@@ -41,12 +44,11 @@ import {
   selectCurrency,
   selectThemeMode,
   resetEmiState,
-}
-from "../../store/emiSlice";
+} from "../../store/emiSlice";
 import { selectCalculatedValues } from "../../features/emiCalculator/utils/emiCalculator";
 import { useSnackbar } from "notistack";
 import storage from "redux-persist/lib/storage";
-import { useTheme } from "@mui/material/styles"; // New import
+import { useTheme } from "@mui/material/styles";
 import "./Header.css";
 
 const calculators = [
@@ -85,12 +87,15 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
-  const theme = useTheme(); // Initialize useTheme
-  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Check for mobile screens
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
-  const [drawerOpen, setDrawerOpen] = useState(false); // State for mobile drawer
+  const [exportAnchorEl, setExportAnchorEl] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [openCalculators, setOpenCalculators] = useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
 
   const handleExport = (value) => {
     if (value === "pdf") {
@@ -114,7 +119,8 @@ const Header = () => {
       XLSX.utils.book_append_sheet(wb, ws, "Schedule");
       XLSX.writeFile(wb, "emi_schedule.xlsx");
     }
-    setDrawerOpen(false); // Close drawer after export
+    setDrawerOpen(false);
+    handleExportMenuClose();
   };
 
   const handleMenuOpen = (event) => {
@@ -133,16 +139,24 @@ const Header = () => {
     setProfileAnchorEl(null);
   };
 
+  const handleExportMenuOpen = (event) => {
+    setExportAnchorEl(event.currentTarget);
+  };
+
+  const handleExportMenuClose = () => {
+    setExportAnchorEl(null);
+  };
+
   const handleCalculatorSelect = (path) => {
     navigate(path);
     setAnchorEl(null);
-    setDrawerOpen(false); // Close drawer after selection
+    setDrawerOpen(false);
   };
 
   const handleProfileSelect = (tab) => {
     navigate(`/profile?tab=${tab}`);
     setProfileAnchorEl(null);
-    setDrawerOpen(false); // Close drawer after selection
+    setDrawerOpen(false);
   };
 
   const handleResetLocalData = async () => {
@@ -155,8 +169,16 @@ const Header = () => {
       variant: "success",
     });
     handleProfileMenuClose();
-    setDrawerOpen(false); // Close drawer
+    setDrawerOpen(false);
     window.location.reload();
+  };
+
+  const handleClickCalculators = () => {
+    setOpenCalculators(!openCalculators);
+  };
+
+  const handleClickProfile = () => {
+    setOpenProfile(!openProfile);
   };
 
   // Determine current active calculator for display in header
@@ -173,7 +195,6 @@ const Header = () => {
     <Box
       sx={{ width: 250 }}
       role="presentation"
-      // Removed redundant onClick and onKeyDown as Drawer's onClose handles it
     >
       <List>
         <ListItem disablePadding>
@@ -185,85 +206,61 @@ const Header = () => {
           </ListItemButton>
         </ListItem>
         <Divider />
-        <ListItem>
+        {/* Collapsible Calculators Section */}
+        <ListItemButton onClick={handleClickCalculators}>
           <ListItemText primary="Calculators" />
-        </ListItem>
-        {calculators.map((calc) => (
-          <ListItem key={calc.path} disablePadding>
-            <ListItemButton
-              selected={location.pathname.startsWith(calc.path)}
-              onClick={() => handleCalculatorSelect(calc.path)}
-            >
-              <ListItemIcon>{calc.icon}</ListItemIcon>
-              <ListItemText primary={calc.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+          {openCalculators ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={openCalculators} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {calculators.map((calc) => (
+              <ListItem key={calc.path} disablePadding sx={{ pl: 4 }}>
+                <ListItemButton
+                  selected={location.pathname.startsWith(calc.path)}
+                  onClick={() => handleCalculatorSelect(calc.path)}
+                >
+                  <ListItemIcon>{calc.icon}</ListItemIcon>
+                  <ListItemText primary={calc.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Collapse>
         <Divider />
-        <ListItem>
-          <ListItemText primary="Actions" />
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleExport("pdf")}>
-            <ListItemIcon>
-              <ExitToAppIcon />
-            </ListItemIcon>
-            <ListItemText primary="Export to PDF" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleExport("excel")}>
-            <ListItemIcon>
-              <ExitToAppIcon />
-            </ListItemIcon>
-            <ListItemText primary="Export to Excel" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => navigate("/faq")}>
-            <ListItemIcon>
-              <HelpOutlineIcon />
-            </ListItemIcon>
-            <ListItemText primary="FAQ" />
-          </ListItemButton>
-        </ListItem>
-        <Divider />
-        <ListItem>
+        {/* Collapsible Profile Section */}
+        <ListItemButton onClick={handleClickProfile}>
           <ListItemText primary="Profile" />
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleProfileSelect("personal")}>
-            <ListItemIcon>
-              <PersonIcon />
-            </ListItemIcon>
-            <ListItemText primary="Personal Profile" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleProfileSelect("goals")}>
-            <ListItemIcon>
-              <EmojiEventsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Future Goals" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => handleProfileSelect("settings")}>
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItemButton>
-        </ListItem>
+          {openProfile ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={openProfile} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            <ListItem disablePadding sx={{ pl: 4 }}>
+              <ListItemButton onClick={() => handleProfileSelect("personal")}>
+                <ListItemIcon>
+                  <PersonIcon />
+                </ListItemIcon>
+                <ListItemText primary="Personal Profile" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding sx={{ pl: 4 }}>
+              <ListItemButton onClick={() => handleProfileSelect("goals")}>
+                <ListItemIcon>
+                  <EmojiEventsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Future Goals" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding sx={{ pl: 4 }}>
+              <ListItemButton onClick={() => handleProfileSelect("settings")}>
+                <ListItemIcon>
+                  <SettingsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Settings" />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Collapse>
         <Divider />
-        <ListItem disablePadding>
-          <ListItemButton onClick={handleResetLocalData}>
-            <ListItemIcon>
-              <RestartAltIcon />
-            </ListItemIcon>
-            <ListItemText primary="Reset Data" />
-          </ListItemButton>
-        </ListItem>
       </List>
     </Box>
   );
@@ -297,6 +294,45 @@ const Header = () => {
 
         {/* Spacer to push items to the right */}
         <Box sx={{ flexGrow: 1 }} />
+
+        {isMobile && (
+          <>
+            {/* Export Icon for Mobile */}
+            <IconButton
+              color="inherit"
+              onClick={handleExportMenuOpen}
+              sx={{ mr: 1 }}
+            >
+              <ExitToAppIcon />
+            </IconButton>
+            <Menu
+              anchorEl={exportAnchorEl}
+              open={Boolean(exportAnchorEl)}
+              onClose={handleExportMenuClose}
+            >
+              <MenuItem onClick={() => handleExport("pdf")}>Export to PDF</MenuItem>
+              <MenuItem onClick={() => handleExport("excel")}>Export to Excel</MenuItem>
+            </Menu>
+
+            {/* FAQ Icon for Mobile */}
+            <IconButton
+              color="inherit"
+              onClick={() => navigate("/faq")}
+              sx={{ mr: 1 }}
+            >
+              <HelpOutlineIcon />
+            </IconButton>
+
+            {/* Reset Data Icon for Mobile */}
+            <IconButton
+              color="inherit"
+              onClick={handleResetLocalData}
+              sx={{ mr: 1 }}
+            >
+              <RestartAltIcon />
+            </IconButton>
+          </>
+        )}
 
         {!isMobile && (
           <>
@@ -391,7 +427,7 @@ const Header = () => {
               Settings
             </MenuItem>
             <Divider />
-            <MenuItem onClick={handleResetLocalData}>Reset Data</MenuItem>
+            {/* Removed Reset Data from here, now it's an icon on mobile and in the drawer */}
           </Menu>
         </Box>
       </Toolbar>
