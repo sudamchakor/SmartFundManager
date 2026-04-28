@@ -36,6 +36,9 @@ import {
   selectTotalMonthlyExpenses,
   setCareerGrowthRate, // Import setCareerGrowthRate
   setGeneralInflationRate, // Import setGeneralInflationRate
+  selectName,
+  selectOccupation,
+  selectRiskTolerance,
 } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
@@ -190,85 +193,6 @@ export default function PersonalProfileTab({ onEditGoal }) {
               onEditGoal={onEditGoal}
               isSmallScreen={isSmallScreen}
             />
-          </Paper>
-        </Grid>
-
-        {/* Career Growth and Expense Inflation Row */}
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              Career Growth (Year-on-Year)
-            </Typography>
-            <AmountWithUnitInput
-              label="Expected Annual Salary Hike"
-              value={
-                careerGrowthType === "percentage"
-                  ? (careerGrowthRate * 100).toFixed(2)
-                  : careerGrowthRate
-              }
-              onAmountChange={(e) => {
-                const val = Number(e.target.value);
-                dispatch(
-                  setCareerGrowthRate({
-                    type: careerGrowthType,
-                    value: careerGrowthType === "percentage" ? val / 100 : val,
-                  }),
-                );
-              }}
-              unitValue={careerGrowthType === "percentage" ? "%" : currency}
-              onUnitChange={(e) => {
-                const newUnit = e.target.value;
-                const newType = newUnit === "%" ? "percentage" : "fixed";
-                dispatch(
-                  setCareerGrowthRate({
-                    type: newType,
-                    value: newType === "percentage" ? 0.1 : 50000,
-                  }),
-                );
-              }}
-              unitOptions={[
-                { value: "%", label: "%" },
-                { value: currency, label: currency },
-              ]}
-            />
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-              }}
-            >
-              Expense Inflation (Year-on-Year)
-            </Typography>
-            <Box sx={{ mt: 2 }}>
-              <SliderInput
-                label="Expected Annual Inflation Rate (%)"
-                value={(generalInflationRate * 100).toFixed(1)}
-                onChange={(val) => {
-                  dispatch(setGeneralInflationRate(val / 100));
-                }}
-                min={0}
-                max={20}
-                step={0.1}
-                isInline={false}
-              />
-            </Box>
           </Paper>
         </Grid>
 

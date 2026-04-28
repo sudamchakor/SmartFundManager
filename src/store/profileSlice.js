@@ -3,6 +3,9 @@ import { createSlice, createSelector } from "@reduxjs/toolkit";
 const currentYear = new Date().getFullYear();
 
 const initialState = {
+  name: "",
+  occupation: "",
+  riskTolerance: "medium",
   currentAge: 30,
   retirementAge: 60,
   considerInflation: false,
@@ -47,6 +50,12 @@ const profileSlice = createSlice({
   name: "profile",
   initialState,
   reducers: {
+    setBasicInfo: (state, action) => {
+      state.name = action.payload.name;
+      state.occupation = action.payload.occupation;
+      state.riskTolerance = action.payload.riskTolerance;
+      state.currentAge = action.payload.age;
+    },
     setCurrentAge: (state, action) => {
       state.currentAge = action.payload;
     },
@@ -175,6 +184,7 @@ const profileSlice = createSlice({
 });
 
 export const {
+  setBasicInfo,
   setCurrentAge,
   setRetirementAge,
   setConsiderInflation,
@@ -198,6 +208,9 @@ export const {
 } = profileSlice.actions;
 
 // Basic Selectors
+export const selectName = (state) => state.profile.name;
+export const selectOccupation = (state) => state.profile.occupation;
+export const selectRiskTolerance = (state) => state.profile.riskTolerance;
 export const selectCurrentAge = (state) => state.profile.currentAge;
 export const selectRetirementAge = (state) => state.profile.retirementAge;
 export const selectConsiderInflation = (state) =>
