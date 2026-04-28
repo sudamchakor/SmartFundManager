@@ -139,7 +139,15 @@ export const selectGoals = state => state.profile.goals;
 // Derived Selectors
 export const selectTotalMonthlyIncome = createSelector(
     [selectIncomes],
-    (incomes) => incomes.reduce((total, income) => total + (income.amount || 0), 0)
+    (incomes) => incomes.reduce((total, income) => {
+      let monthlyAmount = income.amount || 0;
+      if (income.frequency === 'quarterly') {
+        monthlyAmount /= 3;
+      } else if (income.frequency === 'yearly') {
+        monthlyAmount /= 12;
+      }
+      return total + monthlyAmount;
+    }, 0)
 );
 
 export const selectTotalMonthlyExpenses = createSelector(
@@ -153,13 +161,6 @@ export const selectTotalMonthlyExpenses = createSelector(
       }
       return total + monthlyAmount;
     }, 0)
-);
-
-export const selectTotalMonthlyGoalContributions = createSelector(
-    [selectGoals],
-    (goals) => goals.reduce((total, goal) => 
-        total + (goal.investmentPlans || []).reduce((planTotal, plan) => planTotal + (plan.monthlyContribution || 0), 0)
-    , 0)
 );
 
 // Selector to get individual investment plan contributions
@@ -216,6 +217,20 @@ export const selectIndividualGoalInvestmentContributions = createSelector(
     });
     return contributions;
   }
+);
+
+export const selectTotalMonthlyGoalContributions = createSelector(
+    [selectIndividualGoalInvestmentContributions],
+    (contributions) =>
+        contributions.reduce((total, contribution) => {
+            let monthlyAmount = contribution.amount || 0;
+            if (contribution.frequency === 'yearly') {
+                monthlyAmount /= 12;
+            } else if (contribution.frequency === 'quarterly') {
+                monthlyAmount /= 3;
+            }
+            return total + monthlyAmount;
+        }, 0)
 );
 
 
