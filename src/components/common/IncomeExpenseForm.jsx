@@ -53,7 +53,15 @@ export default function IncomeExpenseForm({
   };
 
   return (
-    <Box sx={{ display: "flex", gap: 2, mt: isInline ? 0 : 2, flexWrap: "wrap", width: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 2,
+        mt: isInline ? 0 : 2,
+        flexWrap: "wrap",
+        width: "100%",
+      }}
+    >
       <Grid container spacing={2}>
         <Grid item xs={12} sm={6}>
           <TextField
@@ -64,7 +72,7 @@ export default function IncomeExpenseForm({
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
         </Grid>
-        
+
         {isExpense ? (
           <Grid item xs={12}>
             <SliderInput
@@ -78,13 +86,15 @@ export default function IncomeExpenseForm({
             />
           </Grid>
         ) : (
-          <Grid item xs={12} sm={4}>
+          <Grid item xs={12} sm={6}>
             <FormControl size="small" fullWidth>
               <InputLabel>Frequency</InputLabel>
               <Select
                 value={formData.frequency || "monthly"}
                 label="Frequency"
-                onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, frequency: e.target.value })
+                }
               >
                 <MenuItem value="monthly">Monthly</MenuItem>
                 <MenuItem value="quarterly">Quarterly</MenuItem>
@@ -102,7 +112,9 @@ export default function IncomeExpenseForm({
                 <Select
                   value={formData.category || "basic"}
                   label="Category"
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
                 >
                   <MenuItem value="basic">Basic Need</MenuItem>
                   <MenuItem value="discretionary">Discretionary</MenuItem>
@@ -115,7 +127,9 @@ export default function IncomeExpenseForm({
                 <Select
                   value={formData.frequency || "monthly"}
                   label="Frequency"
-                  onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, frequency: e.target.value })
+                  }
                 >
                   <MenuItem value="monthly">Monthly</MenuItem>
                   <MenuItem value="quarterly">Quarterly</MenuItem>
@@ -172,7 +186,9 @@ export default function IncomeExpenseForm({
             open={endYearOpen}
             onOpen={() => setEndYearOpen(true)}
             onClose={() => setEndYearOpen(false)}
-            value={dayjs(`${Number(formData.endYear) || currentYear + 10}-01-01`)}
+            value={dayjs(
+              `${Number(formData.endYear) || currentYear + 10}-01-01`,
+            )}
             onChange={(newValue) =>
               setFormData({
                 ...formData,
@@ -186,12 +202,20 @@ export default function IncomeExpenseForm({
                 onClick: () => setEndYearOpen(true),
               },
             }}
-            minDate={dayjs(`${Number(formData.startYear) || currentYear}-01-01`)}
+            minDate={dayjs(
+              `${Number(formData.startYear) || currentYear}-01-01`,
+            )}
             maxDate={dayjs(`${currentYear + 50}-12-31`)}
           />
         </Grid>
         <Grid item xs={12}>
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: isInline ? 1 : 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: isInline ? 1 : 2,
+            }}
+          >
             {isInline ? (
               <>
                 <IconButton size="small" onClick={handleSubmit} color="success">

@@ -10,10 +10,14 @@ import {
   useTheme,
   Menu,
   MenuItem,
+  Paper,
 } from "@mui/material";
+import { Divider } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BasicInfoDisplay from "../components/BasicInfoDisplay";
 import BasicInfoEdit from "../components/BasicInfoEdit";
+import { AmountWithUnitInput } from "../../../components/common/CommonComponents"; // Keep AmountWithUnitInput
+import SliderInput from "../../../components/common/SliderInput"; // Corrected import for SliderInput
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectProfileExpenses,
@@ -28,12 +32,16 @@ import {
   selectCareerGrowthRate,
   selectIncomes,
   selectGeneralInflationRate,
+  selectTotalMonthlyIncome,
+  selectTotalMonthlyExpenses,
+  setCareerGrowthRate, // Import setCareerGrowthRate
+  setGeneralInflationRate, // Import setGeneralInflationRate
 } from "../../../store/profileSlice";
+import { selectCurrency } from "../../../store/emiSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
-import IncomeSection from "../components/IncomeSection";
-import ExpenseSection from "../components/ExpenseSection";
 import CashFlowDonutChart from "../components/CashFlowDonutChart";
 import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
+import FinancialSection from "../components/FinancialSection";
 
 const modalStyle = {
   position: "absolute",
@@ -43,13 +51,13 @@ const modalStyle = {
   width: { xs: "90%", md: "50%" },
   maxHeight: "90vh",
   overflowY: "auto",
-  // Removed bgcolor, boxShadow, p, borderRadius from here
 };
 
 export default function PersonalProfileTab({ onEditGoal }) {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const currency = useSelector(selectCurrency);
 
   const expenses = useSelector(selectProfileExpenses) || [];
   const incomes = useSelector(selectIncomes) || [];
@@ -77,6 +85,11 @@ export default function PersonalProfileTab({ onEditGoal }) {
   );
   const investableSurplus = useSelector(selectCurrentSurplus);
   const goals = useSelector(selectGoals) || [];
+  const totalIncome = useSelector(selectTotalMonthlyIncome);
+  const totalExpenses =
+    useSelector(selectTotalMonthlyExpenses) +
+    (monthlyEmi || 0) +
+    totalMonthlyGoalContributions;
 
   const needsValue = expenses
     .filter((e) => e.category === "basic")
@@ -107,8 +120,8 @@ export default function PersonalProfileTab({ onEditGoal }) {
 
   const [editingBasicInfo, setEditingBasicInfo] = useState(false);
   const [openModal, setOpenModal] = useState(false);
-  const [modalType, setModalType] = useState(null); // 'income' or 'expense'
-  const [anchorEl, setAnchorEl] = useState(null); // For the FAB menu
+  const [modalType, setModalType] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const handleSaveBasicInfo = (newCurrentAge, newRetirementAge) => {
     dispatch(setCurrentAge(newCurrentAge));
@@ -119,7 +132,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const handleOpenModal = (type) => {
     setModalType(type);
     setOpenModal(true);
-    handleCloseMenu(); // Close the FAB menu when a modal is opened
+    handleCloseMenu();
   };
 
   const handleCloseModal = () => {
@@ -136,49 +149,152 @@ export default function PersonalProfileTab({ onEditGoal }) {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs={12}>
-        {editingBasicInfo ? (
-          <BasicInfoEdit
-            currentAge={currentAge}
-            retirementAge={retirementAge}
-            onSave={handleSaveBasicInfo}
-            onCancel={() => setEditingBasicInfo(false)}
-          />
-        ) : (
-          <BasicInfoDisplay
-            currentAge={currentAge}
-            retirementAge={retirementAge}
-            onEdit={() => setEditingBasicInfo(true)}
-          />
-        )}
-      </Grid>
+    <>
+      <Grid container spacing={3}>
+        {/* Full-width Basic Info */}
+        <Grid item xs={12}>
+          {editingBasicInfo ? (
+            <BasicInfoEdit
+              currentAge={currentAge}
+              retirementAge={retirementAge}
+              onSave={handleSaveBasicInfo}
+              onCancel={() => setEditingBasicInfo(false)}
+            />
+          ) : (
+            <BasicInfoDisplay
+              currentAge={currentAge}
+              retirementAge={retirementAge}
+              onEdit={() => setEditingBasicInfo(true)}
+            />
+          )}
+        </Grid>
 
-      {/* Always render IncomeSection and ExpenseSection for their lists and forms on larger screens */}
-      {/* On small screens, these sections will only display their lists, and forms will be in modals */}
-      <Grid item xs={12} md={6}>
-        <IncomeSection isSmallScreen={isSmallScreen} />
-      </Grid>
-      <Grid item xs={12} md={6}>
-        <CashFlowDonutChart donutData={donutData} />
-      </Grid>
-      <Grid item xs={12}>
-        <ExpenseSection onEditGoal={onEditGoal} isSmallScreen={isSmallScreen} />
-      </Grid>
-      <Grid item xs={12}>
-        <ProjectedCashFlowChart
-          currentAge={currentAge}
-          retirementAge={retirementAge}
-          careerGrowthRate={careerGrowthRate}
-          careerGrowthType={careerGrowthType}
-          monthlyEmi={monthlyEmi}
-          emiState={emiState}
-          individualGoalInvestments={individualGoalInvestments}
-          goals={goals}
-          expenses={expenses}
-          incomes={incomes}
-          inflationRate={generalInflationRate}
-        />
+        {/* Income and Expense Details Row */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Income Details
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <FinancialSection isIncome={true} isSmallScreen={isSmallScreen} />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="h6" gutterBottom>
+              Expense Details
+            </Typography>
+            <Divider sx={{ my: 2 }} />
+            <FinancialSection
+              isIncome={false}
+              onEditGoal={onEditGoal}
+              isSmallScreen={isSmallScreen}
+            />
+          </Paper>
+        </Grid>
+
+        {/* Career Growth and Expense Inflation Row */}
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              Career Growth (Year-on-Year)
+            </Typography>
+            <AmountWithUnitInput
+              label="Expected Annual Salary Hike"
+              value={
+                careerGrowthType === "percentage"
+                  ? (careerGrowthRate * 100).toFixed(2)
+                  : careerGrowthRate
+              }
+              onAmountChange={(e) => {
+                const val = Number(e.target.value);
+                dispatch(
+                  setCareerGrowthRate({
+                    type: careerGrowthType,
+                    value: careerGrowthType === "percentage" ? val / 100 : val,
+                  }),
+                );
+              }}
+              unitValue={careerGrowthType === "percentage" ? "%" : currency}
+              onUnitChange={(e) => {
+                const newUnit = e.target.value;
+                const newType = newUnit === "%" ? "percentage" : "fixed";
+                dispatch(
+                  setCareerGrowthRate({
+                    type: newType,
+                    value: newType === "percentage" ? 0.1 : 50000,
+                  }),
+                );
+              }}
+              unitOptions={[
+                { value: "%", label: "%" },
+                { value: currency, label: currency },
+              ]}
+            />
+          </Paper>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              Expense Inflation (Year-on-Year)
+            </Typography>
+            <Box sx={{ mt: 2 }}>
+              <SliderInput
+                label="Expected Annual Inflation Rate (%)"
+                value={(generalInflationRate * 100).toFixed(1)}
+                onChange={(val) => {
+                  dispatch(setGeneralInflationRate(val / 100));
+                }}
+                min={0}
+                max={20}
+                step={0.1}
+                isInline={false}
+              />
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Charts Row */}
+        <Grid item xs={12} md={6}>
+          <Box sx={{ width: "100%", minHeight: 300 }}>
+            <ProjectedCashFlowChart
+              currentAge={currentAge}
+              retirementAge={retirementAge}
+              careerGrowthRate={careerGrowthRate}
+              careerGrowthType={careerGrowthType}
+              monthlyEmi={monthlyEmi}
+              emiState={emiState}
+              individualGoalInvestments={individualGoalInvestments}
+              goals={goals}
+              expenses={expenses}
+              incomes={incomes}
+              inflationRate={generalInflationRate}
+            />
+          </Box>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Box sx={{ width: "100%", minHeight: 300 }}>
+            <CashFlowDonutChart donutData={donutData} />
+          </Box>
+        </Grid>
       </Grid>
 
       {isSmallScreen && (
@@ -190,7 +306,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
               position: "fixed",
               bottom: 16,
               right: 16,
-              zIndex: 99999, // Added zIndex
+              zIndex: 1050,
             }}
             onClick={handleOpenMenu}
           >
@@ -223,34 +339,32 @@ export default function PersonalProfileTab({ onEditGoal }) {
         open={openModal}
         onClose={handleCloseModal}
         aria-labelledby="add-item-modal-title"
-        aria-describedby="add-item-modal-description"
       >
         <Box sx={modalStyle}>
-          {/* The Typography and Button are still direct children of the Box,
-              but the IncomeSection/ExpenseSection will now handle their own Paper styling. */}
           <Typography
             id="add-item-modal-title"
             variant="h6"
             component="h2"
-            gutterBottom
+            sx={{ p: 2 }}
           >
             {modalType === "income" ? "Add New Income" : "Add New Expense"}
           </Typography>
           {modalType === "income" && (
-            <IncomeSection isModal={true} onCloseModal={handleCloseModal} />
+            <FinancialSection isIncome={true} isModal={true} onCloseModal={handleCloseModal} />
           )}
           {modalType === "expense" && (
-            <ExpenseSection
+            <FinancialSection
+              isIncome={false}
               isModal={true}
               onCloseModal={handleCloseModal}
               onEditGoal={onEditGoal}
             />
           )}
-          <Button onClick={handleCloseModal} sx={{ mt: 2 }}>
+          <Button onClick={handleCloseModal} sx={{ mt: 2, m: 2 }}>
             Close
           </Button>
         </Box>
       </Modal>
-    </Grid>
+    </>
   );
 }
