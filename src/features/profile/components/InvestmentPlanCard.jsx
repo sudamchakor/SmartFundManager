@@ -80,7 +80,7 @@ const InvestmentPlanCard = ({
   );
 
   return (
-    <Box sx={{ border: "1px solid #ddd", p: 2, mb: 2, borderRadius: 2 }}>
+    <Box sx={{ border: "1px solid #e0e0e0", p: 2, mb: 2, borderRadius: 2 }}>
       <Grid container spacing={2} alignItems="center">
         <Grid item xs={6} sm={6}>
           <FormControl fullWidth size="small">

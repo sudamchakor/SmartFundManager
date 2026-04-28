@@ -23,6 +23,7 @@ export const SliderInput = ({
   showInput = true,
   color = "primary",
   isInline = true,
+  warning = false, // New prop for external warning
 }) => {
   // Internal state for the slider's value during drag or text input
   const [internalValue, setInternalValue] = useState(Number(value) || 0);
@@ -35,7 +36,8 @@ export const SliderInput = ({
   }, [value]);
 
   const numValue = Number(value) || 0; // Use the external value for warning calculation
-  const isWarning = warningThreshold !== null && numValue > warningThreshold;
+  // Combine internal warning logic with external 'warning' prop
+  const isWarning = (warningThreshold !== null && numValue > warningThreshold) || warning;
   const sliderColor = isWarning ? "error" : color;
 
   const handleInputChange = (e) => {
@@ -145,7 +147,7 @@ export const SliderInput = ({
             display: "none",
           },
       }}
-      error={isWarning}
+      error={isWarning} // Use isWarning for TextField error state
     />
   );
 

@@ -73,7 +73,7 @@ const COLORS = [
 const Transition = React.forwardRef(function Transition(props, ref) {
   const { children, ...other } = props;
   return (
-    <Slide direction="up" ref={ref} {...other} timeout={500}>
+    <Slide direction="up" ref={ref} {...other}>
       {children}
     </Slide>
   );
@@ -121,6 +121,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const formatCurrency = (val) =>
     `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const currentYear = new Date().getFullYear();
+  const calculatedRetirementYear = currentYear + (retirementAge - currentAge);
 
   useEffect(() => {
     if (goalToEditId) {
@@ -159,6 +160,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "",
       targetAmount: 0,
+      startYear: currentYear, // Initialize startYear
       targetYear: currentYear + 5,
       category: "general",
       investmentPlans: [],
@@ -213,6 +215,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "Retirement",
       targetAmount: targetAmount,
+      startYear: currentYear, // Initialize startYear
       targetYear: currentYear + (yearsToRetirement > 0 ? yearsToRetirement : 1),
       category: "retirement",
       investmentPlans: [],
@@ -241,6 +244,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "Child's Higher Education",
       targetAmount: Math.round(targetAmount),
+      startYear: currentYear, // Initialize startYear
       targetYear: currentYear + (yearsToCollege > 0 ? yearsToCollege : 1),
       category: "education",
       investmentPlans: [],
@@ -262,6 +266,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "Emergency Fund",
       targetAmount: targetAmount,
+      startYear: currentYear, // Initialize startYear
       targetYear: currentYear + yearsToGoal,
       category: "safety",
       investmentPlans: [],
@@ -809,6 +814,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
               goal={currentGoalFormData}
               currentYear={currentYear}
               onSave={setCurrentGoalFormData}
+              retirementYear={calculatedRetirementYear} // Pass retirementYear here
             />
           )}
         </DialogContent>

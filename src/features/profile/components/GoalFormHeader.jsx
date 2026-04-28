@@ -1,5 +1,5 @@
 import React from "react";
-import { Grid, TextField, Button } from "@mui/material";
+import { Grid, TextField, Button, Typography } from "@mui/material";
 import SliderInput from "../../../components/common/SliderInput";
 import InvestmentSummary from "./InvestmentSummary";
 
@@ -7,6 +7,7 @@ const GoalFormHeader = ({
   editedGoal,
   setEditedGoal,
   currentYear,
+  retirementYear,
   handleGenerateInvestmentPlans,
   plans,
   handleSaveGoal,
@@ -17,6 +18,7 @@ const GoalFormHeader = ({
     0,
   );
   const isMismatch = totalAmount !== editedGoal.targetAmount;
+  const isTargetYearInvalid = editedGoal.targetYear > retirementYear;
 
   const onSave = () => {
     if (isMismatch) {
@@ -55,6 +57,19 @@ const GoalFormHeader = ({
       </Grid>
       <Grid item xs={12} sm={6} md={6} lg={6} xl={4}>
         <SliderInput
+          label="Start Year"
+          value={Number(editedGoal.startYear) || currentYear}
+          onChange={(val) =>
+            setEditedGoal({ ...editedGoal, startYear: val })
+          }
+          min={currentYear}
+          max={currentYear + 50}
+          step={1}
+          showInput={true}
+        />
+      </Grid>
+      <Grid item xs={12} sm={6} md={6} lg={6} xl={4}>
+        <SliderInput
           label="Target Year"
           value={Number(editedGoal.targetYear) || currentYear}
           onChange={(val) =>
@@ -64,7 +79,13 @@ const GoalFormHeader = ({
           max={currentYear + 50}
           step={1}
           showInput={true}
+          warning={isTargetYearInvalid}
         />
+        {isTargetYearInvalid && (
+          <Typography variant="caption" color="error">
+            Target year cannot exceed retirement year ({retirementYear}).
+          </Typography>
+        )}
       </Grid>
       {/* This Grid item now always takes full width to ensure the button is on its own row */}
       <Grid item xs={12}>

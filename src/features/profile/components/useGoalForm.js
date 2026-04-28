@@ -10,6 +10,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
     const initialTimePeriod = initialGoal?.targetYear
       ? initialGoal.targetYear - currentYear
       : 10;
+    const initialStartYear = initialGoal?.startYear || currentYear; // Initialize startYear
 
     if (initialGoal && initialGoal.investmentPlans && initialGoal.investmentPlans.length > 0) {
       // If goal has existing plans, recalculate them to ensure consistency
@@ -23,11 +24,12 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
       "sip",
       initialTargetAmount,
       initialTimePeriod,
-      currentYear,
+      initialStartYear, // Pass initialStartYear
       initialGoal,
     );
     return {
       ...initialGoal,
+      startYear: initialStartYear, // Ensure startYear is set
       investmentPlans: [calculatePlanResults(defaultPlan)],
     };
   });
@@ -48,6 +50,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
       const initialTimePeriod = initialGoal?.targetYear
         ? initialGoal.targetYear - currentYear
         : 10;
+      const initialStartYear = initialGoal?.startYear || currentYear; // Initialize startYear
 
       if (initialGoal && initialGoal.investmentPlans && initialGoal.investmentPlans.length > 0) {
         setEditedGoal({
@@ -59,16 +62,17 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
           "sip",
           initialTargetAmount,
           initialTimePeriod,
-          currentYear,
+          initialStartYear, // Pass initialStartYear
           initialGoal,
         );
         setEditedGoal({
           ...initialGoal,
+          startYear: initialStartYear, // Ensure startYear is set
           investmentPlans: [calculatePlanResults(defaultPlan)],
         });
       }
     }
-  }, [initialGoal]);
+  }, [initialGoal, editedGoal?.id, currentYear]);
 
   // Helper to calculate the sum of totalValue from all plans
   const calculateTotalFutureValue = useCallback((plans) => {
@@ -103,6 +107,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
     const currentTimePeriod = editedGoal.targetYear
       ? editedGoal.targetYear - currentYear
       : 10;
+    const currentStartYear = editedGoal.startYear || currentYear; // Use editedGoal.startYear
 
     const totalFutureValueOfExistingPlans = calculateTotalFutureValue(editedGoal.investmentPlans);
     const remainingBalance = Math.max(0, currentTargetAmount - totalFutureValueOfExistingPlans);
@@ -113,7 +118,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
         "sip", // Default to SIP
         remainingBalance,
         currentTimePeriod,
-        currentYear,
+        currentStartYear, // Pass currentStartYear
         editedGoal,
       );
       // Perform initial calculation for the new plan
@@ -146,6 +151,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
             const currentTimePeriod = prevGoal.targetYear
               ? prevGoal.targetYear - currentYear
               : 10;
+            const currentStartYear = prevGoal.startYear || currentYear; // Use prevGoal.startYear
 
             // Calculate total future value of OTHER plans
             const otherPlans = prevGoal.investmentPlans.filter(p => p.id !== planId);
@@ -157,7 +163,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
               value, // New type
               remainingBalance,
               currentTimePeriod,
-              currentYear,
+              currentStartYear, // Pass currentStartYear
               prevGoal,
             );
             tempUpdatedPlan = { ...newDefaultPlan, id: plan.id }; // Keep original ID
@@ -174,13 +180,14 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
   }, [currentYear, calculateTotalFutureValue]);
 
   const handleGenerateInvestmentPlans = useCallback(() => {
-    const { targetAmount, targetYear } = editedGoal;
+    const { targetAmount, targetYear, startYear } = editedGoal; // Destructure startYear
     if (!targetAmount || !targetYear || targetYear <= currentYear) {
       alert("Please set a valid Target Amount and Target Year.");
       return;
     }
 
     const totalTimePeriod = targetYear - currentYear;
+    const planStartYear = startYear || currentYear; // Use startYear from editedGoal
 
     // Define plan types that accumulate towards a target
     const accumulatingPlanTypes = ["sip", "lumpsum", "stepUpSip", "fd"];
@@ -200,7 +207,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
           type,
           portionOfTarget,
           totalTimePeriod,
-          currentYear,
+          planStartYear, // Pass planStartYear
           editedGoal
         )
       );
@@ -216,7 +223,7 @@ const useGoalForm = (initialGoal, currentYear, onSave) => {
       lastPlanType,
       remainingTarget,
       totalTimePeriod,
-      currentYear,
+      planStartYear, // Pass planStartYear
       editedGoal
     );
     const calculatedLastPlan = calculatePlanResults(lastPlanRaw);

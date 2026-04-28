@@ -99,7 +99,7 @@ export const getDefaultPlanState = (
   type,
   targetAmountForPlan, // This is the target future value for this specific plan
   timePeriod,
-  currentYear,
+  planStartYear, // Renamed from currentYear to be more descriptive
   goal // The parent goal object, useful for default rates
 ) => {
   const id = Date.now();
@@ -114,6 +114,7 @@ export const getDefaultPlanState = (
     estimatedReturns: 0,
     totalValue: 0,
     timePeriod: timePeriod > 0 ? timePeriod : 10, // Ensure positive time period
+    startYear: planStartYear, // Store the start year
     details: "",
     isSafe: false,
     // Default values for all types
