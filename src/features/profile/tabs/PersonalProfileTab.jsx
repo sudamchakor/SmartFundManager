@@ -35,13 +35,21 @@ import CashFlowDonutChart from "../components/CashFlowDonutChart";
 import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
 import FinancialSection from "../components/FinancialSection";
 import CorpusManager from "../../corpus/CorpusManager";
+import FinancialModal from "../components/FinancialModal"; // Import FinancialModal
 
-export default function PersonalProfileTab({ onEditGoal, onOpenModal }) {
+export default function PersonalProfileTab({ onEditGoal }) { // Removed onOpenModal from props
   const dispatch = useDispatch();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [editingBasicInfo, setEditingBasicInfo] = useState(false);
+
+  // State for FinancialModal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("");
+  const [modalAsset, setModalAsset] = useState(null); // To hold asset data for editing
+  const [modalMode, setModalMode] = useState("add"); // "add" or "edit"
 
   const expenses = useSelector(selectProfileExpenses) || [];
   const incomes = useSelector(selectIncomes) || [];
@@ -97,7 +105,6 @@ export default function PersonalProfileTab({ onEditGoal, onOpenModal }) {
     },
   ].filter((item) => item.value > 0);
 
-  const [editingBasicInfo, setEditingBasicInfo] = useState(false);
 
   const handleSaveBasicInfo = (newCurrentAge, newRetirementAge) => {
     dispatch(setCurrentAge(newCurrentAge));
@@ -105,26 +112,37 @@ export default function PersonalProfileTab({ onEditGoal, onOpenModal }) {
     setEditingBasicInfo(false);
   };
 
-  const handleModalOpen = (type) => {
-    onOpenModal(type);
-    setSpeedDialOpen(false);
+  // New function to open the FinancialModal
+  const handleOpenFinancialModal = (type, assetData = null, mode = "add") => {
+    setModalType(type);
+    setModalAsset(assetData);
+    setModalMode(mode);
+    setModalOpen(true);
+    setSpeedDialOpen(false); // Close speed dial if opened from there
+  };
+
+  const handleCloseFinancialModal = () => {
+    setModalOpen(false);
+    setModalType("");
+    setModalAsset(null);
+    setModalMode("add");
   };
 
   const actions = [
     {
       icon: <AccountBalanceWallet />,
       name: "Corpus",
-      handler: () => handleModalOpen("corpus"),
+      handler: () => handleOpenFinancialModal("corpus", null, "add"),
     },
     {
       icon: <AttachMoney />,
       name: "Income",
-      handler: () => handleModalOpen("income"),
+      handler: () => handleOpenFinancialModal("income", null, "add"),
     },
     {
       icon: <MoneyOff />,
       name: "Expense",
-      handler: () => handleModalOpen("expense"),
+      handler: () => handleOpenFinancialModal("expense", null, "add"),
     },
   ];
 
@@ -151,18 +169,18 @@ export default function PersonalProfileTab({ onEditGoal, onOpenModal }) {
 
         {/* Corpus Manager */}
         <Grid item xs={12} md={6}>
-          <CorpusManager onOpenModal={onOpenModal} />
+          <CorpusManager onOpenModal={handleOpenFinancialModal} />
         </Grid>
 
         {/* Income and Expense Details Row */}
         <Grid item xs={12} md={6}>
-          <FinancialSection isIncome={true} onOpenModal={onOpenModal} />
+          <FinancialSection isIncome={true} onOpenModal={handleOpenFinancialModal} />
         </Grid>
         <Grid item xs={12} md={6}>
           <FinancialSection
             isIncome={false}
             onEditGoal={onEditGoal}
-            onOpenModal={onOpenModal}
+            onOpenModal={handleOpenFinancialModal}
           />
         </Grid>
 
@@ -210,6 +228,15 @@ export default function PersonalProfileTab({ onEditGoal, onOpenModal }) {
           ))}
         </SpeedDial>
       )}
+
+      {/* Render FinancialModal */}
+      <FinancialModal
+        open={modalOpen}
+        onClose={handleCloseFinancialModal}
+        type={modalType}
+        asset={modalAsset} // Pass the asset data for editing
+        mode={modalMode} // Pass the mode (add/edit)
+      />
     </>
   );
 }

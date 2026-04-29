@@ -60,7 +60,7 @@ const CorpusManager = ({ onOpenModal }) => {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => onOpenModal("corpus")}
+                onClick={() => onOpenModal("corpus", null, "add")}
               >
                 Add
               </Button>
@@ -88,7 +88,12 @@ const CorpusManager = ({ onOpenModal }) => {
                       {asset.expectedReturn.toFixed(2)}%
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton edge="end" aria-label="edit" color="primary">
+                      <IconButton
+                        edge="end"
+                        aria-label="edit"
+                        color="primary"
+                        onClick={() => onOpenModal("corpus", asset, "edit")}
+                      >
                         <EditIcon fontSize="small" />
                       </IconButton>
                       <IconButton

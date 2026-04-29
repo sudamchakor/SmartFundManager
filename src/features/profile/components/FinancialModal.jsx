@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,19 +7,39 @@ import {
   Button,
   TextField,
   Typography,
+  Divider,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import IncomeExpenseForm from "../../../components/common/IncomeExpenseForm";
 import { addIncome, addExpense } from "../../../store/profileSlice";
-import { addAsset } from "../../corpus/corpusSlice";
+import { addAsset, updateAsset } from "../../corpus/corpusSlice"; // Import updateAsset
 
-const CorpusForm = ({ onSave, onCancel }) => {
+const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => { // Added mode prop
   const [newAsset, setNewAsset] = useState({
     label: "",
     value: "",
     expectedReturn: "",
     category: "Equity",
   });
+
+  useEffect(() => {
+    if (assetToEdit && mode === "edit") { // Check mode for editing
+      setNewAsset({
+        id: assetToEdit.id,
+        label: assetToEdit.label,
+        value: assetToEdit.value,
+        expectedReturn: assetToEdit.expectedReturn,
+        category: assetToEdit.category,
+      });
+    } else {
+      setNewAsset({
+        label: "",
+        value: "",
+        expectedReturn: "",
+        category: "Equity",
+      });
+    }
+  }, [assetToEdit, mode]); // Added mode to dependency array
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -76,50 +96,42 @@ const CorpusForm = ({ onSave, onCancel }) => {
       <DialogActions>
         <Button onClick={onCancel}>Cancel</Button>
         <Button onClick={handleSave} variant="contained">
-          Add
+          {mode === "edit" ? "Update" : "Add"}
         </Button>
       </DialogActions>
     </>
   );
 };
 
-export default function FinancialModal({ open, onClose, type }) {
+export default function FinancialModal({ open, onClose, type, asset, mode }) { // Added mode prop
   const dispatch = useDispatch();
 
   const getTitle = () => {
     switch (type) {
       case "income":
-        return "Add New Income";
+        return mode === "edit" ? "Edit Income" : "Add New Income";
       case "expense":
-        return "Add New Expense";
+        return mode === "edit" ? "Edit Expense" : "Add New Expense";
       case "corpus":
-        return "Add New Asset";
+        return mode === "edit" ? "Edit Asset" : "Add New Asset";
       default:
         return "";
     }
   };
 
   const handleSave = (formData) => {
-    const payload = { ...formData, id: Date.now() };
-    switch (type) {
-      case "income":
-        dispatch(addIncome(payload));
-        break;
-      case "expense":
-        dispatch(addExpense(payload));
-        break;
-      case "corpus":
-        dispatch(
-          addAsset(
-            payload.label,
-            payload.value,
-            payload.expectedReturn,
-            payload.category,
-          ),
-        );
-        break;
-      default:
-        break;
+    if (mode === "edit") { // Use mode to determine edit operation
+      dispatch(updateAsset({ ...formData, id: asset.id }));
+    } else { // Otherwise, it's an add operation
+      const payload = { ...formData, id: Date.now() }; // id will be generated in prepare for addAsset
+      dispatch(
+        addAsset(
+          payload.label,
+          payload.value,
+          payload.expectedReturn,
+          payload.category,
+        ),
+      );
     }
     onClose();
   };
@@ -127,15 +139,16 @@ export default function FinancialModal({ open, onClose, type }) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>{getTitle()}</DialogTitle>
+      <Divider sx={{ mb: 2 }} />
       {type === "corpus" ? (
-        <CorpusForm onSave={handleSave} onCancel={onClose} />
+        <CorpusForm onSave={handleSave} onCancel={onClose} assetToEdit={asset} mode={mode} /> // Pass assetToEdit and mode
       ) : (
         <DialogContent>
           <IncomeExpenseForm
             isExpense={type === "expense"}
             onSave={handleSave}
             onCancel={onClose}
-            submitLabel="Add"
+            submitLabel={mode === "edit" ? "Update" : "Add"} // Use mode for submitLabel
           />
         </DialogContent>
       )}
