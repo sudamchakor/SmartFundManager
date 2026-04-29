@@ -10,7 +10,6 @@ import { selectCurrency } from "../store/emiSlice"; // Only need currency now
 import PersonalProfileTab from "../features/profile/tabs/PersonalProfileTab";
 import FutureGoalsTab from "../features/profile/tabs/FutureGoalsTab";
 import WealthTab from "../features/profile/tabs/WealthTab";
-import Settings from "../features/profile/tabs/Settings";
 import OnboardingModal from "../features/profile/tabs/OnboardingModal";
 
 function CustomTabPanel(props) {
@@ -36,7 +35,6 @@ export default function UserProfile() {
   const getTabIndex = (tabParam) => {
     if (tabParam === "goals") return 1;
     if (tabParam === "wealth") return 2;
-    if (tabParam === "settings") return 3;
     return 0; // Default is personal
   };
 
@@ -46,7 +44,9 @@ export default function UserProfile() {
   const [tabValue, setTabValue] = useState(() => getTabIndex(tabParam));
   const [goalToEditId, setGoalToEditId] = useState(null); // New state for goal editing
   const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [isProfileCreated, setIsProfileCreated] = useState(localStorage.getItem("isProfileCreated") === "true");
+  const [isProfileCreated, setIsProfileCreated] = useState(
+    localStorage.getItem("isProfileCreated") === "true",
+  );
 
   useEffect(() => {
     setTabValue(getTabIndex(tabParam));
@@ -60,7 +60,6 @@ export default function UserProfile() {
     let newTabName = "personal";
     if (newValue === 1) newTabName = "goals";
     if (newValue === 2) newTabName = "wealth";
-    if (newValue === 3) newTabName = "settings";
     navigate(`/profile?tab=${newTabName}`);
     setGoalToEditId(null); // Clear goalToEditId when changing tabs
   };
@@ -88,7 +87,12 @@ export default function UserProfile() {
       {!isProfileCreated && (
         <Alert severity="warning" sx={{ mb: 2 }}>
           Your profile is not created. Please{" "}
-          <Link component="button" variant="inherit" onClick={() => setOnboardingOpen(true)} sx={{ fontWeight: 'bold', verticalAlign: 'baseline' }}>
+          <Link
+            component="button"
+            variant="inherit"
+            onClick={() => setOnboardingOpen(true)}
+            sx={{ fontWeight: "bold", verticalAlign: "baseline" }}
+          >
             create profile
           </Link>
           .
@@ -120,16 +124,16 @@ export default function UserProfile() {
             },
           }}
         >
-          <Tab label="Personal Profile" />
-          <Tab label="Future Goals" />
+          <Tab label="Profile" />
+          <Tab label="Goals" />
           <Tab label="Wealth" />
-          <Tab label="Settings" />
         </Tabs>
       </Box>
 
       {/* Tab 1: Personal Profile */}
       <CustomTabPanel value={tabValue} index={0}>
-        <PersonalProfileTab onEditGoal={handleEditGoal} /> {/* Pass the handler */}
+        <PersonalProfileTab onEditGoal={handleEditGoal} />{" "}
+        {/* Pass the handler */}
       </CustomTabPanel>
 
       {/* Tab 2: Future Goals */}
@@ -140,11 +144,6 @@ export default function UserProfile() {
       {/* Tab 3: Wealth */}
       <CustomTabPanel value={tabValue} index={2}>
         <WealthTab />
-      </CustomTabPanel>
-
-      {/* Tab 4: Settings */}
-      <CustomTabPanel value={tabValue} index={3}>
-        <Settings />
       </CustomTabPanel>
 
       <OnboardingModal open={onboardingOpen} onClose={handleOnboardingClose} />
@@ -160,21 +159,27 @@ export default function UserProfile() {
           color: "white",
           p: 2,
           display: "flex",
-          flexDirection: { xs: 'column', sm: 'row' }, // Stack vertically on extra small, row on small and up
+          flexDirection: { xs: "column", sm: "row" }, // Stack vertically on extra small, row on small and up
           justifyContent: "space-around",
-          alignItems: { xs: 'flex-start', sm: 'center' }, // Align items for stacked layout
+          alignItems: { xs: "flex-start", sm: "center" }, // Align items for stacked layout
           gap: { xs: 1, sm: 0 }, // Add gap when stacked
           zIndex: 1000,
           boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
         }}
       >
-        <Typography variant="h6" sx={{ fontSize: { xs: '0.9rem', sm: '1.1rem' } }}>
+        <Typography
+          variant="h6"
+          sx={{ fontSize: { xs: "0.9rem", sm: "1.1rem" } }}
+        >
           Current Surplus:{" "}
           <strong>
             {formatCurrency(investableSurplus.toFixed(0))} / month
           </strong>
         </Typography>
-        <Typography variant="h6" sx={{ fontSize: { xs: '0.9rem', sm: '1.1rem' } }}>
+        <Typography
+          variant="h6"
+          sx={{ fontSize: { xs: "0.9rem", sm: "1.1rem" } }}
+        >
           Debt-Free Countdown: <strong>{debtFreeCountdown}</strong>
         </Typography>
       </Box>

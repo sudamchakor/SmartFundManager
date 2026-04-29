@@ -154,7 +154,11 @@ const Header = () => {
   };
 
   const handleProfileSelect = (tab) => {
-    navigate(`/profile?tab=${tab}`);
+    if (tab === "settings") {
+      navigate("/settings");
+    } else {
+      navigate(`/profile?tab=${tab}`);
+    }
     setProfileAnchorEl(null);
     setDrawerOpen(false);
   };

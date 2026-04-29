@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider, createTheme, CssBaseline, Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -26,6 +26,7 @@ import InvestmentCalculator from "./pages/InvestmentCalculator";
 import PrivacyPolicy from "./pages/PrivacyPolicy"; // Import PrivacyPolicy
 import TermsOfService from "./pages/TermsOfService"; // Import TermsOfService
 import ContactUs from "./pages/ContactUs"; // Import ContactUs
+import SettingsPage from "./pages/SettingsPage";
 
 // Styles
 import "./App.css";
@@ -123,6 +124,7 @@ const AppContent = () => {
             <Route path="/" element={<Home />} />
             <Route path="/calculator" element={<Calculator />} />
             <Route path="/profile" element={<UserProfile />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route
               path="/credit-card-emi"
               element={<CreditCardEmiCalculator />}
