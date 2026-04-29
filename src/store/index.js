@@ -4,17 +4,19 @@ import storage from 'redux-persist/lib/storage';
 import emiReducer from './emiSlice';
 import taxReducer from './taxSlice';
 import profileReducer from './profileSlice';
+import corpusReducer from '../features/corpus/corpusSlice'; // Import the new corpus reducer
 
 const persistConfig = {
   key: 'app_v1',
   storage,
-  whitelist: ['emi', 'tax', 'profile'], // Persist slices
+  whitelist: ['emi', 'tax', 'profile', 'corpus'], // Add 'corpus' to the whitelist
 };
 
 const rootReducer = combineReducers({
   emi: emiReducer,
   tax: taxReducer,
   profile: profileReducer,
+  corpus: corpusReducer, // Add the corpus reducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

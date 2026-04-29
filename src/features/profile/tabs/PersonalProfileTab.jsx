@@ -45,6 +45,7 @@ import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator"
 import CashFlowDonutChart from "../components/CashFlowDonutChart";
 import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
 import FinancialSection from "../components/FinancialSection";
+import CorpusManager from "../../corpus/CorpusManager"; // Import CorpusManager
 
 const modalStyle = {
   position: "absolute",
@@ -154,8 +155,8 @@ export default function PersonalProfileTab({ onEditGoal }) {
   return (
     <>
       <Grid container spacing={3}>
-        {/* Full-width Basic Info */}
-        <Grid item xs={12}>
+        {/* Basic Info */}
+        <Grid item xs={12} md={6}>
           {editingBasicInfo ? (
             <BasicInfoEdit
               currentAge={currentAge}
@@ -170,6 +171,11 @@ export default function PersonalProfileTab({ onEditGoal }) {
               onEdit={() => setEditingBasicInfo(true)}
             />
           )}
+        </Grid>
+
+        {/* Corpus Manager */}
+        <Grid item xs={12} md={6}>
+          <CorpusManager />
         </Grid>
 
         {/* Income and Expense Details Row */}
@@ -274,7 +280,11 @@ export default function PersonalProfileTab({ onEditGoal }) {
             {modalType === "income" ? "Add New Income" : "Add New Expense"}
           </Typography>
           {modalType === "income" && (
-            <FinancialSection isIncome={true} isModal={true} onCloseModal={handleCloseModal} />
+            <FinancialSection
+              isIncome={true}
+              isModal={true}
+              onCloseModal={handleCloseModal}
+            />
           )}
           {modalType === "expense" && (
             <FinancialSection
