@@ -8,6 +8,7 @@ import {
   Grid,
   Slider,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles"; // Import useTheme
 import {
   selectWealthProjection,
   selectFinancialIndependenceYear,
@@ -25,7 +26,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  BarChart,
+  ComposedChart,
+  Line,
   Bar,
 } from "recharts";
 import { formatCurrency } from "../../../utils/formatting";
@@ -36,11 +38,14 @@ const formatLargeNumber = (num, currency) => {
   const absNum = Math.abs(num);
   let formattedNum;
 
-  if (absNum >= 10000000) { // Crores
+  if (absNum >= 10000000) {
+    // Crores
     formattedNum = `${(num / 10000000).toFixed(1)}Cr`;
-  } else if (absNum >= 100000) { // Lakhs
+  } else if (absNum >= 100000) {
+    // Lakhs
     formattedNum = `${(num / 100000).toFixed(1)}L`;
-  } else if (absNum >= 1000) { // Thousands
+  } else if (absNum >= 1000) {
+    // Thousands
     formattedNum = `${(num / 1000).toFixed(1)}K`;
   } else {
     formattedNum = num.toString();
@@ -59,10 +64,22 @@ const formatLargeNumber = (num, currency) => {
 const DataCard = ({ title, value, subValue }) => (
   <Card sx={{ height: "100%" }}>
     <CardContent>
-      <Typography variant="h6" color="text.secondary" gutterBottom>
+      <Typography
+        variant="h6"
+        color="text.secondary"
+        gutterBottom
+        sx={{ fontSize: { xs: "0.9rem", sm: "1rem", md: "1rem" } }} // Adjusted for responsiveness
+      >
         {title}
       </Typography>
-      <Typography variant="h4" component="div">
+      <Typography
+        variant="h4"
+        component="div"
+        sx={{
+          fontSize: { xs: "1.2rem", sm: "1rem", md: "1rem" },
+          fontWeight: "bold",
+        }} // Adjusted for responsiveness
+      >
         {value}
       </Typography>
       {subValue && (
@@ -97,6 +114,8 @@ const WealthProjectionEngine = () => {
   const expectedReturnRate = useSelector(selectExpectedReturnRate);
   const stepUpPercentage = useSelector(selectStepUpPercentage);
   const currency = useSelector(selectCurrency);
+  const theme = useTheme(); // Use the theme hook
+
   const handleReturnRateChange = (event, newValue) => {
     dispatch(setExpectedReturnRate(newValue / 100));
   };
@@ -113,7 +132,11 @@ const WealthProjectionEngine = () => {
 
   return (
     <Box sx={{ mt: 4 }}>
-      <Typography variant="h5" gutterBottom>
+      <Typography
+        variant="h5"
+        gutterBottom
+        sx={{ fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" } }} // Adjusted for responsiveness
+      >
         Wealth Creation & Projection Engine
       </Typography>
 
@@ -142,12 +165,21 @@ const WealthProjectionEngine = () => {
 
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" } }} // Adjusted for responsiveness
+          >
             Investment Strategy
           </Typography>
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={6}>
-              <Typography gutterBottom>Expected Return %</Typography>
+              <Typography
+                gutterBottom
+                sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+              >
+                Expected Return %
+              </Typography>
               <Slider
                 value={expectedReturnRate * 100}
                 onChange={handleReturnRateChange}
@@ -160,7 +192,12 @@ const WealthProjectionEngine = () => {
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography gutterBottom>Annual Step-up %</Typography>
+              <Typography
+                gutterBottom
+                sx={{ fontSize: { xs: "0.9rem", sm: "1rem" } }}
+              >
+                Annual Step-up %
+              </Typography>
               <Slider
                 value={stepUpPercentage * 100}
                 onChange={handleStepUpChange}
@@ -180,15 +217,28 @@ const WealthProjectionEngine = () => {
         <Grid item xs={12} lg={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" } }} // Adjusted for responsiveness
+              >
                 Inflation-Adjusted Wealth Growth
               </Typography>
               <ResponsiveContainer width="100%" height={400}>
-                <AreaChart data={projectionData}>
+                <AreaChart
+                  data={projectionData}
+                  margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="age" />
+                  <XAxis
+                    dataKey="age"
+                    interval="preserveStartEnd"
+                    tick={{ fontSize: 10 }}
+                    minTickGap={10}
+                  />
                   <YAxis
                     tickFormatter={(tick) => formatLargeNumber(tick, currency)}
+                    tick={{ fontSize: 10 }}
                   />
                   <Tooltip content={<CustomTooltip currency={currency} />} />
                   <Legend />
@@ -196,15 +246,15 @@ const WealthProjectionEngine = () => {
                     type="monotone"
                     dataKey="inflationAdjustedWealth"
                     name="Real Wealth"
-                    stroke="#8884d8"
-                    fill="#8884d8"
+                    stroke={theme.palette.primary.main} // Using theme color
+                    fill={theme.palette.primary.main} // Using theme color
                   />
                   <Area
                     type="monotone"
                     dataKey="totalInvested"
                     name="Total Invested"
-                    stroke="#82ca9d"
-                    fill="#82ca9d"
+                    stroke={theme.palette.info.main} // Using theme color
+                    fill={theme.palette.info.main} // Using theme color
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -215,30 +265,55 @@ const WealthProjectionEngine = () => {
         <Grid item xs={12} lg={6}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <Typography
+                variant="h6"
+                gutterBottom
+                sx={{ fontSize: { xs: "1rem", sm: "1.1rem", md: "1.25rem" } }} // Adjusted for responsiveness
+              >
                 Year-on-Year Cash Flow
               </Typography>
               <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={projectionData}>
+                <ComposedChart
+                  data={projectionData}
+                  margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="age" />
+                  <XAxis
+                    dataKey="age"
+                    interval="preserveStart"
+                    tick={{ fontSize: 10 }}
+                    minTickGap={5}
+                  />
                   <YAxis
                     tickFormatter={(tick) => formatLargeNumber(tick, currency)}
+                    tick={{ fontSize: 10 }}
                   />
                   <Tooltip content={<CustomTooltip currency={currency} />} />
                   <Legend />
-                  <Bar dataKey="annualIncome" name="Income" fill="#82ca9d" />
-                  <Bar
+                  <Area
+                    type="monotone"
+                    dataKey="annualIncome"
+                    name="Income"
+                    stroke={theme.palette.primary.main} // Using theme color
+                    fill={theme.palette.primary.main} // Using theme color
+                  />
+                  <Line
+                    type="monotone"
                     dataKey="annualExpenses"
                     name="Expenses"
-                    fill="#ff8042"
+                    stroke={theme.palette.error.light} // Using theme color
+                    strokeWidth={2}
+                    dot={false}
                   />
-                  <Bar
+                  <Line
+                    type="monotone"
                     dataKey="annualInvestment"
                     name="Investments"
-                    fill="#8884d8"
+                    stroke={theme.palette.primary.dark} // Using theme color
+                    strokeWidth={2}
+                    dot={false}
                   />
-                </BarChart>
+                </ComposedChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
@@ -247,9 +322,16 @@ const WealthProjectionEngine = () => {
 
       {financialIndependence ? (
         <Typography
-          variant="h5"
+          variant="h4"
           align="center"
-          sx={{ mt: 4, p: 2, bgcolor: "success.light", borderRadius: 2 }}
+          sx={{
+            mt: 4,
+            p: 2,
+            bgcolor: "success.main",
+            borderRadius: 2,
+            fontSize: { xs: "1rem", sm: "1rem", md: "1.25rem" },
+            color: "white",
+          }} // Adjusted for responsiveness
         >
           Financial Independence Achievable by Age{" "}
           <strong>{financialIndependence.age}</strong>!
@@ -258,7 +340,14 @@ const WealthProjectionEngine = () => {
         <Typography
           variant="h5"
           align="center"
-          sx={{ mt: 4, p: 2, bgcolor: "error.light", borderRadius: 2 }}
+          sx={{
+            mt: 4,
+            p: 2,
+            bgcolor: "error.light",
+            borderRadius: 2,
+            fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
+            color: "white",
+          }} // Adjusted for responsiveness
         >
           Financial Independence Not Achievable!
         </Typography>
