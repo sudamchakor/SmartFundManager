@@ -26,6 +26,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import EditableGoalItem from "../../../components/common/EditableGoalItem";
 import GoalForm from "../components/GoalForm";
+import BridgeGapModal from "../components/BridgeGapModal"; // Import new modal
 import {
   selectGoals,
   selectConsiderInflation,
@@ -42,6 +43,7 @@ import {
   selectCurrentSurplus,
   selectTotalMonthlyIncome,
   selectTotalMonthlyGoalContributions,
+  selectPrioritizedGoalFunding, // Import new selector
 } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
@@ -87,7 +89,10 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const theme = useTheme();
   const isMediumScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  const goals = useSelector(selectGoals) || [];
+  // Use the new prioritized funding selector instead of raw goals
+  const goalsWithFunding = useSelector(selectPrioritizedGoalFunding) || [];
+  const goals = useSelector(selectGoals) || []; // Keep raw goals for charts
+  
   const considerInflation = useSelector(selectConsiderInflation) || false;
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
@@ -116,8 +121,11 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const [openModal, setOpenModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [modalTitle, setModalTitle] = useState("Add New Goal");
-
   const [currentGoalFormData, setCurrentGoalFormData] = useState(null);
+
+  // State for Bridge Gap Modal
+  const [bridgeGapModalOpen, setBridgeGapModalOpen] = useState(false);
+  const [selectedGoalForGap, setSelectedGoalForGap] = useState(null);
 
   const formatCurrency = (val) =>
     `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
@@ -161,7 +169,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "",
       targetAmount: 0,
-      startYear: currentYear, // Initialize startYear
+      startYear: currentYear,
       targetYear: currentYear + 5,
       category: "general",
       investmentPlans: [],
@@ -176,6 +184,16 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData(null);
     setModalTitle("Add New Goal");
   }, []);
+
+  const handleOpenBridgeGapModal = (goal) => {
+      setSelectedGoalForGap(goal);
+      setBridgeGapModalOpen(true);
+  };
+
+  const handleCloseBridgeGapModal = () => {
+      setBridgeGapModalOpen(false);
+      setSelectedGoalForGap(null);
+  };
 
   const applyRetirementGoal = useCallback(() => {
     const yearsToRetirement = retirementAge - currentAge;
@@ -202,7 +220,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "Retirement",
       targetAmount: targetAmount,
-      startYear: currentYear, // Initialize startYear
+      startYear: currentYear,
       targetYear: currentYear + (yearsToRetirement > 0 ? yearsToRetirement : 1),
       category: "retirement",
       investmentPlans: [],
@@ -231,7 +249,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "Child's Higher Education",
       targetAmount: Math.round(targetAmount),
-      startYear: currentYear, // Initialize startYear
+      startYear: currentYear,
       targetYear: currentYear + (yearsToCollege > 0 ? yearsToCollege : 1),
       category: "education",
       investmentPlans: [],
@@ -253,7 +271,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setCurrentGoalFormData({
       name: "Emergency Fund",
       targetAmount: targetAmount,
-      startYear: currentYear, // Initialize startYear
+      startYear: currentYear,
       targetYear: currentYear + yearsToGoal,
       category: "safety",
       investmentPlans: [],
@@ -526,7 +544,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
               }}
             >
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Your Goals ({goals.length})
+                Your Goals ({goalsWithFunding.length})
               </Typography>
               <FormControlLabel
                 control={
@@ -545,8 +563,8 @@ export default function FutureGoalsTab({ goalToEditId }) {
               />
             </Box>
 
-            {goals && goals.length > 0 ? (
-              goals.map((g) => (
+            {goalsWithFunding && goalsWithFunding.length > 0 ? (
+              goalsWithFunding.map((g) => (
                 <EditableGoalItem
                   key={g.id}
                   goal={g}
@@ -555,6 +573,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
                   considerInflation={considerInflation}
                   onEdit={handleOpenModalForEdit}
                   onDelete={(id) => dispatch(deleteGoal(id))}
+                  onOpenBridgeGapModal={handleOpenBridgeGapModal} // Pass handler
                   investmentAmount={(g.investmentPlans || []).reduce(
                     (sum, plan) => sum + (plan.monthlyContribution || 0),
                     0,
@@ -811,6 +830,13 @@ export default function FutureGoalsTab({ goalToEditId }) {
           </Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Bridge Gap Modal */}
+      <BridgeGapModal 
+        open={bridgeGapModalOpen} 
+        onClose={handleCloseBridgeGapModal} 
+        goal={selectedGoalForGap} 
+      />
     </Grid>
   );
 }

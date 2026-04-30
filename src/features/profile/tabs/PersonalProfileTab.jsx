@@ -7,21 +7,22 @@ import {
   SpeedDial,
   SpeedDialIcon,
   SpeedDialAction,
-  Card, // Added Card
-  CardContent, // Added CardContent
-  CardHeader, // Added CardHeader
-  IconButton, // Added IconButton for edit button in CardHeader
+  Card,
+  CardContent,
+  CardHeader,
+  IconButton,
   Typography,
-  Divider, // Added Typography for card titles
+  Divider,
 } from "@mui/material";
 import {
   AttachMoney,
   MoneyOff,
   AccountBalanceWallet,
-  Edit as EditIcon, // Added EditIcon
+  Edit as EditIcon,
 } from "@mui/icons-material";
 import BasicInfoDisplay from "../components/BasicInfoDisplay";
 import BasicInfoEdit from "../components/BasicInfoEdit";
+import FinancialSettings from "../components/FinancialSettings"; // Import FinancialSettings
 import { useDispatch, useSelector } from "react-redux";
 import {
   selectProfileExpenses,
@@ -42,22 +43,19 @@ import CashFlowDonutChart from "../components/CashFlowDonutChart";
 import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
 import FinancialSection from "../components/FinancialSection";
 import CorpusManager from "../../corpus/CorpusManager";
-import FinancialModal from "../components/FinancialModal"; // Import FinancialModal
+import FinancialModal from "../components/FinancialModal";
 
 export default function PersonalProfileTab({ onEditGoal }) {
-  // Removed onOpenModal from props
   const dispatch = useDispatch();
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
   const [editingBasicInfo, setEditingBasicInfo] = useState(false);
-
-  // State for FinancialModal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
-  const [modalAsset, setModalAsset] = useState(null); // To hold asset data for editing
-  const [modalMode, setModalMode] = useState("add"); // "add" or "edit"
+  const [modalAsset, setModalAsset] = useState(null);
+  const [modalMode, setModalMode] = useState("add");
 
   const expenses = useSelector(selectProfileExpenses) || [];
   const incomes = useSelector(selectIncomes) || [];
@@ -83,7 +81,6 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const individualGoalInvestments = useSelector(
     selectIndividualGoalInvestmentContributions,
   );
-  const investableSurplus = useSelector(selectCurrentSurplus);
   const goals = useSelector(selectGoals) || [];
 
   const needsValue = expenses
@@ -104,12 +101,8 @@ export default function PersonalProfileTab({ onEditGoal }) {
     },
     { name: "Loan EMIs", value: monthlyEmi || 0 },
     {
-      name: "Future Wealth (Goals)",
+      name: "Future Wealth",
       value: totalMonthlyGoalContributions,
-    },
-    {
-      name: "Surplus",
-      value: investableSurplus > 0 ? investableSurplus : 0,
     },
   ].filter((item) => item.value > 0);
 
@@ -119,13 +112,12 @@ export default function PersonalProfileTab({ onEditGoal }) {
     setEditingBasicInfo(false);
   };
 
-  // New function to open the FinancialModal
   const handleOpenFinancialModal = (type, assetData = null, mode = "add") => {
     setModalType(type);
     setModalAsset(assetData);
     setModalMode(mode);
     setModalOpen(true);
-    setSpeedDialOpen(false); // Close speed dial if opened from there
+    setSpeedDialOpen(false);
   };
 
   const handleCloseFinancialModal = () => {
@@ -156,7 +148,6 @@ export default function PersonalProfileTab({ onEditGoal }) {
   return (
     <>
       <Grid container spacing={3}>
-        {/* Basic Info */}
         <Grid item xs={12} md={6}>
           <Card
             sx={{ height: "100%", display: "flex", flexDirection: "column" }}
@@ -191,19 +182,21 @@ export default function PersonalProfileTab({ onEditGoal }) {
                 <BasicInfoDisplay
                   currentAge={currentAge}
                   retirementAge={retirementAge}
-                  // onEdit prop is no longer needed here as the edit button is in CardHeader
                 />
               )}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Corpus Manager */}
+        {/* Financial Settings */}
+        <Grid item xs={12} md={6}>
+          <FinancialSettings />
+        </Grid>
+
         <Grid item xs={12} md={6}>
           <CorpusManager onOpenModal={handleOpenFinancialModal} />
         </Grid>
 
-        {/* Income and Expense Details Row */}
         <Grid item xs={12} md={6}>
           <FinancialSection
             isIncome={true}
@@ -218,7 +211,6 @@ export default function PersonalProfileTab({ onEditGoal }) {
           />
         </Grid>
 
-        {/* Charts Row */}
         <Grid item xs={12} md={6}>
           <Box sx={{ width: "100%", minHeight: 300 }}>
             <ProjectedCashFlowChart
@@ -263,13 +255,12 @@ export default function PersonalProfileTab({ onEditGoal }) {
         </SpeedDial>
       )}
 
-      {/* Render FinancialModal */}
       <FinancialModal
         open={modalOpen}
         onClose={handleCloseFinancialModal}
         type={modalType}
-        asset={modalAsset} // Pass the asset data for editing
-        mode={modalMode} // Pass the mode (add/edit)
+        asset={modalAsset}
+        mode={modalMode}
       />
     </>
   );

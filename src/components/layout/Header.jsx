@@ -50,6 +50,7 @@ import { useSnackbar } from "notistack";
 import storage from "redux-persist/lib/storage";
 import { useTheme } from "@mui/material/styles";
 import "./Header.css";
+import { exportToPdf } from "../../utils/exportToPdf";
 
 const calculators = [
   {
@@ -97,9 +98,33 @@ const Header = () => {
   const [openCalculators, setOpenCalculators] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
 
-  const handleExport = (value) => {
+  const handleExport = async (value) => {
     if (value === "pdf") {
-      window.print();
+      const wealthEngineRef = window.__wealthEngineRef;
+      const debtAcceleratorRef = window.__debtAcceleratorRef;
+
+      if (location.pathname.startsWith('/profile') && wealthEngineRef && wealthEngineRef.current) {
+        try {
+          enqueueSnackbar("Generating PDF...", { variant: "info" });
+          const engine = wealthEngineRef.current;
+          const summaryData = engine.getSummaryData();
+          const dashboardRef = engine.getDashboardRef();
+          const chartRefs = engine.getChartRefs();
+          
+          let verdictText = null;
+          if (debtAcceleratorRef && debtAcceleratorRef.current) {
+              verdictText = debtAcceleratorRef.current.getVerdict();
+          }
+
+          await exportToPdf(dashboardRef, summaryData, chartRefs, verdictText);
+          enqueueSnackbar("PDF generated successfully!", { variant: "success" });
+        } catch (error) {
+          console.error("PDF Export failed:", error);
+          enqueueSnackbar("Failed to generate PDF.", { variant: "error" });
+        }
+      } else {
+         window.print();
+      }
     } else if (value === "excel") {
       if (!calculatedValues || !calculatedValues.schedule) {
         enqueueSnackbar("No data to export.", { variant: "info" });

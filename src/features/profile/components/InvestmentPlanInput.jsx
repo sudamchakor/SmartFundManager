@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Select,
@@ -9,11 +9,39 @@ import {
   Switch,
   FormControlLabel,
   Typography,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
-import SliderInput from "../../../components/common/SliderInput"; // Corrected path
+import SliderInput from "../../../components/common/SliderInput";
 
 const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, isRemovable }) => {
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const prevStepUpPercentage = useRef(plan.stepUpPercentage);
+
+  useEffect(() => {
+    if (plan.stepUpPercentage > (prevStepUpPercentage.current || 0)) {
+      const difference = "X"; // Placeholder for corpus difference calculation
+      setSnackbarMessage(`Increasing step-up by ${plan.stepUpPercentage - (prevStepUpPercentage.current || 0)}% adds ₹${difference} to your final corpus!`);
+      setOpenSnackbar(true);
+    }
+    prevStepUpPercentage.current = plan.stepUpPercentage;
+  }, [plan.stepUpPercentage]);
+
+  const getReturnRateColor = (value) => {
+    if (value < 7) return "red";
+    if (value > 12) return "green";
+    return "primary";
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
+
   return (
     <Box
       sx={{
@@ -22,9 +50,9 @@ const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, 
         p: 2,
         mb: 2,
         position: "relative",
-        display: "flex", // Added for responsiveness
-        flexDirection: "column", // Added for responsiveness
-        gap: 1.5, // Added for consistent spacing between elements
+        display: "flex",
+        flexDirection: "column",
+        gap: 1.5,
       }}
     >
       <Typography variant="subtitle1">
@@ -51,13 +79,12 @@ const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, 
         >
           <MenuItem value="sip">Standard SIP</MenuItem>
           <MenuItem value="lumpsum">Lumpsum</MenuItem>
-          <MenuItem value="stepUpSip">Step-Up SIP</MenuItem> {/* Corrected type name */}
+          <MenuItem value="stepUpSip">Step-Up SIP</MenuItem>
           <MenuItem value="swp">SWP</MenuItem>
           <MenuItem value="fd">Fixed Deposit</MenuItem>
         </Select>
       </FormControl>
 
-      {/* Common inputs for most plans */}
       {(plan.type === "sip" || plan.type === "lumpsum" || plan.type === "stepUpSip" || plan.type === "swp") && (
         <SliderInput
           label="Expected Return Rate"
@@ -68,6 +95,8 @@ const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, 
           step={0.1}
           showInput={true}
           unit="%"
+          valueLabelDisplay="on"
+          color={getReturnRateColor(plan.expectedReturnRate)}
         />
       )}
 
@@ -84,7 +113,6 @@ const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, 
         />
       )}
 
-      {/* Specific inputs based on plan type */}
       {plan.type === "sip" && (
         <SliderInput
           label="Monthly Contribution"
@@ -132,6 +160,7 @@ const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, 
             step={0.5}
             showInput={true}
             unit="%"
+            valueLabelDisplay="on"
           />
         </>
       )}
@@ -214,6 +243,11 @@ const InvestmentPlanInput = ({ plan, index, handlePlanChange, handleRemovePlan, 
         }
         label="Safe Investment Option"
       />
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
