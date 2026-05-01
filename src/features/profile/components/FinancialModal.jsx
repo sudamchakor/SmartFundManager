@@ -23,7 +23,7 @@ import {
   AccountBalanceWallet as AssetIcon,
   Close as CloseIcon,
 } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import IncomeExpenseForm from "../../../components/common/IncomeExpenseForm";
 import {
   addIncome,
@@ -31,27 +31,46 @@ import {
   updateIncome,
   updateExpense,
 } from "../../../store/profileSlice";
-import { addAsset, updateAsset } from "../../corpus/corpusSlice";
+import {
+  addAsset,
+  updateAsset,
+  addInvestmentType,
+  selectInvestmentTypes,
+} from "../../corpus/corpusSlice";
 import {
   updateDeclaration,
   updateHouseProperty,
   updateMonthData,
 } from "../../../store/taxSlice";
-import { investmentCategories } from "../../../utils/taxRules";
 
 const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
+  const dispatch = useDispatch();
+  const investmentTypes = useSelector(selectInvestmentTypes);
   const [newAsset, setNewAsset] = useState({
     label: "",
     value: "",
     expectedReturn: "",
     category: "Equity",
   });
+  const [newInvestmentType, setNewInvestmentType] = useState("");
 
   useEffect(() => {
     if (assetToEdit && mode === "edit") {
       setNewAsset({ ...assetToEdit });
     }
   }, [assetToEdit, mode]);
+
+  const handleAddInvestmentType = () => {
+    if (newInvestmentType.trim() !== "") {
+      dispatch(
+        addInvestmentType({
+          value: newInvestmentType,
+          label: newInvestmentType,
+        }),
+      );
+      setNewInvestmentType("");
+    }
+  };
 
   return (
     <Box
@@ -90,7 +109,7 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
               }
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             >
-              {investmentCategories.map((cat) => (
+              {investmentTypes.map((cat) => (
                 <MenuItem key={cat.value} value={cat.value}>
                   {cat.label}
                 </MenuItem>
@@ -148,6 +167,15 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
                 },
               }}
             />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              label="Add New Investment Type"
+              fullWidth
+              value={newInvestmentType}
+              onChange={(e) => setNewInvestmentType(e.target.value)}
+            />
+            <Button onClick={handleAddInvestmentType}>Add Type</Button>
           </Grid>
         </Grid>
       </Box>
@@ -280,14 +308,7 @@ export default function FinancialModal({ open, onClose, type, asset, mode }) {
       if (type === "income") dispatch(addIncome(formData));
       else if (type === "expense") dispatch(addExpense(formData));
       else if (type === "corpus") {
-        dispatch(
-          addAsset(
-            formData.label,
-            +formData.value,
-            formData.expectedReturn,
-            formData.category,
-          ),
-        );
+        dispatch(addAsset(formData));
       }
     }
     onClose();

@@ -16,7 +16,7 @@ const initialState = {
   stepUpPercentage: 0.05,
   postTax: false,
   scenario: "current", // "current", "frugal", "aggressive"
-  taxRegime: 'new', // 'new' vs 'old'
+  taxRegime: "new", // 'new' vs 'old'
   emergencyFundTarget: 6, // in months
   riskProfile: { q1: 3, q2: 3, q3: 3, q4: 3, q5: 3 }, // 5 questions, default to neutral
   totalDebt: 0,
@@ -93,20 +93,26 @@ const profileSlice = createSlice({
       state.scenario = action.payload;
     },
     updateFinancialSettings: (state, action) => {
-        const { taxRegime, emergencyFundTarget, riskProfile } = action.payload;
-        state.taxRegime = taxRegime;
-        state.emergencyFundTarget = emergencyFundTarget;
-        state.riskProfile = riskProfile;
+      const { taxRegime, emergencyFundTarget, riskProfile } = action.payload;
+      state.taxRegime = taxRegime;
+      state.emergencyFundTarget = emergencyFundTarget;
+      state.riskProfile = riskProfile;
 
-        // Automatically update expected return rate based on risk profile
-        const score = Object.values(riskProfile).reduce((sum, val) => sum + val, 0);
-        if (score <= 8) { // Low risk
-            state.expectedReturnRate = 0.08;
-        } else if (score <= 17) { // Medium risk
-            state.expectedReturnRate = 0.12;
-        } else { // High risk
-            state.expectedReturnRate = 0.15;
-        }
+      // Automatically update expected return rate based on risk profile
+      const score = Object.values(riskProfile).reduce(
+        (sum, val) => sum + val,
+        0,
+      );
+      if (score <= 8) {
+        // Low risk
+        state.expectedReturnRate = 0.08;
+      } else if (score <= 17) {
+        // Medium risk
+        state.expectedReturnRate = 0.12;
+      } else {
+        // High risk
+        state.expectedReturnRate = 0.15;
+      }
     },
     setTotalDebt: (state, action) => {
       state.totalDebt = action.payload;
@@ -137,7 +143,9 @@ const profileSlice = createSlice({
       });
     },
     updateExpense: (state, action) => {
-      const index = state.expenses.findIndex((e) => e.id === action.payload.id);
+      const index = state.expenses.findIndex(
+        (e) => e.id === action.payload.id,
+      );
       if (index !== -1) state.expenses[index] = action.payload;
     },
     deleteExpense: (state, action) => {
@@ -146,10 +154,12 @@ const profileSlice = createSlice({
     deleteGoal: (state, action) => {
       state.goals = state.goals.filter((g) => g.id !== action.payload);
       // Re-assign priorities after deletion
-      const sortedGoals = [...state.goals].sort((a, b) => a.priority - b.priority);
+      const sortedGoals = [...state.goals].sort(
+        (a, b) => a.priority - b.priority,
+      );
       sortedGoals.forEach((goal, i) => {
-          const index = state.goals.findIndex((g) => g.id === goal.id);
-          state.goals[index].priority = i + 1;
+        const index = state.goals.findIndex((g) => g.id === goal.id);
+        state.goals[index].priority = i + 1;
       });
     },
     addGoal: (state, action) => {
@@ -167,15 +177,28 @@ const profileSlice = createSlice({
       const index = state.goals.findIndex((g) => g.id === action.payload.id);
       if (index !== -1) state.goals[index] = action.payload;
     },
+    addInvestmentPlan: (state, action) => {
+      const { goalId, plan } = action.payload;
+      const goal = state.goals.find((g) => g.id === goalId);
+      if (goal) {
+        goal.investmentPlans.push({
+          ...plan,
+          id:
+            goal.investmentPlans.length > 0
+              ? Math.max(...goal.investmentPlans.map((p) => p.id)) + 1
+              : 1,
+        });
+      }
+    },
     updateGoalPriority: (state, action) => {
-        const { goalId, priority } = action.payload;
-        const goal = state.goals.find(g => g.id === goalId);
-        if (goal) {
-            goal.priority = priority;
-        }
+      const { goalId, priority } = action.payload;
+      const goal = state.goals.find((g) => g.id === goalId);
+      if (goal) {
+        goal.priority = priority;
+      }
     },
     reorderGoals: (state, action) => {
-        state.goals = action.payload;
+      state.goals = action.payload;
     },
     addTemplateGoal: (state, action) => {
       const { type, monthlyExpenses } = action.payload;
@@ -255,6 +278,7 @@ export const {
   deleteGoal,
   addGoal,
   updateGoal,
+  addInvestmentPlan,
   updateGoalPriority,
   reorderGoals,
   addTemplateGoal,
@@ -280,7 +304,8 @@ export const selectStepUpPercentage = (state) => state.profile.stepUpPercentage;
 export const selectPostTax = (state) => state.profile.postTax;
 export const selectScenario = (state) => state.profile.scenario;
 export const selectTaxRegime = (state) => state.profile.taxRegime;
-export const selectEmergencyFundTarget = (state) => state.profile.emergencyFundTarget;
+export const selectEmergencyFundTarget = (state) =>
+  state.profile.emergencyFundTarget;
 export const selectRiskProfile = (state) => state.profile.riskProfile;
 export const selectTotalDebt = (state) => state.profile.totalDebt;
 export const selectIncomes = (state) => state.profile.incomes;
@@ -664,16 +689,32 @@ export const selectFinancialIndependenceYear = createSelector(
 
 // Helper function for SIP calculation
 const calculateRequiredSip = (futureValue, annualRate, years) => {
-    if (years <= 0 || annualRate <= 0) return futureValue / (years * 12 || 1);
-    const monthlyRate = annualRate / 12;
-    const months = years * 12;
-    const requiredSip = (futureValue * monthlyRate) / ((Math.pow(1 + monthlyRate, months) - 1) * (1 + monthlyRate));
-    return requiredSip;
+  if (years <= 0 || annualRate <= 0) return futureValue / (years * 12 || 1);
+  const monthlyRate = annualRate / 12;
+  const months = years * 12;
+  const requiredSip =
+    (futureValue * monthlyRate) /
+    ((Math.pow(1 + monthlyRate, months) - 1) * (1 + monthlyRate));
+  return requiredSip;
 };
 
 export const selectPrioritizedGoalFunding = createSelector(
-  [selectWealthProjection, selectGoals, selectGeneralInflationRate, selectEducationInflationRate, selectCurrentAge, selectExpectedReturnRate],
-  (projection, goals, generalInflationRate, educationInflationRate, currentAge, expectedReturnRate) => {
+  [
+    selectWealthProjection,
+    selectGoals,
+    selectGeneralInflationRate,
+    selectEducationInflationRate,
+    selectCurrentAge,
+    selectExpectedReturnRate,
+  ],
+  (
+    projection,
+    goals,
+    generalInflationRate,
+    educationInflationRate,
+    currentAge,
+    expectedReturnRate,
+  ) => {
     if (!projection.length) return [];
 
     const finalWealth = projection[projection.length - 1].inflationAdjustedWealth;
@@ -681,39 +722,49 @@ export const selectPrioritizedGoalFunding = createSelector(
 
     // Use priority if available, otherwise fallback to targetYear
     const sortedGoals = [...goals].sort((a, b) => {
-        if (a.priority !== undefined && b.priority !== undefined) {
-            return a.priority - b.priority;
-        }
-        return a.targetYear - b.targetYear;
+      if (a.priority !== undefined && b.priority !== undefined) {
+        return a.priority - b.priority;
+      }
+      return a.targetYear - b.targetYear;
     });
 
-    return sortedGoals.map(goal => {
+    return sortedGoals.map((goal) => {
       const yearsToGoal = goal.targetYear - currentYear;
-      const inflationRate = goal.category === 'education' ? educationInflationRate : generalInflationRate;
-      const futureValue = goal.targetAmount * Math.pow(1 + inflationRate, yearsToGoal);
-      const inflationAdjustedTarget = futureValue / Math.pow(1 + generalInflationRate, (goal.targetYear - currentYear));
+      const inflationRate =
+        goal.category === "education"
+          ? educationInflationRate
+          : generalInflationRate;
+      const futureValue =
+        goal.targetAmount * Math.pow(1 + inflationRate, yearsToGoal);
+      const inflationAdjustedTarget =
+        futureValue /
+        Math.pow(1 + generalInflationRate, goal.targetYear - currentYear);
 
-      let status = 'At Risk';
+      let status = "At Risk";
       let fundedAmount = 0;
       let shortfall = inflationAdjustedTarget;
       let requiredSip = 0;
 
       if (remainingWealth > 0) {
         if (remainingWealth >= inflationAdjustedTarget) {
-          status = 'Fully Funded';
+          status = "Fully Funded";
           fundedAmount = inflationAdjustedTarget;
           shortfall = 0;
           remainingWealth -= inflationAdjustedTarget;
         } else {
-          status = 'Partially Funded';
+          status = "Partially Funded";
           fundedAmount = remainingWealth;
           shortfall = inflationAdjustedTarget - remainingWealth;
           remainingWealth = 0;
         }
       }
-      
+
       if (shortfall > 0) {
-          requiredSip = calculateRequiredSip(shortfall, expectedReturnRate, yearsToGoal);
+        requiredSip = calculateRequiredSip(
+          shortfall,
+          expectedReturnRate,
+          yearsToGoal,
+        );
       }
 
       return {
@@ -725,12 +776,12 @@ export const selectPrioritizedGoalFunding = createSelector(
         requiredSip,
       };
     });
-  }
+  },
 );
 
 export const selectGoalCoverage = createSelector(
   [selectPrioritizedGoalFunding],
-  (goalsWithFunding) => goalsWithFunding
+  (goalsWithFunding) => goalsWithFunding,
 );
 
 export default profileSlice.reducer;

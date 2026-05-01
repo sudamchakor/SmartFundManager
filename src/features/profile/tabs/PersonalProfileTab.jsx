@@ -53,6 +53,7 @@ import {
   selectCareerGrowthRate,
 } from "../../../store/profileSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
+import { investmentCategories } from "../../../utils/taxRules";
 
 export default function PersonalProfileTab({ onEditGoal }) {
   const dispatch = useDispatch();
@@ -327,6 +328,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
         type={modalType}
         asset={modalAsset}
         mode={modalMode}
+        investmentCategories={investmentCategories}
       />
     </Box>
   );
