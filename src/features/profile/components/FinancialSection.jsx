@@ -1,24 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Box,
   Typography,
-  Grid,
-  Tooltip,
-  useTheme,
+  Stack,
   Card,
   CardContent,
-  Paper,
-  Button,
-  useMediaQuery,
   Divider,
   CardHeader,
+  Button,
+  Tooltip,
 } from "@mui/material";
-import InfoIcon from "@mui/icons-material/Info";
 import AddIcon from "@mui/icons-material/Add";
-import EditableIncomeExpenseItem from "../../../components/common/EditableIncomeExpenseItem";
+import InfoIcon from "@mui/icons-material/Info";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import MoneyOffIcon from "@mui/icons-material/MoneyOff"; // Keep this icon
 import ReadOnlyItem from "../../../components/common/ReadOnlyItem";
 import { useDispatch, useSelector } from "react-redux";
-import Collapse from "@mui/material/Collapse";
 import {
   selectIncomes,
   deleteIncome,
@@ -33,9 +30,10 @@ import {
   selectGoals,
   selectCurrentSurplus,
 } from "../../../store/profileSlice";
-import { selectCurrency } from "../../../store/emiSlice";
+import { resetEmiState, selectCurrency } from "../../../store/emiSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
 import { formatCurrency } from "../../../utils/formatting";
+import { useNavigate } from "react-router-dom";
 
 export default function FinancialSection({
   isIncome,
@@ -44,8 +42,7 @@ export default function FinancialSection({
 }) {
   const dispatch = useDispatch();
   const currency = useSelector(selectCurrency);
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const navigate = useNavigate();
 
   const incomes = useSelector(selectIncomes) || [];
   const totalIncome = useSelector(selectTotalMonthlyIncome);
@@ -54,278 +51,202 @@ export default function FinancialSection({
   const totalMonthlyGoalContributions = useSelector(
     selectTotalMonthlyGoalContributions,
   );
-  const individualGoalInvestmentContributions = useSelector(
+  const individualGoalInvestments = useSelector(
     selectIndividualGoalInvestmentContributions,
   );
   const goals = useSelector(selectGoals) || [];
   const investableSurplus = useSelector(selectCurrentSurplus);
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
 
-  const items = isIncome ? incomes : expenses;
   const totalAmount = isIncome
     ? totalIncome
     : totalProfileExpenses + (monthlyEmi || 0) + totalMonthlyGoalContributions;
-
-  const [expandedGoals, setExpandedGoals] = useState({});
-
-  const handleDelete = (id) => {
-    dispatch(isIncome ? deleteIncome(id) : deleteExpense(id));
-  };
-
   const isBudgetExceeded = !isIncome && investableSurplus < 0;
-  const budgetWarning = isBudgetExceeded
-    ? `Your spending (${formatCurrency(totalAmount)}) exceeds income (${formatCurrency(totalIncome)}) by ${formatCurrency(Math.abs(investableSurplus))}. Consider reducing expenses or increasing income.`
-    : "";
 
-  const sectionTitle = isIncome ? "Income Details" : "Expense Details";
-  const totalLabel = isIncome
-    ? "Total Monthly Income"
-    : "Total Monthly Expenses";
-
-  const toggleGoalExpanded = (goalId) => {
-    setExpandedGoals((prev) => ({ ...prev, [goalId]: !prev[goalId] }));
-  };
-
-  const groupedGoalInvestmentContributions =
-    individualGoalInvestmentContributions.reduce((acc, inv) => {
+  // Grouping logic to pass investments into the subItems prop
+  const groupedGoals = individualGoalInvestments.reduce((acc, inv) => {
+    if (!acc[inv.goalId]) {
       const goal = goals.find((g) => g.id === inv.goalId);
-      const goalName = goal ? goal.name : "Other Goal";
+      acc[inv.goalId] = {
+        id: inv.goalId,
+        name: goal?.name || "Goal",
+        amount: 0,
+        frequency: "monthly",
+        investments: [],
+      };
+    }
+    let monthly = inv.amount || 0;
+    if (inv.frequency === "yearly") monthly /= 12;
+    else if (inv.frequency === "quarterly") monthly /= 3;
 
-      if (!acc[inv.goalId]) {
-        acc[inv.goalId] = {
-          goalId: inv.goalId,
-          goalName: goalName,
-          investments: [],
-        };
-      }
-      acc[inv.goalId].investments.push(inv);
-      return acc;
-    }, {});
+    acc[inv.goalId].amount += monthly;
+    acc[inv.goalId].investments.push(inv);
+    return acc;
+  }, {});
+
+  // Helper function to determine expense item color for text
+  const getExpenseItemColor = (category) => {
+    if (category === "basic") return "#0288d1";
+    if (category === "discretionary") return "#ed6c02";
+    return "primary.main"; // Default if no category match
+  };
 
   return (
-    <>
-      <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <CardHeader
-          sx={{ py: 1.5, px: 2 }}
-          title={
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-              {sectionTitle}
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: 3,
+        boxShadow: 1,
+        overflow: "hidden",
+      }}
+    >
+      <CardHeader
+        sx={{ py: 1.5, px: 2 }}
+        title={
+          <Stack direction="row" spacing={1} alignItems="center">
+            {isIncome ? (
+              <AttachMoneyIcon color="primary" fontSize="small" />
+            ) : (
+              <MoneyOffIcon color="primary" fontSize="small" />
+            )}
+            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+              {isIncome ? "Income Details" : "Expense Details"}
             </Typography>
-          }
-          action={
-            !isSmallScreen && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => onOpenModal(isIncome ? "income" : "expense")}
-              >
-                Add
-              </Button>
-            )
-          }
-        />
-        <Divider />
-        <CardContent
+          </Stack>
+        }
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => onOpenModal(isIncome ? "income" : "expense")}
+            sx={{ borderRadius: 1.5 }}
+          >
+            Add
+          </Button>
+        }
+      />
+      <Divider />
+
+      <CardContent
+        sx={{
+          flexGrow: 1,
+          p: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          "&:last-child": { pb: 0 },
+        }}
+      >
+        <Box
           sx={{
+            p: 2,
             flexGrow: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
+            overflowY: "auto",
+            maxHeight: "340px",
+            "&::-webkit-scrollbar": { width: "6px" },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#ccc",
+              borderRadius: "10px",
+            },
           }}
         >
-          <Box sx={{ maxHeight: 300, overflowY: "auto", pr: 1 }}>
-            {isIncome
-              ? items.map((item) => (
-                  <EditableIncomeExpenseItem
+          <Stack spacing={1.5}>
+            {isIncome ? (
+              incomes.map((item) => (
+                <ReadOnlyItem
+                  key={item.id}
+                  item={item}
+                  currency={currency}
+                  isIncome={true}
+                  isReadOnly={false} // Ensure edit button is visible
+                  onDelete={(id) => dispatch(deleteIncome(id))}
+                  onEdit={(itemId) => onOpenModal("income", incomes.find(inc => inc.id === itemId), "edit")}
+                  formatCurrency={formatCurrency}
+                  totalIncome={totalIncome}
+                />
+              ))
+            ) : (
+              <>
+                {monthlyEmi > 0 && (
+                  <ReadOnlyItem
+                    item={{
+                      id: "home-loan-emi",
+                      name: "Home Loan EMI",
+                      amount: monthlyEmi,
+                    }}
+                    currency={currency}
+                    isExpense={true}
+                    totalIncome={totalIncome}
+                    expenseRatio={(monthlyEmi / totalIncome) * 100}
+                    formatCurrency={formatCurrency}
+                    onConfirmDelete={() => dispatch(resetEmiState())}
+                    isReadOnly={true}
+                    onClick={() => navigate("/calculator")}
+                  />
+                )}
+                {Object.values(groupedGoals).map((goal) => (
+                  <ReadOnlyItem
+                    key={goal.id}
+                    item={goal}
+                    subItems={goal.investments} // investments passed to subItems
+                    currency={currency}
+                    isExpense={true}
+                    totalIncome={totalIncome}
+                    expenseRatio={(goal.amount / totalIncome) * 100}
+                    formatCurrency={formatCurrency}
+                    isGoal={true}
+                    onEditGoal={() => onEditGoal(goal.id)}
+                  />
+                ))}
+                {expenses.map((item) => (
+                  <ReadOnlyItem
                     key={item.id}
                     item={item}
                     currency={currency}
-                    onUpdate={(updatedItem) =>
-                      dispatch(updateIncome(updatedItem))
-                    }
-                    onDelete={handleDelete}
-                    isIncome={true}
+                    isExpense={true}
+                    isReadOnly={false} // Ensure edit button is visible
+                    onDelete={(id) => dispatch(deleteExpense(id))}
+                    onEdit={(itemId) => onOpenModal("expense", expenses.find(exp => exp.id === itemId), "edit")}
+                    formatCurrency={formatCurrency}
                     totalIncome={totalIncome}
+                    getExpenseColor={() => getExpenseItemColor(item.category)}
                   />
-                ))
-              : [
-                  monthlyEmi > 0 && (
-                    <ReadOnlyItem
-                      key="home-loan-emi"
-                      item={{
-                        id: "home-loan-emi",
-                        name: "Home Loan EMI",
-                        amount: monthlyEmi,
-                        frequency: "monthly",
-                      }}
-                      currency={currency}
-                      isExpense={true}
-                      totalIncome={totalIncome}
-                      expenseRatio={(monthlyEmi / totalIncome) * 100}
-                      getExpenseColor={() => {
-                        const ratio = (monthlyEmi / totalIncome) * 100;
-                        if (ratio > 40) return "error.main";
-                        if (ratio > 30) return "warning.main";
-                        return "success.main";
-                      }}
-                      formatCurrency={(val) => formatCurrency(val)}
-                      onConfirmDelete={() => {}}
-                      deletionImpactMessage="Deleting Home Loan EMI will remove it from your expenses and cash flow calculations. To adjust the EMI, please use the EMI Calculator tab."
-                      isReadOnly={true}
-                      onClick={() => {}}
-                    />
-                  ),
-                  ...Object.values(groupedGoalInvestmentContributions).map(
-                    (group) => {
-                      const groupMonthlyTotal = group.investments.reduce(
-                        (sum, inv) => {
-                          let monthly = inv.amount || 0;
-                          if (inv.frequency === "yearly") monthly /= 12;
-                          else if (inv.frequency === "quarterly") monthly /= 3;
-                          return sum + monthly;
-                        },
-                        0,
-                      );
-                      const isExpanded = expandedGoals[group.goalId];
+                ))}
+              </>
+            )}
+          </Stack>
+        </Box>
 
-                      return (
-                        <Grid item xs={12} key={group.goalId}>
-                          <Box
-                            sx={{
-                              mb: 0,
-                              p: 1.5,
-                              bgcolor: "rgba(0,0,0,0.02)",
-                              borderRadius: 2,
-                            }}
-                          >
-                            <Grid
-                              container
-                              spacing={1}
-                              alignItems="center"
-                              onClick={() => toggleGoalExpanded(group.goalId)}
-                              sx={{
-                                cursor: "pointer",
-                                "&:hover": { opacity: 0.8 },
-                              }}
-                            >
-                              <Grid item xs={12} sm={8}>
-                                <Typography
-                                  variant="subtitle2"
-                                  sx={{
-                                    fontWeight: 600,
-                                    color: "text.secondary",
-                                  }}
-                                >
-                                  {group.goalName} ({group.investments.length}{" "}
-                                  {group.investments.length === 1
-                                    ? "plan"
-                                    : "plans"}
-                                  )
-                                </Typography>
-                              </Grid>
-                              <Grid
-                                item
-                                xs={12}
-                                sm={3}
-                                sx={{
-                                  textAlign: { xs: "left", sm: "right" },
-                                }}
-                              >
-                                <Typography
-                                  variant="subtitle2"
-                                  sx={{
-                                    fontWeight: 600,
-                                    color: "text.secondary",
-                                  }}
-                                >
-                                  {formatCurrency(groupMonthlyTotal)} / mo
-                                </Typography>
-                              </Grid>
-                            </Grid>
-                            <Collapse in={isExpanded}>
-                              <Box sx={{ mt: 1.5 }}>
-                                {group.investments.map((investment) => (
-                                  <ReadOnlyItem
-                                    key={investment.id}
-                                    item={investment}
-                                    currency={currency}
-                                    isExpense={true}
-                                    totalIncome={totalIncome}
-                                    expenseRatio={
-                                      totalIncome > 0
-                                        ? (investment.amount / totalIncome) *
-                                          100
-                                        : 0
-                                    }
-                                    getExpenseColor={() => "default"}
-                                    formatCurrency={(val) =>
-                                      formatCurrency(val)
-                                    }
-                                    onConfirmDelete={() => {}}
-                                    deletionImpactMessage={`To stop this investment, please edit or delete the associated goal in the Future Goals tab.`}
-                                    isReadOnly={true}
-                                    onClick={() =>
-                                      onEditGoal(investment.goalId)
-                                    }
-                                  />
-                                ))}
-                              </Box>
-                            </Collapse>
-                          </Box>
-                        </Grid>
-                      );
-                    },
-                  ),
-                  ...items.map((item) => (
-                    <EditableIncomeExpenseItem
-                      key={item.id}
-                      item={item}
-                      currency={currency}
-                      onUpdate={(updatedItem) =>
-                        dispatch(updateExpense(updatedItem))
-                      }
-                      onDelete={handleDelete}
-                      isExpense={true}
-                      isBudgetExceeded={isBudgetExceeded}
-                      budgetWarning={budgetWarning}
-                      totalIncome={totalIncome}
-                    />
-                  )),
-                ]}
-          </Box>
-          <Paper
-            sx={{
-              mt: 2,
-              p: 2,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              backgroundColor: isIncome
-                ? "primary.main"
-                : isBudgetExceeded
-                  ? "error.main"
-                  : "primary.main",
-              color: "primary.contrastText",
-              flexWrap: "wrap",
-              gap: 1,
-            }}
-          >
-            <Typography variant="subtitle1">{totalLabel}:</Typography>
-            <Typography
-              variant="h6"
-              component="span"
-              sx={{ fontWeight: "bold" }}
-            >
+        <Box
+          sx={{
+            p: 2,
+            background: (theme) =>
+              `linear-gradient(135deg, ${isBudgetExceeded ? theme.palette.error.main : theme.palette.primary.main} 0%, ${isBudgetExceeded ? theme.palette.error.dark : theme.palette.primary.dark} 100%)`,
+            color: "white",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mt: "auto",
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+            {isIncome ? "Total Income" : "Total Expenses"}
+          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 900 }}>
               {formatCurrency(totalAmount)}
             </Typography>
             {isBudgetExceeded && (
-              <Tooltip title={budgetWarning}>
-                <InfoIcon fontSize="small" sx={{ cursor: "help" }} />
+              <Tooltip title="Spending exceeds income">
+                <InfoIcon fontSize="small" sx={{ color: "white" }} />
               </Tooltip>
             )}
-          </Paper>
-        </CardContent>
-      </Card>
-    </>
+          </Stack>
+        </Box>
+      </CardContent>
+    </Card>
   );
 }

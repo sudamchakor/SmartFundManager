@@ -24,19 +24,19 @@ const roundToNiceNumber = (val, roundUp) => {
   if (val === 0) return 0;
   const sign = val < 0 ? -1 : 1;
   const absVal = Math.abs(val);
-  
+
   // Find magnitude to get 2 significant digits (e.g., 10000 for 123456)
   const magnitude = Math.pow(10, Math.floor(Math.log10(absVal)) - 1);
-  
+
   let scaled = absVal / magnitude;
   const shouldRoundUpAbs = (sign === 1 && roundUp) || (sign === -1 && !roundUp);
-  
+
   if (shouldRoundUpAbs) {
-      scaled = Math.ceil(scaled);
+    scaled = Math.ceil(scaled);
   } else {
-      scaled = Math.floor(scaled);
+    scaled = Math.floor(scaled);
   }
-  
+
   return sign * scaled * magnitude;
 };
 
@@ -44,7 +44,15 @@ const roundToNiceNumber = (val, roundUp) => {
 const renderLegend = (props, hiddenLines) => {
   const { payload, onClick } = props;
   return (
-    <ul style={{ listStyle: 'none', padding: 0, display: 'flex', justifyContent: 'center', margin: 0 }}>
+    <ul
+      style={{
+        listStyle: "none",
+        padding: 0,
+        display: "flex",
+        justifyContent: "center",
+        margin: 0,
+      }}
+    >
       {payload.map((entry, index) => {
         const isHidden = hiddenLines[entry.dataKey];
         return (
@@ -52,18 +60,18 @@ const renderLegend = (props, hiddenLines) => {
             key={`item-${index}`}
             onClick={() => onClick(entry)}
             style={{
-              cursor: 'pointer',
+              cursor: "pointer",
               marginRight: 20,
-              display: 'flex',
-              alignItems: 'center',
-              color: isHidden ? '#999' : '#000',
-              textDecoration: isHidden ? 'line-through' : 'none',
+              display: "flex",
+              alignItems: "center",
+              color: isHidden ? "#999" : "#000",
+              textDecoration: isHidden ? "line-through" : "none",
               opacity: isHidden ? 0.5 : 1,
             }}
           >
             <span
               style={{
-                display: 'inline-block',
+                display: "inline-block",
                 width: 14,
                 height: 14,
                 backgroundColor: entry.color,
@@ -110,7 +118,8 @@ export default function ProjectedCashFlowChart({
   };
 
   // --- Income & Expense Projection Calculation ---
-  const projectionYears = retirementAge > currentAge ? retirementAge - currentAge : 0;
+  const projectionYears =
+    retirementAge > currentAge ? retirementAge - currentAge : 0;
   const endProjectionYear = currentYear + projectionYears;
 
   let loanTenureMonths = 0;
@@ -118,14 +127,20 @@ export default function ProjectedCashFlowChart({
   let emiStartMonth = new Date().getMonth();
 
   if (emiState?.loanDetails) {
-    loanTenureMonths = emiState.loanDetails.tenureUnit === 'years' ? Number(emiState.loanDetails.loanTenure) * 12 : Number(emiState.loanDetails.loanTenure);
+    loanTenureMonths =
+      emiState.loanDetails.tenureUnit === "years"
+        ? Number(emiState.loanDetails.loanTenure) * 12
+        : Number(emiState.loanDetails.loanTenure);
     const startDate = dayjs(emiState.loanDetails.startDate);
     if (startDate.isValid()) {
       emiStartYear = startDate.year();
       emiStartMonth = startDate.month();
     }
   } else if (emiState && emiState.tenure) {
-    loanTenureMonths = emiState.tenureType === 'years' ? Number(emiState.tenure) * 12 : Number(emiState.tenure);
+    loanTenureMonths =
+      emiState.tenureType === "years"
+        ? Number(emiState.tenure) * 12
+        : Number(emiState.tenure);
   }
 
   const absoluteStartMonth = emiStartYear * 12 + emiStartMonth;
@@ -146,25 +161,25 @@ export default function ProjectedCashFlowChart({
           hasActiveIncome = true;
           let rawAmount = Number(inc.amount) || 0;
 
-          if (inc.frequency === 'monthly') rawAmount *= 12;
-          else if (inc.frequency === 'quarterly') rawAmount *= 4;
+          if (inc.frequency === "monthly") rawAmount *= 12;
+          else if (inc.frequency === "quarterly") rawAmount *= 4;
 
           let yearlyAmount = rawAmount;
           const activeYears = year - Math.max(start, currentYear);
           if (activeYears > 0) {
-            if (careerGrowthType === 'percentage') {
-                yearlyAmount *= Math.pow(1 + careerGrowthRate, activeYears);
+            if (careerGrowthType === "percentage") {
+              yearlyAmount *= Math.pow(1 + careerGrowthRate, activeYears);
             }
           }
           annualIncome += yearlyAmount;
         }
       });
 
-      if (careerGrowthType === 'fixed' && hasActiveIncome) {
-         const activeYears = year - currentYear;
-         if (activeYears > 0) {
-            annualIncome += careerGrowthRate * activeYears;
-         }
+      if (careerGrowthType === "fixed" && hasActiveIncome) {
+        const activeYears = year - currentYear;
+        if (activeYears > 0) {
+          annualIncome += careerGrowthRate * activeYears;
+        }
       }
 
       let baseAnnualExpense = 0;
@@ -175,8 +190,8 @@ export default function ProjectedCashFlowChart({
         const end = exp.endYear || currentYear + 10;
         if (year >= start && year <= end) {
           let rawAmount = Number(exp.amount) || 0;
-          if (exp.frequency === 'monthly') rawAmount *= 12;
-          else if (exp.frequency === 'quarterly') rawAmount *= 4;
+          if (exp.frequency === "monthly") rawAmount *= 12;
+          else if (exp.frequency === "quarterly") rawAmount *= 4;
 
           baseAnnualExpense += rawAmount;
 
@@ -193,18 +208,21 @@ export default function ProjectedCashFlowChart({
       if (loanTenureMonths > 0) {
         for (let m = 0; m < 12; m++) {
           const absoluteCurrentMonth = year * 12 + m;
-          if (absoluteCurrentMonth >= absoluteStartMonth && absoluteCurrentMonth < absoluteEndMonth) {
+          if (
+            absoluteCurrentMonth >= absoluteStartMonth &&
+            absoluteCurrentMonth < absoluteEndMonth
+          ) {
             activeEmiMonths++;
           }
         }
       }
-      
+
       const emiAnnual = (monthlyEmi || 0) * activeEmiMonths;
       annualExpense += emiAnnual;
       baseAnnualExpense += emiAnnual;
 
       individualGoalInvestments.forEach((inv) => {
-        if (inv.type === 'one-time-yearly') {
+        if (inv.type === "one-time-yearly") {
           if (year === inv.year) {
             const amt = Number(inv.amount) || 0;
             annualExpense += amt;
@@ -212,19 +230,24 @@ export default function ProjectedCashFlowChart({
           }
         } else {
           const start = inv.startYear || currentYear;
-          const end = inv.endYear || (inv.goalTargetYear ? inv.goalTargetYear : currentYear + 10);
+          const end =
+            inv.endYear ||
+            (inv.goalTargetYear ? inv.goalTargetYear : currentYear + 10);
 
           if (year >= start && year <= end) {
             let rawAmount = Number(inv.amount) || 0;
 
-            if (inv.frequency === 'monthly') rawAmount *= 12;
-            else if (inv.frequency === 'quarterly') rawAmount *= 4;
+            if (inv.frequency === "monthly") rawAmount *= 12;
+            else if (inv.frequency === "quarterly") rawAmount *= 4;
 
             baseAnnualExpense += rawAmount;
 
             let yearlyAmount = rawAmount;
-            if (inv.type === 'step_up_sip' || inv.investmentType === 'step_up_sip') {
-              const stepUpRate = inv.stepUpRate ? (inv.stepUpRate / 100) : 0;
+            if (
+              inv.type === "step_up_sip" ||
+              inv.investmentType === "step_up_sip"
+            ) {
+              const stepUpRate = inv.stepUpRate ? inv.stepUpRate / 100 : 0;
               const activeYears = year - start;
               if (activeYears > 0) {
                 yearlyAmount *= Math.pow(1 + stepUpRate, activeYears);
@@ -250,7 +273,12 @@ export default function ProjectedCashFlowChart({
   let yMax = 100000;
 
   if (projectionData.length > 0) {
-    const allValues = projectionData.flatMap(d => [d.Income, d.Expenses, d.Surplus, d.BaseExpenses]);
+    const allValues = projectionData.flatMap((d) => [
+      d.Income,
+      d.Expenses,
+      d.Surplus,
+      d.BaseExpenses,
+    ]);
     const minValue = Math.min(...allValues);
     const maxValue = Math.max(...allValues);
 
@@ -262,11 +290,11 @@ export default function ProjectedCashFlowChart({
   }
 
   return (
-    <Paper sx={{ p: 3, height: "100%" }}>
+    <>
       <Typography variant="h6" align="center" gutterBottom>
         Projected Annual Income vs. Expenses Until Retirement
       </Typography>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={350}>
         <ComposedChart
           data={projectionData}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -277,57 +305,63 @@ export default function ProjectedCashFlowChart({
             tickFormatter={(val) => formatCurrency(val)}
             domain={[yMin, yMax]}
             allowDataOverflow={true}
-           />
-          <RechartsTooltip formatter={(value, name) => [formatCurrency(value), name]} />
-          
-          <Legend 
-            content={(props) => renderLegend(props, hiddenLines)}
-            onClick={handleLegendClick} 
           />
-          
-          <ReferenceLine y={0} stroke={theme.palette.text.primary} strokeWidth={2} />
+          <RechartsTooltip
+            formatter={(value, name) => [formatCurrency(value), name]}
+          />
 
-          <Area 
-            hide={hiddenLines["Income"]} 
-            type="monotone" 
-            dataKey="Income" 
-            name="Annual Income" 
-            fill={theme.palette.success.light} 
-            stroke={theme.palette.success.main} 
+          <Legend
+            content={(props) => renderLegend(props, hiddenLines)}
+            onClick={handleLegendClick}
           />
-          
-          <Area 
-            hide={hiddenLines["Expenses"]} 
-            legendType="none" 
-            type="monotone" 
-            dataKey="BaseExpenses" 
-            name="Base Expenses" 
-            fill={theme.palette.error.light} 
-            stroke={theme.palette.error.light} 
-            fillOpacity={0.3} 
+
+          <ReferenceLine
+            y={0}
+            stroke={theme.palette.text.primary}
+            strokeWidth={2}
           />
-          <Line 
-            hide={hiddenLines["Expenses"]} 
-            type="monotone" 
-            dataKey="Expenses" 
-            name="Expenses" 
-            stroke={theme.palette.error.main} 
-            strokeDasharray="5 5" 
-            strokeWidth={2} 
-            dot={false} 
+
+          <Area
+            hide={hiddenLines["Income"]}
+            type="monotone"
+            dataKey="Income"
+            name="Annual Income"
+            fill={theme.palette.success.light}
+            stroke={theme.palette.success.main}
           />
-          
-          <Line 
-            hide={hiddenLines["Surplus"]} 
-            type="monotone" 
-            dataKey="Surplus" 
-            name="Surplus" 
-            stroke={theme.palette.primary.main} 
-            strokeWidth={2} 
-            dot={false} 
+
+          <Area
+            hide={hiddenLines["Expenses"]}
+            legendType="none"
+            type="monotone"
+            dataKey="BaseExpenses"
+            name="Base Expenses"
+            fill={theme.palette.error.light}
+            stroke={theme.palette.error.light}
+            fillOpacity={0.3}
+          />
+          <Line
+            hide={hiddenLines["Expenses"]}
+            type="monotone"
+            dataKey="Expenses"
+            name="Expenses"
+            stroke={theme.palette.error.main}
+            strokeDasharray="5 5"
+            strokeWidth={2}
+            dot={false}
+          />
+
+          <Line
+            hide={hiddenLines["Surplus"]}
+            type="monotone"
+            dataKey="Surplus"
+            name="Surplus"
+            stroke={theme.palette.primary.main}
+            strokeWidth={2}
+            dot={false}
           />
         </ComposedChart>
       </ResponsiveContainer>
-    </Paper>
+    </>
   );
 }

@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Box,
   Chip,
@@ -6,26 +7,24 @@ import {
   AccordionDetails,
   Typography,
   IconButton,
-  Paper,
-  Tooltip,  
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
   Button,
-  Grid,
+  Stack,
 } from "@mui/material";
 import WarningIcon from "@mui/icons-material/Warning";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore"; // Import ExpandMoreIcon
-import React, { useState } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 const ReadOnlyItem = (props) => {
   const {
     item,
-    currency,
-    onUpdate,
+    currency, // FIXED: Added currency to destructuring
     onDelete,
     onConfirmDelete,
     deletionImpactMessage,
@@ -34,25 +33,27 @@ const ReadOnlyItem = (props) => {
     isBudgetExceeded = false,
     budgetWarning = "",
     totalIncome = 0,
-    isEditing,
-    setIsEditing,
     expenseRatio,
     getExpenseColor,
     formatCurrency,
     isReadOnly = false,
-    isGoal = false, // Add isGoal prop
-    onEditGoal, // Add onEditGoal prop
+    isGoal = false,
+    onEditGoal,
+    onEdit, // Added a generic onEdit prop for non-goal items
     onClick,
+    subItems = [],
   } = props;
+
+  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+
   const handleEditClick = (event) => {
     event.stopPropagation();
-    if (!isReadOnly && setIsEditing) { // Ensure setIsEditing is provided
-      setIsEditing(true); // Trigger the parent's modal
-    } else if (isGoal && onEditGoal) { // Handle read-only goal items
-      onEditGoal(item); // Pass the full item for goal editing
+    if (isGoal && onEditGoal) {
+      onEditGoal(item.id);
+    } else if (onEdit) { // If it's not a goal, and onEdit is provided, call it
+      onEdit(item.id); // Assuming onEdit will take the item's ID
     }
   };
-  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
 
   const handleDeleteClick = (event) => {
     event.stopPropagation();
@@ -64,193 +65,209 @@ const ReadOnlyItem = (props) => {
   };
 
   const handleConfirmDelete = () => {
-    if (onConfirmDelete) onConfirmDelete(item.id);
-    else if (onDelete) onDelete(item.id);
+    if (onConfirmDelete) {
+      onConfirmDelete(item.id);
+    } else if (onDelete) {
+      onDelete(item.id);
+    }
     handleCloseConfirmDelete();
   };
 
+  const getItemColor = () => {
+    if (isIncome) return "#2e7d32";
+    if (item.id === "home-loan-emi") return "#d32f2f";
+    if (item.category === "basic") return "#0288d1";
+    if (item.category === "discretionary") return "#ed6c02";
+    return "#7b1fa2"; // Goals color
+  };
+
+  const itemColor = getItemColor();
+
   const renderItemContent = () => (
-    <Grid container spacing={1} alignItems="center">
-      <Grid item xs={12}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            width: "100%",
-          }}
+    <Stack
+      direction="row"
+      justifyContent="space-between"
+      alignItems="center"
+      sx={{ width: "100%" }}
+    >
+      <Box>
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 800, color: "#333", lineHeight: 1.2 }}
         >
-          <Box
+          {item.name || item.label}
+          {isGoal && subItems.length > 0 && ` (${subItems.length} plans)`}
+        </Typography>
+
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+          <Typography
+            variant="body2"
             sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: { xs: "flex-start", sm: "center" },
-              gap: { xs: 0.5, sm: 1 },
-              flexWrap: "wrap",
+              fontWeight: 800,
+              color:
+                isExpense && getExpenseColor
+                  ? getExpenseColor()
+                  : "primary.main",
             }}
           >
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {item.name}
-              <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}> :</Box>
+            {formatCurrency(item.amount)}
+            <Typography
+              component="span"
+              variant="caption"
+              color="textSecondary"
+              sx={{ fontWeight: 600, ml: 0.5 }}
+            >
+              / {item.frequency || "monthly"}
             </Typography>
-            
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  color:
-                    isExpense && getExpenseColor
-                      ? getExpenseColor()
-                      : "success.main",
-                  fontWeight: 600,
-                }}
-              >
-                {formatCurrency(item.amount)}
-              </Typography>
-              {(isExpense || isIncome) && item.frequency && (
-                <Typography variant="body2" color="textSecondary">
-                  / {item.frequency}
-                </Typography>
-              )}
-            </Box>
-          </Box>
+          </Typography>
 
-          <Box sx={{ display: "flex", flexShrink: 0 }}>
-            {/* Show edit button if not read-only, OR if it's a read-only goal item with an edit handler */}
-            {(!isReadOnly || (isGoal && onEditGoal)) && (
-              <IconButton
-                size="small"
-                onClick={handleEditClick}
-                color="primary"
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-            )}
-            {/* Only show delete button if not read-only */}
-            {(!isReadOnly && (onConfirmDelete || onDelete)) && (
-              <IconButton
-                size="small"
-                onClick={handleDeleteClick}
-                color="error"
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
-          </Box>
-        </Box>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            flexWrap: "wrap",
-            mt: 1,
-          }}
-        >
           {isExpense && totalIncome > 0 && (
-            <Typography variant="caption" color="textSecondary">
-              ({expenseRatio ? expenseRatio.toFixed(1) : 0}% of income)
+            <Typography
+              variant="caption"
+              sx={{
+                color: "text.secondary",
+                fontWeight: 600,
+                bgcolor: "#f5f5f5",
+                px: 0.8,
+                borderRadius: 1,
+              }}
+            >
+              {expenseRatio ? expenseRatio.toFixed(1) : 0}% of income
             </Typography>
           )}
-          {isExpense && item.category && (
-            <Chip
-              label={
-                item.category === "basic" ? "Basic" : "Discretionary"
-              }
-              size="small"
-              variant="outlined"
-            />
-          )}
-          {isBudgetExceeded && (
-            <Tooltip title={budgetWarning}>
-              <WarningIcon
-                fontSize="small"
-                sx={{ color: "error.main", cursor: "help" }}
-              />
-            </Tooltip>
-          )}
-        </Box>
-      </Grid>
-    </Grid>
+        </Stack>
+      </Box>
+
+      <Stack direction="row" spacing={0.5} alignItems="center">
+        {(!isReadOnly || (isGoal && onEditGoal)) && (
+          <IconButton
+            size="small"
+            onClick={handleEditClick}
+            sx={{ bgcolor: "#f0f7ff", color: "primary.main" }}
+          >
+            <EditIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
+        {(item.id === "home-loan-emi" ||
+          (!isReadOnly && (onConfirmDelete || onDelete))) && (
+          <IconButton
+            size="small"
+            onClick={handleDeleteClick}
+            sx={{ bgcolor: "#fff0f0", color: "error.main" }}
+          >
+            <DeleteIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
+      </Stack>
+    </Stack>
   );
 
-  const itemPaperProps = {
-    sx: {
-      p: 2,
-      mb: 1.5,
-      border: isBudgetExceeded ? "2px solid #f44336" : "1px solid #e0e0e0",
-      backgroundColor: isBudgetExceeded ? "#ffebee" : "background.paper",
-      borderRadius: 1.5,
-      transition: "all 0.3s ease",
-      "&:hover": {
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-        cursor: onClick ? "pointer" : "default",
-      },
-    },
-    onClick: onClick,
+  const tileStyle = {
+    borderRadius: "4px 8px 8px 4px !important",
+    bgcolor: isBudgetExceeded ? "#fff5f5" : "white",
+    border: isBudgetExceeded ? "1px solid #ffcdd2" : "1px solid #f0f0f0",
+    borderLeft: `5px solid ${itemColor} !important`,
+    boxShadow: "none",
+    transition: "0.2s",
+    "&:hover": { bgcolor: "#f8faff" },
+    "&:before": { display: "none" },
   };
 
   return (
     <>
       {isGoal ? (
-        <Accordion defaultExpanded={false} sx={{ mb: 1.5, borderRadius: 1.5, '&.Mui-expanded': { margin: '8px 0' } }}>
+        <Accordion elevation={0} sx={tileStyle}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
-            aria-controls={`panel-${item.id}-content`}
-            id={`panel-${item.id}-header`}
-            sx={{
-              p: 0, // Remove default padding to use Paper's padding
-              '& .MuiAccordionSummary-content': { margin: 0 }, // Remove content margin
-            }}
+            sx={{ p: 1.5, "& .MuiAccordionSummary-content": { m: 0 } }}
           >
-            <Paper {...itemPaperProps} sx={{ ...itemPaperProps.sx, mb: 0, width: '100%' }}>
-              {renderItemContent()}
-            </Paper>
+            {renderItemContent()}
           </AccordionSummary>
-          <AccordionDetails sx={{ pt: 0, pb: 2, px: 2, borderTop: '1px solid #e0e0e0', backgroundColor: 'background.paper' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Target Amount: {formatCurrency(item.targetAmount)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Target Year: {item.targetYear}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Status: {item.status}
-            </Typography>
-            {item.inflationAdjustedTarget && (
-              <Typography variant="body2" color="text.secondary">
-                Inflation-Adjusted Target: {formatCurrency(item.inflationAdjustedTarget)}
-              </Typography>
-            )}
+          <AccordionDetails
+            sx={{ bgcolor: "#fafafa", p: 1.5, borderTop: "1px solid #f0f0f0" }}
+          >
+            <Stack spacing={1.5}>
+              {subItems.length > 0 ? (
+                subItems.map((sub) => (
+                  <ReadOnlyItem
+                    key={sub.id}
+                    item={sub}
+                    currency={currency} // currency is now defined
+                    isExpense={true}
+                    totalIncome={totalIncome}
+                    expenseRatio={
+                      totalIncome > 0 ? (sub.amount / totalIncome) * 100 : 0
+                    }
+                    formatCurrency={formatCurrency}
+                    isReadOnly={true}
+                    onClick={() => onEditGoal(sub.goalId)}
+                  />
+                ))
+              ) : (
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  sx={{ p: 1 }}
+                >
+                  No linked plans found.
+                </Typography>
+              )}
+            </Stack>
           </AccordionDetails>
         </Accordion>
       ) : (
-        <Paper {...itemPaperProps}>
+        <Box sx={{ ...tileStyle, p: 1.5, display: "flex" }} onClick={onClick}>
           {renderItemContent()}
-        </Paper>
+        </Box>
       )}
 
-      <Dialog
-        open={openConfirmDelete}
-        onClose={handleCloseConfirmDelete}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <DialogTitle id="alert-dialog-title">{"Confirm Deletion"}</DialogTitle>
+      <Dialog open={openConfirmDelete} onClose={handleCloseConfirmDelete}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Confirm Deletion</DialogTitle>
         <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete "{item.name}"?
+          <DialogContentText sx={{ color: "text.primary", fontWeight: 500 }}>
+            Are you sure you want to delete "{item.name || item.label}"?
             <br />
             <br />
-            <strong>Impact of deletion:</strong>
-            <br />
-            {deletionImpactMessage || "This item will be permanently removed."}
+            <Box
+              sx={{
+                p: 1.5,
+                bgcolor: "#fff4f4",
+                borderRadius: 2,
+                borderLeft: "4px solid #d32f2f",
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 800,
+                  color: "#d32f2f",
+                  display: "block",
+                  mb: 0.5,
+                }}
+              >
+                IMPACT
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {deletionImpactMessage ||
+                  "This item will be permanently removed from calculations."}
+              </Typography>
+            </Box>
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseConfirmDelete}>Cancel</Button>
-          <Button onClick={handleConfirmDelete} autoFocus color="error">
-            Delete
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleCloseConfirmDelete}
+            sx={{ fontWeight: 700, color: "text.secondary" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            variant="contained"
+            color="error"
+            sx={{ fontWeight: 700, borderRadius: 2 }}
+          >
+            Delete Item
           </Button>
         </DialogActions>
       </Dialog>

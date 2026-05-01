@@ -3,12 +3,23 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   Button,
   TextField,
   Typography,
   Divider,
+  Stack,
+  InputAdornment,
+  Box,
+  Grid,
+  IconButton,
+  MenuItem,
 } from "@mui/material";
+import {
+  AttachMoney as IncomeIcon,
+  MoneyOff as ExpenseIcon,
+  AccountBalanceWallet as AssetIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import { useDispatch } from "react-redux";
 import IncomeExpenseForm from "../../../components/common/IncomeExpenseForm";
 import {
@@ -16,7 +27,7 @@ import {
   addExpense,
   updateIncome,
   updateExpense,
-} from "../../../store/profileSlice"; // Import updateIncome, updateExpense
+} from "../../../store/profileSlice";
 import { addAsset, updateAsset } from "../../corpus/corpusSlice";
 
 const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
@@ -29,124 +40,181 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
 
   useEffect(() => {
     if (assetToEdit && mode === "edit") {
-      setNewAsset({
-        id: assetToEdit.id,
-        label: assetToEdit.label,
-        value: assetToEdit.value,
-        expectedReturn: assetToEdit.expectedReturn,
-        category: assetToEdit.category,
-      });
-    } else {
-      setNewAsset({
-        label: "",
-        value: "",
-        expectedReturn: "",
-        category: "Equity",
-      });
+      setNewAsset({ ...assetToEdit });
     }
   }, [assetToEdit, mode]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewAsset({ ...newAsset, [name]: value });
-  };
-
-  const handleSave = () => {
-    if (newAsset.label && newAsset.value && newAsset.expectedReturn) {
-      onSave(newAsset);
-    }
-  };
+  const categories = ["Equity", "Debt", "Gold", "Real Estate", "Cash/FD"];
 
   return (
-    <>
-      <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          name="label"
-          label="Asset Name"
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={newAsset.label}
-          onChange={handleInputChange}
-        />
-        <TextField
-          margin="dense"
-          name="value"
-          label="Current Amount"
-          type="number"
-          fullWidth
-          variant="outlined"
-          value={newAsset.value}
-          onChange={handleInputChange}
-          InputProps={{
-            startAdornment: <Typography>₹</Typography>,
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        width: "100%",
+      }}
+    >
+      <Box>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TextField
+              autoFocus
+              label="Asset Name"
+              placeholder="e.g., HDFC Top 100, ICICI Liquid Fund..."
+              fullWidth
+              variant="outlined"
+              value={newAsset.label}
+              onChange={(e) =>
+                setNewAsset({ ...newAsset, label: e.target.value })
+              }
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              fullWidth
+              label="Category"
+              value={newAsset.category}
+              onChange={(e) =>
+                setNewAsset({ ...newAsset, category: e.target.value })
+              }
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            >
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Expected Return"
+              type="number"
+              fullWidth
+              value={newAsset.expectedReturn}
+              onChange={(e) =>
+                setNewAsset({ ...newAsset, expectedReturn: e.target.value })
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 700, color: "text.secondary" }}
+                    >
+                      %
+                    </Typography>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            />
+          </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Current Value"
+              type="number"
+              fullWidth
+              value={newAsset.value}
+              onChange={(e) =>
+                setNewAsset({ ...newAsset, value: e.target.value })
+              }
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Typography sx={{ fontWeight: 800, color: "primary.main" }}>
+                      ₹
+                    </Typography>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  backgroundColor: "#fcfcfc",
+                },
+              }}
+            />
+          </Grid>
+        </Grid>
+      </Box>
+
+      <Box sx={{ mx: -4, mb: -3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+            px: 4, // Re-applies the horizontal padding for the buttons
+            py: 2.5,
+            bgcolor: "#fcfcfc",
           }}
-        />
-        <TextField
-          margin="dense"
-          name="expectedReturn"
-          label="Expected Return"
-          type="number"
-          fullWidth
-          variant="outlined"
-          value={newAsset.expectedReturn}
-          onChange={handleInputChange}
-          InputProps={{
-            endAdornment: <Typography>%</Typography>,
-          }}
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained">
-          {mode === "edit" ? "Update" : "Add"}
-        </Button>
-      </DialogActions>
-    </>
+        >
+          <Button
+            onClick={onCancel}
+            variant="text"
+            color="inherit"
+            sx={{ fontWeight: 700, textTransform: "none" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => onSave(newAsset)}
+            variant="contained"
+            elevation={0}
+            sx={{
+              px: 4,
+              borderRadius: 2.5,
+              fontWeight: 800,
+              textTransform: "none",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            }}
+          >
+            {mode === "edit" ? "Update Asset" : "Add to Corpus"}
+          </Button>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
 export default function FinancialModal({ open, onClose, type, asset, mode }) {
   const dispatch = useDispatch();
 
-  const getTitle = () => {
-    switch (type) {
-      case "income":
-        return mode === "edit" ? "Edit Income" : "Add New Income";
-      case "expense":
-        return mode === "edit" ? "Edit Expense" : "Add New Expense";
-      case "corpus":
-        return mode === "edit" ? "Edit Asset" : "Add New Asset";
-      default:
-        return "";
-    }
+  const config = {
+    income: { title: "Income", icon: <IncomeIcon />, color: "#2e7d32" },
+    expense: { title: "Expense", icon: <ExpenseIcon />, color: "#d32f2f" },
+    corpus: {
+      title: "Investment Asset",
+      icon: <AssetIcon />,
+      color: "#1976d2",
+    },
   };
+
+  const active = config[type] || config.corpus;
 
   const handleFormSave = (formData) => {
     if (mode === "edit") {
-      if (type === "income") {
-        dispatch(updateIncome({ ...formData, id: asset.id }));
-      } else if (type === "expense") {
-        dispatch(updateExpense({ ...formData, id: asset.id }));
-      } else if (type === "corpus") {
-        dispatch(updateAsset({ ...formData, id: asset.id }));
-      }
+      const payload = { ...formData, id: asset.id };
+      if (type === "income") dispatch(updateIncome(payload));
+      else if (type === "expense") dispatch(updateExpense(payload));
+      else if (type === "corpus") dispatch(updateAsset(payload));
     } else {
-      // Add operation
-      if (type === "income") {
-        dispatch(addIncome(formData));
-      } else if (type === "expense") {
-        dispatch(addExpense(formData));
-      } else if (type === "corpus") {
-        const payload = { ...formData, id: Date.now() }; // id will be generated in prepare for addAsset
+      if (type === "income") dispatch(addIncome(formData));
+      else if (type === "expense") dispatch(addExpense(formData));
+      else if (type === "corpus") {
         dispatch(
           addAsset(
-            payload.label,
-            +payload.value,
-            payload.expectedReturn,
-            payload.category,
+            formData.label,
+            +formData.value,
+            formData.expectedReturn,
+            formData.category,
           ),
         );
       }
@@ -155,27 +223,80 @@ export default function FinancialModal({ open, onClose, type, asset, mode }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{getTitle()}</DialogTitle>
-      <Divider sx={{ mb: 2 }} />
-      {type === "corpus" ? (
-        <CorpusForm
-          onSave={handleFormSave}
-          onCancel={onClose}
-          assetToEdit={asset}
-          mode={mode}
-        />
-      ) : (
-        <DialogContent>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 4, boxShadow: "0 24px 64px rgba(0,0,0,0.2)" },
+      }}
+    >
+      <DialogTitle sx={{ px: 4, py: 3 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box
+              sx={{
+                bgcolor: `${active.color}15`,
+                color: active.color,
+                p: 1.2,
+                borderRadius: 2.5,
+                display: "flex",
+              }}
+            >
+              {active.icon}
+            </Box>
+            <Box>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 900, lineHeight: 1.2, color: "#1a1a1a" }}
+              >
+                {mode === "edit"
+                  ? `Edit ${active.title}`
+                  : `Add ${active.title}`}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "text.secondary", fontWeight: 600 }}
+              >
+                Manage your financial details
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton
+            onClick={onClose}
+            size="small"
+            sx={{ bgcolor: "#f5f5f5" }}
+          >
+            <CloseIcon fontSize="inherit" />
+          </IconButton>
+        </Stack>
+      </DialogTitle>
+
+      <Divider />
+
+      <DialogContent sx={{ px: 4, py: 4 }}>
+        {type === "corpus" ? (
+          <CorpusForm
+            onSave={handleFormSave}
+            onCancel={onClose}
+            assetToEdit={asset}
+            mode={mode}
+          />
+        ) : (
           <IncomeExpenseForm
-            initialData={mode === "edit" ? asset : null} // Pass initialData for editing
+            initialData={mode === "edit" ? asset : null}
             isExpense={type === "expense"}
             onSave={handleFormSave}
             onCancel={onClose}
-            submitLabel={mode === "edit" ? "Update" : "Add"}
+            submitLabel={mode === "edit" ? "Apply Changes" : "Add Entry"}
           />
-        </DialogContent>
-      )}
+        )}
+      </DialogContent>
     </Dialog>
   );
 }

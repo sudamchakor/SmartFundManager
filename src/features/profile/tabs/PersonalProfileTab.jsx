@@ -13,17 +13,31 @@ import {
   IconButton,
   Typography,
   Divider,
+  Stack,
+  Chip,
 } from "@mui/material";
 import {
   AttachMoney,
   MoneyOff,
   AccountBalanceWallet,
   Edit as EditIcon,
+  Timeline as TimelineIcon,
+  PieChart as PieChartIcon,
+  Person as PersonIcon, // New Icon Import
 } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+
+// Component Imports
 import BasicInfoDisplay from "../components/BasicInfoDisplay";
 import BasicInfoEdit from "../components/BasicInfoEdit";
-import FinancialSettings from "../components/FinancialSettings"; // Import FinancialSettings
-import { useDispatch, useSelector } from "react-redux";
+import FinancialSettings from "../components/FinancialSettings";
+import CashFlowDonutChart from "../components/CashFlowDonutChart";
+import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
+import FinancialSection from "../components/FinancialSection";
+import CorpusManager from "../../corpus/CorpusManager";
+import FinancialModal from "../components/FinancialModal";
+
+// Selector Imports
 import {
   selectProfileExpenses,
   selectCurrentAge,
@@ -33,18 +47,12 @@ import {
   selectTotalMonthlyGoalContributions,
   selectIndividualGoalInvestmentContributions,
   selectGoals,
-  selectPrioritizedGoalFunding, // Import selectPrioritizedGoalFunding
-  selectCurrentSurplus,
-  selectCareerGrowthRate,
+  selectPrioritizedGoalFunding,
   selectIncomes,
   selectGeneralInflationRate,
+  selectCareerGrowthRate,
 } from "../../../store/profileSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
-import CashFlowDonutChart from "../components/CashFlowDonutChart";
-import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
-import FinancialSection from "../components/FinancialSection";
-import CorpusManager from "../../corpus/CorpusManager";
-import FinancialModal from "../components/FinancialModal";
 
 export default function PersonalProfileTab({ onEditGoal }) {
   const dispatch = useDispatch();
@@ -58,6 +66,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const [modalAsset, setModalAsset] = useState(null);
   const [modalMode, setModalMode] = useState("add");
 
+  // Data Selectors
   const expenses = useSelector(selectProfileExpenses) || [];
   const incomes = useSelector(selectIncomes) || [];
   const currentAge = useSelector(selectCurrentAge) || 30;
@@ -82,9 +91,10 @@ export default function PersonalProfileTab({ onEditGoal }) {
   const individualGoalInvestments = useSelector(
     selectIndividualGoalInvestmentContributions,
   );
-  const goalsWithFunding = useSelector(selectPrioritizedGoalFunding) || []; // Get goals with funding details
+  const goalsWithFunding = useSelector(selectPrioritizedGoalFunding) || [];
   const goals = useSelector(selectGoals) || [];
 
+  // Chart Data Calculation
   const needsValue = expenses
     .filter((e) => e.category === "basic")
     .reduce((acc, curr) => acc + curr.amount, 0);
@@ -93,21 +103,13 @@ export default function PersonalProfileTab({ onEditGoal }) {
     .reduce((acc, curr) => acc + curr.amount, 0);
 
   const donutData = [
-    {
-      name: "Needs",
-      value: needsValue,
-    },
-    {
-      name: "Wants",
-      value: wantsValue,
-    },
+    { name: "Needs", value: needsValue },
+    { name: "Wants", value: wantsValue },
     { name: "Loan EMIs", value: monthlyEmi || 0 },
-    {
-      name: "Future Wealth",
-      value: totalMonthlyGoalContributions,
-    },
+    { name: "Future Wealth", value: totalMonthlyGoalContributions },
   ].filter((item) => item.value > 0);
 
+  // Handlers
   const handleSaveBasicInfo = (newCurrentAge, newRetirementAge) => {
     dispatch(setCurrentAge(newCurrentAge));
     dispatch(setRetirementAge(newRetirementAge));
@@ -148,25 +150,28 @@ export default function PersonalProfileTab({ onEditGoal }) {
   ];
 
   return (
-    <>
-      <Grid container spacing={2}>
-        {/* Card 1: Basic Information */}
+    <Box sx={{ pb: 10 }}>
+      <Grid container spacing={3}>
+        {/* ROW 1: CORE PROFILE & SETTINGS */}
         <Grid item xs={12} md={6}>
           <Card
             sx={{
-              height: "520px", // Matches Financial Settings
+              height: "520px",
               display: "flex",
               flexDirection: "column",
+              borderRadius: 3,
               boxShadow: 1,
-              borderRadius: 2,
             }}
           >
             <CardHeader
               sx={{ py: 1.5, px: 2 }}
               title={
-                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                  Basic Information
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <PersonIcon color="primary" fontSize="small" />
+                  <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                    Basic Information
+                  </Typography>
+                </Stack>
               }
               action={
                 !editingBasicInfo && (
@@ -198,12 +203,20 @@ export default function PersonalProfileTab({ onEditGoal }) {
           </Card>
         </Grid>
 
-        {/* Card 2: Financial Settings */}
         <Grid item xs={12} md={6}>
           <FinancialSettings />
         </Grid>
 
-        {/* Following sections: Corpus, Income, Expenses */}
+        {/* SECTION HEADER: ASSETS & INCOME */}
+        <Grid item xs={12}>
+          <Divider>
+            <Chip
+              label="ASSETS & CASH FLOW"
+              sx={{ fontWeight: 800, letterSpacing: 1 }}
+            />
+          </Divider>
+        </Grid>
+
         <Grid item xs={12} md={6}>
           <CorpusManager onOpenModal={handleOpenFinancialModal} />
         </Grid>
@@ -215,6 +228,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
           />
         </Grid>
 
+        {/* SECTION HEADER: EXPENSES & ALLOCATION */}
         <Grid item xs={12} md={6}>
           <FinancialSection
             isIncome={false}
@@ -224,32 +238,68 @@ export default function PersonalProfileTab({ onEditGoal }) {
           />
         </Grid>
 
-        {/* Charts Section */}
         <Grid item xs={12} md={6}>
-          <Box sx={{ width: "100%", height: 320 }}>
-            <ProjectedCashFlowChart
-              currentAge={currentAge}
-              retirementAge={retirementAge}
-              careerGrowthRate={careerGrowthRate}
-              careerGrowthType={careerGrowthType}
-              monthlyEmi={monthlyEmi}
-              emiState={emiState}
-              individualGoalInvestments={individualGoalInvestments}
-              goals={goals}
-              expenses={expenses}
-              incomes={incomes}
-              inflationRate={generalInflationRate}
+          <Card sx={{ height: "100%", borderRadius: 3, boxShadow: 1 }}>
+            <CardHeader
+              title={
+                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                  Monthly Allocation
+                </Typography>
+              }
+              avatar={<PieChartIcon color="primary" />}
             />
-          </Box>
+            <Divider />
+            <CardContent>
+              <Box sx={{ width: "100%", height: 350 }}>
+                <CashFlowDonutChart donutData={donutData} />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
-          <Box sx={{ width: "100%", height: 320 }}>
-            <CashFlowDonutChart donutData={donutData} />
-          </Box>
+        {/* SECTION HEADER: PROJECTIONS */}
+        <Grid item xs={12}>
+          <Divider>
+            <Chip
+              label="FUTURE PROJECTIONS"
+              sx={{ fontWeight: 800, letterSpacing: 1 }}
+            />
+          </Divider>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 3, boxShadow: 1 }}>
+            <CardHeader
+              title={
+                <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                  Projected Annual Income vs. Expenses
+                </Typography>
+              }
+              avatar={<TimelineIcon color="primary" />}
+            />
+            <Divider />
+            <CardContent>
+              <Box sx={{ width: "100%", height: 400 }}>
+                <ProjectedCashFlowChart
+                  currentAge={currentAge}
+                  retirementAge={retirementAge}
+                  careerGrowthRate={careerGrowthRate}
+                  careerGrowthType={careerGrowthType}
+                  monthlyEmi={monthlyEmi}
+                  emiState={emiState}
+                  individualGoalInvestments={individualGoalInvestments}
+                  goals={goals}
+                  expenses={expenses}
+                  incomes={incomes}
+                  inflationRate={generalInflationRate}
+                />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
+      {/* Floating Action Button (Mobile) */}
       {isSmallScreen && (
         <SpeedDial
           ariaLabel="SpeedDial for financial actions"
@@ -270,6 +320,7 @@ export default function PersonalProfileTab({ onEditGoal }) {
           ))}
         </SpeedDial>
       )}
+
       <FinancialModal
         open={modalOpen}
         onClose={handleCloseFinancialModal}
@@ -277,6 +328,6 @@ export default function PersonalProfileTab({ onEditGoal }) {
         asset={modalAsset}
         mode={modalMode}
       />
-    </>
+    </Box>
   );
 }

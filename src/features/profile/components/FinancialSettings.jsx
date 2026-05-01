@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
@@ -20,13 +20,14 @@ import {
   Stack,
   LinearProgress,
   Paper,
+  Chip,
 } from "@mui/material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import SaveIcon from "@mui/icons-material/Save";
+import SettingsIcon from "@mui/icons-material/Settings"; // New Icon Import
 
-// Ensure these paths match your actual project structure
 import {
   selectTaxRegime,
   selectEmergencyFundTarget,
@@ -41,47 +42,47 @@ const questions = [
     text: "In general, how would your best friend describe you as a risk taker?",
     options: [
       { value: 1, label: "A real gambler" },
-      { value: 2, label: "Willing to take risks after research" },
+      { value: 2, label: "Researcher" },
       { value: 3, label: "Cautious" },
-      { value: 4, label: "A real risk avoider" },
+      { value: 4, label: "Avoider" },
     ],
   },
   {
     id: "q2",
-    text: "You are on a TV game show and can choose one of the following. Which would you take?",
+    text: "You are on a TV game show. Which would you take?",
     options: [
-      { value: 1, label: "$1,000 in cash" },
-      { value: 2, label: "50% chance at $5,000" },
-      { value: 3, label: "25% chance at $10,000" },
-      { value: 4, label: "5% chance at $100,000" },
+      { value: 1, label: "$1,000 Cash" },
+      { value: 2, label: "50% @ $5k" },
+      { value: 3, label: "25% @ $10k" },
+      { value: 4, label: "5% @ $100k" },
     ],
   },
   {
     id: "q3",
-    text: 'Three weeks before a "once-in-a-lifetime" vacation, you lose your job. You would:',
+    text: "You lose your job 3 weeks before a vacation. You would:",
     options: [
-      { value: 1, label: "Cancel the vacation" },
-      { value: 2, label: "Take a modest vacation" },
-      { value: 3, label: "Go as scheduled to prepare" },
-      { value: 4, label: "Extend it (first-class)" },
+      { value: 1, label: "Cancel it" },
+      { value: 2, label: "Modest Trip" },
+      { value: 3, label: "Go as planned" },
+      { value: 4, label: "Extend it" },
     ],
   },
   {
     id: "q4",
-    text: "If you unexpectedly received $20,000 to invest, what would you do?",
+    text: "You unexpectedly received $20,000 to invest:",
     options: [
-      { value: 1, label: "Bank account / CD" },
-      { value: 2, label: "Safe bonds / Mutual funds" },
-      { value: 3, label: "Stocks / Stock mutual funds" },
+      { value: 1, label: "Bank/CD" },
+      { value: 2, label: "Bonds/MFs" },
+      { value: 3, label: "Stocks/Equity" },
     ],
   },
   {
     id: "q5",
-    text: "How comfortable are you investing in stocks or stock mutual funds?",
+    text: "How comfortable are you investing in stocks?",
     options: [
       { value: 1, label: "Not at all" },
-      { value: 2, label: "Somewhat comfortable" },
-      { value: 3, label: "Very comfortable" },
+      { value: 2, label: "Somewhat" },
+      { value: 3, label: "Very" },
     ],
   },
 ];
@@ -89,12 +90,10 @@ const questions = [
 const FinancialSettings = () => {
   const dispatch = useDispatch();
 
-  // Selectors
   const currentTaxRegime = useSelector(selectTaxRegime);
   const currentEmergencyTarget = useSelector(selectEmergencyFundTarget);
   const currentRiskProfile = useSelector(selectRiskProfile);
 
-  // Local State
   const [taxRegime, setTaxRegime] = useState(currentTaxRegime || "new");
   const [emergencyTarget, setEmergencyTarget] = useState(
     currentEmergencyTarget || 6,
@@ -106,6 +105,14 @@ const FinancialSettings = () => {
   const totalQuestions = questions.length;
   const answeredCount = Object.keys(riskAnswers).length;
   const completionPercentage = (answeredCount / totalQuestions) * 100;
+
+  // Simple Risk Logic for UX feedback
+  const calculatedRisk = useMemo(() => {
+    const sum = Object.values(riskAnswers).reduce((a, b) => a + b, 0);
+    if (sum <= 8) return { label: "Aggressive", color: "error" };
+    if (sum <= 12) return { label: "Moderate", color: "warning" };
+    return { label: "Conservative", color: "success" };
+  }, [riskAnswers]);
 
   useEffect(() => {
     setTaxRegime(currentTaxRegime || "new");
@@ -136,23 +143,42 @@ const FinancialSettings = () => {
         display: "flex",
         flexDirection: "column",
         borderRadius: 3,
-        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
       }}
     >
       <CardHeader
-        sx={{ py: 1.5, px: 2 }}
+        sx={{ py: 1.5, px: 2, bgcolor: "#fcfcfc" }}
         title={
-          <Typography variant="h6" sx={{ fontWeight: 800, fontSize: "1rem" }}>
-            Financial Settings
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <SettingsIcon color="primary" fontSize="small" />
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 800, color: "#333" }}
+            >
+              Financial Settings
+            </Typography>
+          </Stack>
+        }
+        action={
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<SaveIcon />}
+            onClick={handleSave}
+            sx={{ borderRadius: 1.5, textTransform: "none", px: 2 }}
+          >
+            Save
+          </Button>
         }
       />
       <Divider />
 
-      <CardContent sx={{ flexGrow: 1, overflowY: "auto", p: 0 }}>
-        {/* Core Controls */}
-        <Box sx={{ p: 3, bgcolor: "#f8faff" }}>
-          <Grid container spacing={3}>
+      <CardContent
+        sx={{ flexGrow: 1, overflowY: "auto", p: 0, bgcolor: "#fcfcfc" }}
+      >
+        {/* 1. Core Controls */}
+        <Box sx={{ p: 2, bgcolor: "#fff", borderBottom: "1px solid #eee" }}>
+          <Grid container spacing={2}>
             <Grid item xs={6}>
               <Typography
                 variant="caption"
@@ -161,11 +187,11 @@ const FinancialSettings = () => {
                   color: "text.secondary",
                   display: "flex",
                   alignItems: "center",
-                  gap: 1,
-                  mb: 1,
+                  gap: 0.5,
+                  mb: 0.5,
                 }}
               >
-                <AccountBalanceIcon fontSize="inherit" /> TAX REGIME
+                <AccountBalanceIcon sx={{ fontSize: 14 }} /> TAX REGIME
               </Typography>
               <RadioGroup
                 row
@@ -176,7 +202,7 @@ const FinancialSettings = () => {
                   value="old"
                   control={<Radio size="small" />}
                   label={
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700 }}>
                       Old
                     </Typography>
                   }
@@ -185,7 +211,7 @@ const FinancialSettings = () => {
                   value="new"
                   control={<Radio size="small" />}
                   label={
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700 }}>
                       New
                     </Typography>
                   }
@@ -200,31 +226,35 @@ const FinancialSettings = () => {
                   color: "text.secondary",
                   display: "flex",
                   alignItems: "center",
-                  gap: 1,
+                  gap: 0.5,
                   mb: 1,
                 }}
               >
-                <HealthAndSafetyIcon fontSize="inherit" /> EMERGENCY FUND
+                <HealthAndSafetyIcon sx={{ fontSize: 14 }} /> EMERGENCY FUND
               </Typography>
               <Select
                 fullWidth
                 size="small"
                 value={emergencyTarget}
                 onChange={(e) => setEmergencyTarget(e.target.value)}
-                sx={{ bgcolor: "white", borderRadius: 2 }}
+                sx={{ fontSize: "0.75rem", fontWeight: 600 }}
               >
-                <MenuItem value={3}>3 Months</MenuItem>
-                <MenuItem value={6}>6 Months (Rec.)</MenuItem>
-                <MenuItem value={12}>12 Months</MenuItem>
+                <MenuItem value={3} sx={{ fontSize: "0.75rem" }}>
+                  3 Months
+                </MenuItem>
+                <MenuItem value={6} sx={{ fontSize: "0.75rem" }}>
+                  6 Months (Rec.)
+                </MenuItem>
+                <MenuItem value={12} sx={{ fontSize: "0.75rem" }}>
+                  12 Months
+                </MenuItem>
               </Select>
             </Grid>
           </Grid>
         </Box>
 
-        <Divider />
-
-        {/* Progress Tracker */}
-        <Box sx={{ p: 3, pb: 0 }}>
+        {/* 2. Risk Header with Result */}
+        <Box sx={{ p: 2, pb: 1 }}>
           <Stack
             direction="row"
             justifyContent="space-between"
@@ -232,52 +262,59 @@ const FinancialSettings = () => {
             sx={{ mb: 1 }}
           >
             <Typography
-              variant="subtitle2"
+              variant="caption"
               sx={{
                 fontWeight: 800,
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
+                color: "primary.main",
               }}
             >
-              <AssignmentIcon fontSize="small" color="primary" /> Risk Profile
+              <AssignmentIcon sx={{ fontSize: 16 }} /> RISK PROFILE
             </Typography>
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 700, color: "text.secondary" }}
-            >
-              {answeredCount}/{totalQuestions} Complete
-            </Typography>
+            <Chip
+              label={calculatedRisk.label}
+              color={calculatedRisk.color}
+              size="small"
+              variant="outlined"
+              sx={{ height: 20, fontSize: "0.65rem", fontWeight: 800 }}
+            />
           </Stack>
           <LinearProgress
             variant="determinate"
             value={completionPercentage}
-            sx={{ height: 6, borderRadius: 3, bgcolor: "#eee" }}
+            sx={{ height: 4, borderRadius: 2, bgcolor: "#eee" }}
           />
         </Box>
 
-        {/* Questionnaire */}
-        <Box sx={{ p: 2 }}>
+        {/* 3. Questionnaire Grid */}
+        <Box sx={{ p: 1.5 }}>
           {questions.map((q, idx) => (
             <Paper
               key={q.id}
               elevation={0}
-              sx={{ p: 2, mb: 2, border: "1px solid #edf2f7", borderRadius: 2 }}
+              sx={{
+                p: 1.5,
+                mb: 1.5,
+                border: "1px solid #eef0f2",
+                borderRadius: 2,
+              }}
             >
               <Typography
-                variant="body2"
+                variant="caption"
                 sx={{
                   fontWeight: 700,
-                  mb: 2,
-                  lineHeight: 1.4,
-                  display: "flex",
-                  gap: 1,
+                  mb: 1,
+                  color: "#333",
+                  display: "block",
+                  lineHeight: 1.3,
                 }}
               >
                 <Typography
                   component="span"
-                  variant="body2"
-                  sx={{ color: "primary.main", fontWeight: 900 }}
+                  variant="caption"
+                  sx={{ color: "primary.main", fontWeight: 900, mr: 1 }}
                 >
                   {idx + 1}.
                 </Typography>
@@ -292,19 +329,20 @@ const FinancialSettings = () => {
                 size="small"
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 1,
+                  gridTemplateColumns:
+                    q.options.length > 3 ? "1fr 1fr" : "1fr 1fr 1fr",
+                  gap: 0.5,
                   "& .MuiToggleButton-root": {
-                    border: "1px solid #e2e8f0 !important",
-                    borderRadius: "8px !important",
+                    border: "1px solid #eef0f2 !important",
+                    borderRadius: "16px !important",
                     textTransform: "none",
-                    fontWeight: 600,
-                    fontSize: "0.75rem",
+                    fontWeight: 700,
+                    fontSize: "0.65rem",
                     color: "text.secondary",
+                    py: 0.5,
                     "&.Mui-selected": {
                       bgcolor: "primary.main",
                       color: "white",
-                      borderColor: "primary.main",
                       "&:hover": { bgcolor: "primary.dark" },
                     },
                   },
@@ -320,25 +358,6 @@ const FinancialSettings = () => {
           ))}
         </Box>
       </CardContent>
-
-      <Divider />
-      <Box
-        sx={{
-          p: 2,
-          bgcolor: "#fcfcfc",
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
-      >
-        <Button
-          variant="contained"
-          startIcon={<CheckCircleIcon />}
-          onClick={handleSave}
-          sx={{ borderRadius: 2, px: 4 }}
-        >
-          Apply Changes
-        </Button>
-      </Box>
     </Card>
   );
 };
