@@ -16,18 +16,25 @@ import {
   Print as PrintIcon,
   LightbulbOutlined as LightbulbIcon,
 } from "@mui/icons-material";
+import { generateTaxReportPDF } from "../../utils/taxReportGenerator";
 
 const TaxSummary = ({
   taxComparison,
   declarations,
-  onMaxOut80C,
+  onQuickFill,
   breakEven,
+  calculatedSalary,
+  hraBreakdown,
 }) => {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState("old");
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  const handleExport = () => {
+    generateTaxReportPDF(taxComparison, breakEven, calculatedSalary);
   };
 
   const renderRegimeView = (regime, type) => (
@@ -129,6 +136,13 @@ const TaxSummary = ({
         System Output
       </Typography>
 
+      {hraBreakdown.eligibleHra > 0 && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Rent expense detected. Potential HRA deduction of ₹
+          {hraBreakdown.eligibleHra.toLocaleString("en-IN")} calculated.
+        </Alert>
+      )}
+
       <Box sx={{ mb: 4 }}>
         <Typography
           variant="caption"
@@ -198,26 +212,27 @@ const TaxSummary = ({
           sx={{ mb: 4, borderRadius: 2 }}
         >
           <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
-            Savings Optimizer
+            Tax Optimizer
           </Typography>
           <Typography variant="caption" sx={{ mb: 2, display: "block" }}>
-            You are{" "}
-            <strong>
-              ₹{breakEven.investmentNeeded.toLocaleString("en-IN")}
-            </strong>{" "}
-            away from saving an extra{" "}
+            You could save an additional{" "}
             <strong>
               ₹{breakEven.potentialSavings.toLocaleString("en-IN")}
             </strong>{" "}
-            in the Old Regime.
+            in the Old Regime if you invest{" "}
+            <strong>
+              ₹{breakEven.investmentNeeded.toLocaleString("en-IN")}
+            </strong>{" "}
+            more in Section {breakEven.section}.
           </Typography>
           <Button
             size="small"
             variant="contained"
-            onClick={onMaxOut80C}
-            disabled={declarations.sec80C.totalProduced >= 150000}
+            onClick={() =>
+              onQuickFill(breakEven.section, breakEven.investmentNeeded)
+            }
           >
-            Max Out 80C
+            Quick-Fill
           </Button>
         </Alert>
       )}
@@ -245,7 +260,7 @@ const TaxSummary = ({
         color="primary"
         fullWidth
         startIcon={<PrintIcon />}
-        onClick={() => window.print()}
+        onClick={handleExport}
         sx={{
           mt: 4,
           py: 1.5,

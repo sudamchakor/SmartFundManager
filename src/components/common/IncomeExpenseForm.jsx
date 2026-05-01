@@ -9,10 +9,18 @@ import {
   Select,
   MenuItem,
   DialogActions,
+  Checkbox,
+  FormControlLabel,
+  Collapse,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
 import SliderInput from "./SliderInput";
+import {
+  incomeTypes,
+  expenseCategories,
+  taxExpenseCategories,
+} from "../../utils/taxRules";
 
 const currentYear = new Date().getFullYear();
 
@@ -30,6 +38,9 @@ export default function IncomeExpenseForm({
     startYear: currentYear,
     endYear: currentYear + 10,
     category: "basic",
+    incomeType: "Salary",
+    isTaxDeductible: false,
+    taxCategory: "",
     ...initialData,
   });
 
@@ -45,7 +56,11 @@ export default function IncomeExpenseForm({
 
   const handleSubmit = () => {
     if (formData.name && formData.amount > 0) {
-      onSave({ ...formData, amount: Number(formData.amount) });
+      let finalAmount = Number(formData.amount);
+      if (!isExpense && formData.incomeType === "Rental Income") {
+        finalAmount *= 0.7; // Apply 30% standard deduction
+      }
+      onSave({ ...formData, amount: finalAmount });
     }
   };
 
@@ -59,7 +74,28 @@ export default function IncomeExpenseForm({
       }}
     >
       <Grid container spacing={2}>
-        <Grid item xs={12} sm={6}>
+        {!isExpense && (
+          <Grid item xs={12} sm={6}>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Income Type</InputLabel>
+              <Select
+                value={formData.incomeType || "Salary"}
+                label="Income Type"
+                onChange={(e) =>
+                  setFormData({ ...formData, incomeType: e.target.value })
+                }
+              >
+                {incomeTypes.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        )}
+
+        <Grid item xs={12} sm={isExpense ? 12 : 6}>
           <TextField
             fullWidth
             size="small"
@@ -112,8 +148,11 @@ export default function IncomeExpenseForm({
                     setFormData({ ...formData, category: e.target.value })
                   }
                 >
-                  <MenuItem value="basic">Basic Need</MenuItem>
-                  <MenuItem value="discretionary">Discretionary</MenuItem>
+                  {expenseCategories.map((cat) => (
+                    <MenuItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
@@ -132,6 +171,42 @@ export default function IncomeExpenseForm({
                   <MenuItem value="yearly">Yearly</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.isTaxDeductible}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        isTaxDeductible: e.target.checked,
+                      })
+                    }
+                  />
+                }
+                label="Is this tax-deductible?"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Collapse in={formData.isTaxDeductible}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Exemption Category</InputLabel>
+                  <Select
+                    value={formData.taxCategory}
+                    label="Exemption Category"
+                    onChange={(e) =>
+                      setFormData({ ...formData, taxCategory: e.target.value })
+                    }
+                  >
+                    {taxExpenseCategories.map((cat) => (
+                      <MenuItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Collapse>
             </Grid>
           </>
         ) : (

@@ -13,6 +13,9 @@ import {
   Grid,
   IconButton,
   MenuItem,
+  Checkbox,
+  FormControlLabel,
+  Collapse,
 } from "@mui/material";
 import {
   AttachMoney as IncomeIcon,
@@ -29,6 +32,12 @@ import {
   updateExpense,
 } from "../../../store/profileSlice";
 import { addAsset, updateAsset } from "../../corpus/corpusSlice";
+import {
+  updateDeclaration,
+  updateHouseProperty,
+  updateMonthData,
+} from "../../../store/taxSlice";
+import { investmentCategories } from "../../../utils/taxRules";
 
 const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
   const [newAsset, setNewAsset] = useState({
@@ -43,8 +52,6 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
       setNewAsset({ ...assetToEdit });
     }
   }, [assetToEdit, mode]);
-
-  const categories = ["Equity", "Debt", "Gold", "Real Estate", "Cash/FD"];
 
   return (
     <Box
@@ -83,9 +90,9 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
               }
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             >
-              {categories.map((cat) => (
-                <MenuItem key={cat} value={cat}>
-                  {cat}
+              {investmentCategories.map((cat) => (
+                <MenuItem key={cat.value} value={cat.value}>
+                  {cat.label}
                 </MenuItem>
               ))}
             </TextField>
@@ -200,6 +207,70 @@ export default function FinancialModal({ open, onClose, type, asset, mode }) {
   const active = config[type] || config.corpus;
 
   const handleFormSave = (formData) => {
+    if (formData.isTaxDeductible && formData.taxCategory) {
+      const annualAmount =
+        formData.frequency === "monthly"
+          ? formData.amount * 12
+          : formData.frequency === "quarterly"
+          ? formData.amount * 4
+          : formData.amount;
+
+      switch (formData.taxCategory) {
+        case "hra":
+          dispatch(
+            updateDeclaration({
+              section: "exemptions",
+              field: "hra",
+              value: { produced: annualAmount },
+            }),
+          );
+          break;
+        case "80c":
+          dispatch(
+            updateDeclaration({
+              section: "sec80C",
+              field: "standard80C",
+              value: annualAmount,
+            }),
+          );
+          break;
+        case "80d":
+          dispatch(
+            updateDeclaration({
+              section: "deductions",
+              field: "sec80D",
+              value: { produced: annualAmount },
+            }),
+          );
+          break;
+        case "24b":
+          dispatch(updateHouseProperty({ interest: annualAmount }));
+          break;
+        default:
+          break;
+      }
+    }
+
+    if (
+      type === "expense" &&
+      formData.name.toLowerCase().includes("rent")
+    ) {
+      const monthlyAmount =
+        formData.frequency === "monthly"
+          ? formData.amount
+          : formData.frequency === "quarterly"
+          ? formData.amount / 3
+          : formData.amount / 12;
+      dispatch(
+        updateMonthData({
+          index: 0,
+          field: "rent",
+          value: monthlyAmount,
+          populateRemaining: true,
+        }),
+      );
+    }
+
     if (mode === "edit") {
       const payload = { ...formData, id: asset.id };
       if (type === "income") dispatch(updateIncome(payload));

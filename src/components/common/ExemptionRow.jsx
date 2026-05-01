@@ -1,26 +1,58 @@
-import React from 'react';
-import { Box, Typography, Divider } from '@mui/material';
+import React from "react";
+import {
+  Box,
+  Typography,
+  Tooltip,
+  IconButton,
+  Stack,
+  Divider,
+} from "@mui/material";
+import { InfoOutlined as InfoIcon } from "@mui/icons-material";
 
-const ExemptionRow = ({ label, produced, limited }) => {
+const ExemptionRow = ({ label, produced, limited, tooltip }) => {
   return (
-    <Box sx={{ my: 2 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="body1" color="text.secondary">
-          {label}
-        </Typography>
-        <Box textAlign="right">
-          <Typography variant="body2" color="text.disabled">
-            Produced: ₹{produced || 0}
+    <Box>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        spacing={1}
+      >
+        <Box display="flex" alignItems="center">
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 600, color: "text.secondary" }}
+          >
+            {label}
           </Typography>
-          <Typography variant="body1" fontWeight="bold" color={limited > 0 ? "success.main" : "text.primary"}>
-            Limited: ₹{limited || 0}
-          </Typography>
+          {tooltip && (
+            <Tooltip title={tooltip} placement="top" arrow>
+              <IconButton size="small" sx={{ p: 0.2, ml: 0.5 }}>
+                <InfoIcon
+                  sx={{ fontSize: "1rem", color: "text.disabled" }}
+                />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
-      </Box>
-      <Divider sx={{ mt: 1 }} />
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box sx={{ minWidth: 100 }}>{produced}</Box>
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 800,
+              color: "text.primary",
+              minWidth: 80,
+              textAlign: "right",
+            }}
+          >
+            ₹{Math.round(limited).toLocaleString("en-IN")}
+          </Typography>
+        </Stack>
+      </Stack>
+      <Divider sx={{ my: 1.5 }} />
     </Box>
   );
 };
 
 export default ExemptionRow;
-

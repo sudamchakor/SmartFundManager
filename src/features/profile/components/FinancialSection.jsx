@@ -35,6 +35,7 @@ import {
   selectCurrency,
   selectIsLoanActive,
 } from "../../../store/emiSlice";
+import { selectTaxComparison } from "../../../store/taxSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
 import { formatCurrency } from "../../../utils/formatting";
 import { useNavigate } from "react-router-dom";
@@ -62,6 +63,7 @@ export default function FinancialSection({
   const investableSurplus = useSelector(selectCurrentSurplus);
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
   const isLoanActive = useSelector(selectIsLoanActive);
+  const taxComparison = useSelector(selectTaxComparison);
 
   const totalAmount = isIncome
     ? totalIncome
@@ -97,6 +99,21 @@ export default function FinancialSection({
     if (category === "discretionary") return "#ed6c02";
     return "primary.main"; // Default if no category match
   };
+
+  const getCurrentTaxSlab = () => {
+    if (!taxComparison) return 0;
+    const taxableIncome =
+      taxComparison.optimal === "Old Regime"
+        ? taxComparison.oldRegime.taxableIncome
+        : taxComparison.newRegime.taxableIncome;
+
+    if (taxableIncome > 1000000) return 0.3;
+    if (taxableIncome > 500000) return 0.2;
+    if (taxableIncome > 250000) return 0.05;
+    return 0;
+  };
+
+  const taxRate = getCurrentTaxSlab();
 
   return (
     <Card
@@ -233,6 +250,7 @@ export default function FinancialSection({
                     formatCurrency={formatCurrency}
                     totalIncome={totalIncome}
                     getExpenseColor={() => getExpenseItemColor(item.category)}
+                    taxRate={taxRate}
                   />
                 ))}
               </>

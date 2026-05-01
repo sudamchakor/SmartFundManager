@@ -16,6 +16,10 @@ import {
   Stack,
   ToggleButton,
   ToggleButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  useMediaQuery,
 } from "@mui/material";
 import {
   ArrowRightAlt as ArrowRightAltIcon,
@@ -25,6 +29,7 @@ import {
   AccountBalance as TaxIcon,
   DoubleArrow as DoubleArrowIcon,
   DeleteSweep as DeleteSweepIcon,
+  Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
 import SalaryTable from "../components/tax/SalaryTable";
 import TaxSummary from "../components/tax/TaxSummary";
@@ -33,6 +38,7 @@ import {
   SettingsModal,
 } from "../components/tax/ActionModals";
 import Declarations from "../components/tax/Declarations";
+import TaxBreakdownChart from "../components/tax/TaxBreakdownChart";
 import {
   updateMonthData,
   updateSettings,
@@ -50,11 +56,16 @@ import {
   selectCalculatedSalary,
   selectTaxComparison,
 } from "../store/taxSlice";
+import {
+  selectIncomes,
+  selectProfileExpenses,
+} from "../store/profileSlice";
 import { calculateTax } from "../utils/taxEngine";
 
 const TaxDashboard = () => {
   const theme = useTheme();
   const dispatch = useDispatch();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mounted, setMounted] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -68,60 +79,13 @@ const TaxDashboard = () => {
   const [modalRowId, setModalRowId] = useState("");
   const [modalLabel, setModalLabel] = useState("");
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [analyticsModalOpen, setAnalyticsModalOpen] = useState(false);
   const [hoveredCell, setHoveredCell] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const settings = useSelector(selectSettings);
-  const declarations = useSelector(selectCalculatedDeclarations);
-  const dynamicRows = useSelector(selectDynamicRows);
-  const houseProperty = useSelector(selectHouseProperty);
-  const age = useSelector(selectAge);
-  const calculatedSalary = useSelector(selectCalculatedSalary);
-  const taxComparison = useSelector(selectTaxComparison);
-
-  const breakEven = useMemo(() => {
-    if (taxComparison.optimal !== "New Regime") {
-      return { investmentNeeded: 0, potentialSavings: 0 };
-    }
-
-    const taxDiff =
-      taxComparison.oldRegime.tax - taxComparison.newRegime.tax;
-    if (taxDiff <= 0) {
-      return { investmentNeeded: 0, potentialSavings: 0 };
-    }
-
-    const income = { salary: calculatedSalary.annual.totalIncome };
-    const meta = { age: age, profTax: calculatedSalary.annual.profTax };
-
-    let investmentNeeded = 0;
-    for (let i = 1; i <= 500000; i += 500) {
-      const tempDeclarations = JSON.parse(JSON.stringify(declarations));
-      tempDeclarations.sec80C.standard80C =
-        (parseFloat(tempDeclarations.sec80C.standard80C) || 0) + i;
-
-      const newTax = calculateTax(
-        income,
-        tempDeclarations,
-        houseProperty,
-        meta,
-      );
-      if (newTax.oldRegime.tax < newTax.newRegime.tax) {
-        investmentNeeded = i;
-        break;
-      }
-    }
-
-    return {
-      investmentNeeded,
-      potentialSavings: taxDiff,
-    };
-  }, [taxComparison, declarations, calculatedSalary, houseProperty, age]);
-
-  if (!mounted) return null;
+  // Autofill from Profile
+  const incomes = useSelector(selectIncomes);
+  const expenses = useSelector(selectProfileExpenses);
 
   // Redux Action Handlers
   const handleMonthChange = (index, field, value) => {
@@ -182,20 +146,152 @@ const TaxDashboard = () => {
     setTimeout(() => setIsUpdating(false), 300);
   };
 
-  const handleMaxOut80C = () => {
-    const current80C = declarations.sec80C.totalProduced;
-    const remaining80C = 150000 - current80C;
-    if (remaining80C > 0) {
+  const handleQuickFill = (section, amount) => {
+    if (section === "80C") {
       const currentStandard80C =
         parseFloat(declarations.sec80C.standard80C) || 0;
       handleDeclarationChange(
         "sec80C",
         "standard80C",
         null,
-        currentStandard80C + remaining80C,
+        currentStandard80C + amount,
+      );
+    } else if (section === "80D") {
+      const current80D =
+        parseFloat(declarations.deductions.sec80D.produced) || 0;
+      handleDeclarationChange(
+        "deductions",
+        "sec80D",
+        "produced",
+        current80D + amount,
       );
     }
   };
+
+  useEffect(() => {
+    // Autofill salary from profile
+    const salary = incomes.find((i) => i.name === "Salary");
+    if (salary) {
+      handleAnnualChange("basic", salary.amount * 12);
+    }
+
+    // Autofill rent from profile
+    const rent = expenses.find((e) => e.name === "Rent");
+    if (rent) {
+      handleAnnualChange("rent", rent.amount * 12);
+    }
+  }, [incomes, expenses]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const settings = useSelector(selectSettings);
+  const declarations = useSelector(selectCalculatedDeclarations);
+  const dynamicRows = useSelector(selectDynamicRows);
+  const houseProperty = useSelector(selectHouseProperty);
+  const age = useSelector(selectAge);
+  const calculatedSalary = useSelector(selectCalculatedSalary);
+  const taxComparison = useSelector(selectTaxComparison);
+
+  const breakEven = useMemo(() => {
+    if (taxComparison.optimal !== "New Regime") {
+      return { investmentNeeded: 0, potentialSavings: 0, section: null };
+    }
+
+    const taxDiff =
+      taxComparison.oldRegime.tax - taxComparison.newRegime.tax;
+    if (taxDiff <= 0) {
+      return { investmentNeeded: 0, potentialSavings: 0, section: null };
+    }
+
+    const income = { salary: calculatedSalary.annual.totalIncome };
+    const meta = { age: age, profTax: calculatedSalary.annual.profTax };
+
+    // Check 80C first
+    const current80C = declarations.sec80C.totalProduced;
+    const remaining80C = 150000 - current80C;
+
+    if (remaining80C > 0) {
+      for (let i = 500; i <= remaining80C; i += 500) {
+        const tempDeclarations = JSON.parse(JSON.stringify(declarations));
+        tempDeclarations.sec80C.standard80C =
+          (parseFloat(tempDeclarations.sec80C.standard80C) || 0) + i;
+
+        const newTax = calculateTax(
+          income,
+          tempDeclarations,
+          houseProperty,
+          meta,
+        );
+        if (newTax.oldRegime.tax < newTax.newRegime.tax) {
+          const newSavings =
+            newTax.newRegime.tax - newTax.oldRegime.tax;
+          return {
+            investmentNeeded: i,
+            potentialSavings: newSavings,
+            section: "80C",
+          };
+        }
+      }
+    }
+
+    // If 80C is exhausted or not enough, check 80D
+    const current80D = declarations.deductions.sec80D.produced;
+    const limit80D = age >= 60 ? 50000 : 25000; // Simplified limit
+    const remaining80D = limit80D - current80D;
+
+    if (remaining80D > 0) {
+      for (let i = 500; i <= remaining80D; i += 500) {
+        const tempDeclarations = JSON.parse(JSON.stringify(declarations));
+        tempDeclarations.deductions.sec80D.produced =
+          (parseFloat(tempDeclarations.deductions.sec80D.produced) || 0) +
+          i;
+
+        const newTax = calculateTax(
+          income,
+          tempDeclarations,
+          houseProperty,
+          meta,
+        );
+
+        if (newTax.oldRegime.tax < newTax.newRegime.tax) {
+          const newSavings =
+            newTax.newRegime.tax - newTax.oldRegime.tax;
+          return {
+            investmentNeeded: i,
+            potentialSavings: newSavings,
+            section: "80D",
+          };
+        }
+      }
+    }
+
+    return { investmentNeeded: 0, potentialSavings: 0, section: null };
+  }, [taxComparison, declarations, calculatedSalary, houseProperty, age]);
+
+  const hraBreakdown = useMemo(() => {
+    const annualRent = calculatedSalary.annual.rentPaid;
+    const annualBasic = calculatedSalary.annual.basic;
+    const annualHraReceived = calculatedSalary.annual.hraReceived;
+    const isMetro = settings.isMetro === "Yes";
+
+    const rentMinus10PercentBasic = Math.max(0, annualRent - 0.1 * annualBasic);
+    const fiftyPercentBasic = 0.5 * annualBasic;
+    const fortyPercentBasic = 0.4 * annualBasic;
+
+    const eligibleHra = Math.min(
+      annualHraReceived,
+      isMetro ? fiftyPercentBasic : fortyPercentBasic,
+      rentMinus10PercentBasic,
+    );
+
+    return {
+      eligibleHra,
+    };
+  }, [calculatedSalary, settings]);
+
+  if (!mounted) return null;
 
   // Modal Handlers
   const openAddModal = (type) => {
@@ -648,7 +744,7 @@ const TaxDashboard = () => {
 
       <Grid container spacing={4}>
         {/* Left Column: Heavy Data Entry */}
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12} md={8}>
           <SalaryTable
             viewMode={viewMode}
             onViewModeChange={(e, newMode) =>
@@ -677,13 +773,42 @@ const TaxDashboard = () => {
         </Grid>
 
         {/* Right Column: Tax Verdict Terminal */}
-        <Grid item xs={12} lg={4}>
+        <Grid
+          item
+          xs={12}
+          md={4}
+          sx={
+            isMobile
+              ? {
+                  position: "fixed",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1000,
+                  bgcolor: "background.paper",
+                  p: 2,
+                  boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
+                }
+              : {}
+          }
+        >
           <TaxSummary
             taxComparison={taxComparison}
             declarations={declarations}
-            onMaxOut80C={handleMaxOut80C}
+            onQuickFill={handleQuickFill}
             breakEven={breakEven}
+            calculatedSalary={calculatedSalary}
+            hraBreakdown={hraBreakdown}
           />
+          <Button
+            variant="outlined"
+            startIcon={<AnalyticsIcon />}
+            onClick={() => setAnalyticsModalOpen(true)}
+            fullWidth
+            sx={{ mt: 2 }}
+          >
+            View Analytics
+          </Button>
         </Grid>
       </Grid>
 
@@ -721,6 +846,20 @@ const TaxDashboard = () => {
         wellInputStyle={wellInputStyle}
         labelStyle={labelStyle}
       />
+      <Dialog
+        open={analyticsModalOpen}
+        onClose={() => setAnalyticsModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Tax Analytics</DialogTitle>
+        <DialogContent>
+          <TaxBreakdownChart
+            taxComparison={taxComparison}
+            calculatedSalary={calculatedSalary}
+          />
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

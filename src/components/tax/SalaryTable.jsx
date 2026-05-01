@@ -15,6 +15,10 @@ import {
   Collapse,
   alpha,
   useTheme,
+  useMediaQuery,
+  Card,
+  CardContent,
+  Grid,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 
@@ -32,6 +36,7 @@ const SalaryTable = ({
   wellInputStyle,
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const renderAnnualRow = (
     label,
@@ -74,6 +79,46 @@ const SalaryTable = ({
       </TableRow>
     );
   };
+
+  if (isMobile) {
+    return (
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            textTransform: "uppercase",
+            color: "text.secondary",
+            letterSpacing: 1,
+            mb: 1.5,
+          }}
+        >
+          Salary Components
+        </Typography>
+        <Grid container spacing={2}>
+          {earningsFixed.map((item) => (
+            <Grid item xs={12} sm={6} key={item.field}>
+              <Card>
+                <CardContent>
+                  <Typography variant="caption">{item.label}</Typography>
+                  <TextField
+                    variant="standard"
+                    size="small"
+                    value={calculatedSalary.months[0][item.field]}
+                    onChange={(e) => onAnnualChange(item.field, e.target.value * 12)}
+                    InputProps={{
+                      disableUnderline: true,
+                      sx: { ...wellInputStyle, width: "100%" },
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ mb: 4 }}>
