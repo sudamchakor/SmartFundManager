@@ -1,68 +1,80 @@
 import React, { useState, useEffect } from "react";
 import {
   Grid,
-  Card,
-  CardActionArea,
-  CardContent,
   Typography,
   Box,
   Container,
-  Grow,
   Stack,
   useTheme,
+  alpha,
+  keyframes,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import CalculateIcon from "@mui/icons-material/Calculate";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import ReceiptIcon from "@mui/icons-material/Receipt";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import {
+  Calculate as CalculateIcon,
+  AccountCircle as AccountCircleIcon,
+  CreditCard as CreditCardIcon,
+  TrendingUp as TrendingUpIcon,
+  AccountBalance as AccountBalanceIcon,
+  Receipt as ReceiptIcon,
+  ChevronRight as ChevronRightIcon,
+  Dashboard as DashboardIcon,
+} from "@mui/icons-material";
 import OnboardingModal from "../features/profile/tabs/OnboardingModal";
 
-const features = [
+// Staggered system boot-up animation
+const moduleBootUp = keyframes`
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+`;
+
+// Mapped directly to MUI theme palette tokens instead of hardcoded hex values
+const systemModules = [
   {
     title: "User Profile",
-    description: "Manage your incomes, expenses, and financial goals.",
-    icon: <AccountCircleIcon sx={{ fontSize: 40 }} />,
+    description:
+      "Manage your demographics, operational liabilities, and capital goals.",
+    icon: <AccountCircleIcon sx={{ fontSize: 32 }} />,
     path: "/profile",
-    color: "#7b1fa2", // Purple
+    colorToken: "secondary",
   },
   {
     title: "EMI Calculator",
-    description: "Calculate your monthly EMI and view amortization schedule.",
-    icon: <CalculateIcon sx={{ fontSize: 40 }} />,
+    description:
+      "Calculate monthly amortization schedules and prepayment impacts.",
+    icon: <CalculateIcon sx={{ fontSize: 32 }} />,
     path: "/calculator",
-    color: "#1976d2", // Blue
+    colorToken: "primary",
   },
   {
     title: "Credit Card EMI",
-    description: "Plan your credit card dues and EMI conversions.",
-    icon: <CreditCardIcon sx={{ fontSize: 40 }} />,
+    description: "Simulate the exact cost of converting unsecured debt to EMI.",
+    icon: <CreditCardIcon sx={{ fontSize: 32 }} />,
     path: "/credit-card-emi",
-    color: "#2e7d32", // Green
+    colorToken: "success",
   },
   {
-    title: "Investment Calculator",
-    description: "Calculate SIP, Lumpsum returns and wealth accumulation.",
-    icon: <TrendingUpIcon sx={{ fontSize: 40 }} />,
+    title: "Investment Strategy",
+    description:
+      "Project long-term wealth accumulation and safe withdrawal rates.",
+    icon: <TrendingUpIcon sx={{ fontSize: 32 }} />,
     path: "/investment/sip",
-    color: "#0288d1", // Cyan
+    colorToken: "info",
   },
   {
     title: "Personal Loan",
-    description: "Estimate personal loan EMIs and interest payouts.",
-    icon: <AccountBalanceIcon sx={{ fontSize: 40 }} />,
+    description:
+      "Configure unsecured debt parameters to calculate monthly liabilities.",
+    icon: <AccountBalanceIcon sx={{ fontSize: 32 }} />,
     path: "/personal-loan",
-    color: "#ed6c02", // Orange
+    colorToken: "warning",
   },
   {
-    title: "Tax Calculator",
-    description: "Calculate your income tax under new/old regimes.",
-    icon: <ReceiptIcon sx={{ fontSize: 40 }} />,
+    title: "Tax Optimization",
+    description: "Compute income tax liabilities across legislative regimes.",
+    icon: <ReceiptIcon sx={{ fontSize: 32 }} />,
     path: "/tax-calculator",
-    color: "#d32f2f", // Red
+    colorToken: "error",
   },
 ];
 
@@ -84,17 +96,31 @@ export default function Home() {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 8, mb: 8 }}>
-      {/* Hero Section */}
-      <Box sx={{ textAlign: "center", mb: 8 }}>
+    <Container maxWidth="lg" sx={{ mt: { xs: 4, md: 8 }, mb: 8 }}>
+      {/* Terminal Hero Section */}
+      <Box sx={{ textAlign: "center", mb: 8, position: "relative" }}>
+        <Box
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            p: 1.5,
+            mb: 3,
+            borderRadius: 3,
+            bgcolor: alpha(theme.palette.primary.main, 0.1),
+            color: "primary.main",
+          }}
+        >
+          <DashboardIcon sx={{ fontSize: 40 }} />
+        </Box>
         <Typography
           variant="h3"
           component="h1"
           sx={{
             fontWeight: 900,
-            color: "#1a1a1a",
-            letterSpacing: "-0.02em",
-            mb: 1,
+            color: "text.primary",
+            letterSpacing: "-0.04em",
+            mb: 1.5,
           }}
         >
           SmartFund{" "}
@@ -104,99 +130,149 @@ export default function Home() {
         </Typography>
         <Typography
           variant="h6"
-          color="text.secondary"
-          sx={{ fontWeight: 500, opacity: 0.8 }}
+          sx={{
+            fontWeight: 600,
+            color: "text.secondary",
+            maxWidth: 600,
+            mx: "auto",
+            lineHeight: 1.6,
+          }}
         >
-          Your all-in-one financial command center for planning, tracking, and
-          growth.
+          Your centralized financial command center for precision planning,
+          liability tracking, and capital growth.
         </Typography>
       </Box>
 
-      <Grid container spacing={4}>
-        {features.map((feature, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
-            <Grow in={true} timeout={(index + 1) * 200}>
-              <Card
+      {/* Grid Modules */}
+      <Grid container spacing={3}>
+        {systemModules.map((module, index) => {
+          const colorToken = module.colorToken;
+
+          return (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Box
+                onClick={() => navigate(module.path)}
                 sx={{
                   height: "100%",
-                  borderRadius: 4,
-                  border: "1px solid #f0f0f0",
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+                  p: { xs: 3, md: 4 },
+                  borderRadius: 3,
+                  bgcolor: alpha(theme.palette.background.paper, 0.6),
+                  border: "1px solid",
+                  borderColor: alpha(theme.palette.divider, 0.1),
+                  boxShadow: `0 4px 24px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
+                  cursor: "pointer",
+                  position: "relative",
+                  overflow: "hidden",
+                  backdropFilter: "blur(10px)",
+
+                  // Boot-up Animation
+                  animation: `${moduleBootUp} 0.6s cubic-bezier(0.16, 1, 0.3, 1) both`,
+                  animationDelay: `${index * 80}ms`,
                   transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+
                   "&:hover": {
-                    boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
-                    transform: "translateY(-8px)",
-                    borderColor: feature.color,
+                    bgcolor: theme.palette.background.paper,
+                    borderColor: alpha(theme.palette[colorToken].main, 0.3),
+                    transform: "translateY(-4px)",
+                    boxShadow: `0 12px 40px ${alpha(theme.palette[colorToken].main, 0.12)}`,
                     "& .arrow-icon": {
                       transform: "translateX(4px)",
                       opacity: 1,
                     },
+                    "& .icon-well": {
+                      bgcolor: alpha(theme.palette[colorToken].main, 0.15),
+                      transform: "scale(1.05)",
+                    },
                   },
                 }}
               >
-                <CardActionArea
-                  onClick={() => navigate(feature.path)}
+                {/* Module Top Accent Line */}
+                <Box
                   sx={{
-                    height: "100%",
-                    p: 4,
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 3,
+                    bgcolor: alpha(theme.palette[colorToken].main, 0.4),
+                  }}
+                />
+
+                {/* Tinted Icon Well */}
+                <Box
+                  className="icon-well"
+                  sx={{
                     display: "flex",
-                    flexDirection: "column",
-                    alignItems: "flex-start",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 64,
+                    height: 64,
+                    borderRadius: 2.5,
+                    bgcolor: alpha(theme.palette[colorToken].main, 0.08),
+                    color: `${colorToken}.main`,
+                    mb: 4,
+                    transition: "all 0.3s ease",
                   }}
                 >
-                  {/* Icon Container */}
-                  <Box
+                  {module.icon}
+                </Box>
+
+                <Box>
+                  <Typography
+                    variant="caption"
                     sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 72,
-                      height: 72,
-                      borderRadius: 3,
-                      bgcolor: `${feature.color}10`, // 10% opacity version of the color
-                      color: feature.color,
-                      mb: 3,
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      color: alpha(theme.palette.text.secondary, 0.6),
+                      letterSpacing: 1,
+                      display: "block",
+                      mb: 0.5,
                     }}
                   >
-                    {feature.icon}
-                  </Box>
+                    System Module
+                  </Typography>
 
-                  <CardContent sx={{ p: 0, width: "100%" }}>
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="center"
-                      sx={{ mb: 1 }}
-                    >
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 800, color: "#1a1a1a" }}
-                      >
-                        {feature.title}
-                      </Typography>
-                      <ChevronRightIcon
-                        className="arrow-icon"
-                        sx={{
-                          fontSize: 20,
-                          color: feature.color,
-                          opacity: 0,
-                          transition: "all 0.2s ease",
-                        }}
-                      />
-                    </Stack>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    sx={{ mb: 1.5 }}
+                  >
                     <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontWeight: 500, lineHeight: 1.6 }}
+                      variant="h6"
+                      sx={{
+                        fontWeight: 800,
+                        color: "text.primary",
+                        letterSpacing: -0.5,
+                      }}
                     >
-                      {feature.description}
+                      {module.title}
                     </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grow>
-          </Grid>
-        ))}
+                    <ChevronRightIcon
+                      className="arrow-icon"
+                      sx={{
+                        fontSize: 22,
+                        color: `${colorToken}.main`,
+                        opacity: 0,
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      }}
+                    />
+                  </Stack>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 500,
+                      color: "text.secondary",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {module.description}
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+          );
+        })}
       </Grid>
 
       <OnboardingModal open={showOnboarding} onClose={handleCloseOnboarding} />
