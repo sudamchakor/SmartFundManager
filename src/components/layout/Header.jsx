@@ -55,7 +55,7 @@ const calculators = [
     label: "Home Loan EMI",
     icon: <CalculateIcon />,
     color: "#BBDEFB",
-  }, // Lightened colors for dark bg
+  },
   {
     path: "/credit-card-emi",
     label: "Credit Card EMI",
@@ -124,13 +124,19 @@ const Header = () => {
     }
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+    setDrawerOpen(false);
+    setProfileAnchorEl(null);
+  };
+
   return (
     <AppBar
       position="fixed"
       elevation={0}
       sx={{
-        bgcolor: "primary.main", // UPDATED: Using theme primary color
-        color: "primary.contrastText", // UPDATED: Ensuring text is readable (white/light)
+        bgcolor: "primary.main",
+        color: "primary.contrastText",
         zIndex: (theme) => theme.zIndex.drawer + 1,
       }}
     >
@@ -148,7 +154,7 @@ const Header = () => {
           )}
 
           <Box
-            onClick={() => navigate("/")}
+            onClick={() => handleNavigation("/")}
             sx={{
               display: "flex",
               alignItems: "center",
@@ -187,7 +193,7 @@ const Header = () => {
                 sx={{
                   textTransform: "none",
                   fontWeight: 700,
-                  color: "inherit", // Inherits contrastText
+                  color: "inherit",
                   "&:hover": { bgcolor: alpha("#fff", 0.1) },
                 }}
               >
@@ -233,11 +239,22 @@ const Header = () => {
 
               <Tooltip title="Help & FAQ">
                 <IconButton
-                  onClick={() => navigate("/faq")}
+                  onClick={() => handleNavigation("/faq")}
                   size="small"
                   color="inherit"
                 >
                   <HelpIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+
+              {/* NEW: Direct Settings Icon for Desktop */}
+              <Tooltip title="Settings">
+                <IconButton
+                  onClick={() => handleNavigation("/settings")}
+                  size="small"
+                  color="inherit"
+                >
+                  <SettingsIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </>
@@ -266,7 +283,7 @@ const Header = () => {
             <MenuItem
               key={calc.path}
               onClick={() => {
-                navigate(calc.path);
+                handleNavigation(calc.path);
                 setAnchorEl(null);
               }}
               selected={location.pathname.startsWith(calc.path)}
@@ -291,38 +308,36 @@ const Header = () => {
           </MenuItem>
         </Menu>
 
+        {/* UPDATED: Added Settings to Profile Dropdown */}
         <Menu
           anchorEl={profileAnchorEl}
           open={Boolean(profileAnchorEl)}
           onClose={() => setProfileAnchorEl(null)}
         >
-          <MenuItem
-            onClick={() => {
-              navigate("/profile?tab=personal");
-              setProfileAnchorEl(null);
-            }}
-          >
+          <MenuItem onClick={() => handleNavigation("/profile?tab=personal")}>
             <ListItemIcon>
               <PersonIcon fontSize="small" />
-            </ListItemIcon>{" "}
+            </ListItemIcon>
             Personal Profile
           </MenuItem>
-          <MenuItem
-            onClick={() => {
-              navigate("/profile?tab=goals");
-              setProfileAnchorEl(null);
-            }}
-          >
+          <MenuItem onClick={() => handleNavigation("/profile?tab=goals")}>
             <ListItemIcon>
               <GoalsIcon fontSize="small" />
-            </ListItemIcon>{" "}
+            </ListItemIcon>
             Financial Goals
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={() => handleNavigation("/settings")}>
+            <ListItemIcon>
+              <SettingsIcon fontSize="small" />
+            </ListItemIcon>
+            Global Settings
           </MenuItem>
           <Divider />
           <MenuItem onClick={handleResetData} sx={{ color: "error.main" }}>
             <ListItemIcon>
               <ResetIcon fontSize="small" color="error" />
-            </ListItemIcon>{" "}
+            </ListItemIcon>
             Reset All Data
           </MenuItem>
         </Menu>
@@ -334,16 +349,79 @@ const Header = () => {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <Box sx={{ width: 280, p: 2 }}>
-          <Typography variant="h6" sx={{ fontWeight: 900, mb: 2, px: 2 }}>
-            SmartFund
-            <Box component="span" sx={{ color: "primary.main" }}>
-              {" "}
-              Manager
-            </Box>
-          </Typography>
+        <Box sx={{ width: 280 }}>
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 900, px: 1 }}>
+              SmartFund
+              <Box component="span" sx={{ color: "primary.main" }}>
+                {" "}
+                Manager
+              </Box>
+            </Typography>
+          </Box>
           <Divider />
-          {/* ... drawer content same as before ... */}
+
+          <List sx={{ pt: 0 }}>
+            {/* Calculators List */}
+            <ListItemButton
+              onClick={() => setOpenCalculators(!openCalculators)}
+              sx={{ bgcolor: alpha(theme.palette.primary.main, 0.05) }}
+            >
+              <ListItemIcon>
+                <CalculateIcon color="primary" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Calculators"
+                primaryTypographyProps={{ fontWeight: 700 }}
+              />
+              {openCalculators ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+
+            <Collapse in={openCalculators} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                {calculators.map((calc) => (
+                  <ListItemButton
+                    key={calc.path}
+                    sx={{ pl: 4 }}
+                    onClick={() => handleNavigation(calc.path)}
+                    selected={location.pathname.startsWith(calc.path)}
+                  >
+                    <ListItemIcon>{calc.icon}</ListItemIcon>
+                    <ListItemText
+                      primary={calc.label}
+                      primaryTypographyProps={{ fontSize: "0.9rem" }}
+                    />
+                  </ListItemButton>
+                ))}
+              </List>
+            </Collapse>
+
+            <Divider />
+
+            {/* Profile & Settings List */}
+            <ListItemButton
+              onClick={() => handleNavigation("/profile?tab=personal")}
+            >
+              <ListItemIcon>
+                <PersonIcon />
+              </ListItemIcon>
+              <ListItemText primary="My Profile" />
+            </ListItemButton>
+
+            <ListItemButton onClick={() => handleNavigation("/settings")}>
+              <ListItemIcon>
+                <SettingsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Settings" />
+            </ListItemButton>
+
+            <ListItemButton onClick={() => handleNavigation("/faq")}>
+              <ListItemIcon>
+                <HelpIcon />
+              </ListItemIcon>
+              <ListItemText primary="Help & FAQ" />
+            </ListItemButton>
+          </List>
         </Box>
       </Drawer>
     </AppBar>
