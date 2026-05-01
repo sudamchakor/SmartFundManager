@@ -158,10 +158,14 @@ export const calculateTax = (income, declarations, houseProperty, meta) => {
 
   return {
       oldRegime: {
+          grossIncome: totalIncome,
+          deductions: oldDeductions,
           taxableIncome: oldTaxableIncome,
           tax: oldTotalTaxFinal,
       },
       newRegime: {
+          grossIncome: totalIncome,
+          deductions: newDeductions,
           taxableIncome: newTaxableIncome,
           tax: newTotalTax,
       },
@@ -169,4 +173,3 @@ export const calculateTax = (income, declarations, houseProperty, meta) => {
       savings: Math.abs(oldTotalTaxFinal - newTotalTax),
   };
 };
-
