@@ -24,7 +24,6 @@ import {
 import {
   Calculate as CalculateIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  Home as HomeIcon,
   CreditCard as CreditCardIcon,
   TrendingUp as TrendingUpIcon,
   AccountBalanceWallet as TaxIcon,
@@ -54,31 +53,26 @@ const calculators = [
     path: "/calculator",
     label: "Home Loan EMI",
     icon: <CalculateIcon />,
-    color: "#BBDEFB",
   },
   {
     path: "/credit-card-emi",
     label: "Credit Card EMI",
     icon: <CreditCardIcon />,
-    color: "#C8E6C9",
   },
   {
     path: "/investment",
     label: "Investment",
     icon: <TrendingUpIcon />,
-    color: "#B3E5FC",
   },
   {
     path: "/personal-loan",
     label: "Personal Loan",
     icon: <PersonalLoanIcon />,
-    color: "#FFE0B2",
   },
   {
     path: "/tax-calculator",
     label: "Tax Calculator",
     icon: <TaxIcon />,
-    color: "#FFCDD2",
   },
 ];
 
@@ -130,13 +124,16 @@ const Header = () => {
     setProfileAnchorEl(null);
   };
 
+  // Dynamic Contrast Color for the AppBar
+  const contrastColor = theme.palette.primary.contrastText;
+
   return (
     <AppBar
       position="fixed"
       elevation={0}
       sx={{
         bgcolor: "primary.main",
-        color: "primary.contrastText",
+        color: contrastColor,
         zIndex: (theme) => theme.zIndex.drawer + 1,
       }}
     >
@@ -184,7 +181,7 @@ const Header = () => {
                   height: 24,
                   alignSelf: "center",
                   mx: 1,
-                  bgcolor: alpha("#fff", 0.3),
+                  bgcolor: alpha(contrastColor, 0.3), // STRICT THEME
                 }}
               />
               <Button
@@ -194,7 +191,7 @@ const Header = () => {
                   textTransform: "none",
                   fontWeight: 700,
                   color: "inherit",
-                  "&:hover": { bgcolor: alpha("#fff", 0.1) },
+                  "&:hover": { bgcolor: alpha(contrastColor, 0.1) }, // STRICT THEME
                 }}
               >
                 {currentCalc.label}
@@ -217,10 +214,10 @@ const Header = () => {
                   fontWeight: 700,
                   textTransform: "none",
                   color: "inherit",
-                  borderColor: alpha("#fff", 0.5),
+                  borderColor: alpha(contrastColor, 0.5), // STRICT THEME
                   "&:hover": {
-                    borderColor: "#fff",
-                    bgcolor: alpha("#fff", 0.1),
+                    borderColor: contrastColor, // STRICT THEME
+                    bgcolor: alpha(contrastColor, 0.1), // STRICT THEME
                   },
                 }}
               >
@@ -247,7 +244,6 @@ const Header = () => {
                 </IconButton>
               </Tooltip>
 
-              {/* NEW: Direct Settings Icon for Desktop */}
               <Tooltip title="Settings">
                 <IconButton
                   onClick={() => handleNavigation("/settings")}
@@ -263,9 +259,9 @@ const Header = () => {
           <IconButton
             onClick={(e) => setProfileAnchorEl(e.currentTarget)}
             sx={{
-              bgcolor: alpha("#fff", 0.1),
+              bgcolor: alpha(contrastColor, 0.1), // STRICT THEME
               color: "inherit",
-              "&:hover": { bgcolor: alpha("#fff", 0.2) },
+              "&:hover": { bgcolor: alpha(contrastColor, 0.2) }, // STRICT THEME
             }}
           >
             <ProfileIcon />
@@ -308,7 +304,6 @@ const Header = () => {
           </MenuItem>
         </Menu>
 
-        {/* UPDATED: Added Settings to Profile Dropdown */}
         <Menu
           anchorEl={profileAnchorEl}
           open={Boolean(profileAnchorEl)}

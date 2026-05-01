@@ -1,53 +1,60 @@
-import React, { useMemo } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React, { useState, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import {
-  Card,
-  CardContent,
   Typography,
   Box,
   Button,
-  Alert,
-} from '@mui/material';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+  useTheme,
+  alpha,
+  Stack,
+  Grid,
+} from "@mui/material";
+import {
+  AutoFixHigh as AutoFixIcon,
+  CheckCircleOutline as SuccessIcon,
+  WarningAmber as WarningIcon,
+} from "@mui/icons-material";
+
 import {
   selectCurrentSurplus,
   selectProfileExpenses,
   selectStepUpPercentage,
   updateExpense,
   setStepUpPercentage,
-} from '../../../store/profileSlice';
-import { selectCurrency } from '../../../store/emiSlice';
-import { formatCurrency } from '../../../utils/formatting';
+} from "../../../store/profileSlice";
+import { selectCurrency } from "../../../store/emiSlice";
+import { formatCurrency } from "../../../utils/formatting";
 
 const CorrectionEngine = () => {
+  const theme = useTheme();
   const dispatch = useDispatch();
+
   const surplus = useSelector(selectCurrentSurplus);
   const expenses = useSelector(selectProfileExpenses);
   const currentStepUp = useSelector(selectStepUpPercentage);
   const currency = useSelector(selectCurrency);
 
+  const [hasSucceeded, setHasSucceeded] = useState(false);
+
   const recommendation = useMemo(() => {
-    if (surplus >= 0) {
-      return null;
-    }
+    if (surplus >= 0) return null;
 
     const deficit = Math.abs(surplus);
-    const discretionaryExpenses = expenses.filter(e => e.category === 'discretionary');
-    const totalDiscretionary = discretionaryExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const discretionaryExpenses = expenses.filter(
+      (e) => e.category === "discretionary",
+    );
+    const totalDiscretionary = discretionaryExpenses.reduce(
+      (sum, e) => sum + e.amount,
+      0,
+    );
 
     if (totalDiscretionary === 0) {
-        return {
-            message: "You have a deficit, but no discretionary expenses to reduce. Consider increasing your income or reducing basic needs/goals.",
-            actionable: false
-        }
+      return {
+        message:
+          "Deficit detected. No discretionary expenses available to reduce. Consider increasing income or using the Auto-Balancer for basic needs.",
+        actionable: false,
+      };
     }
-
-    // Goal: Find the minimum % reduction in Discretionary needed to cover the deficit.
-    // If deficit > totalDiscretionary, we max out reduction at 100% and suggest Step-Up changes
-    // However, Step-Up only affects future years in the projection, not the *current* monthly surplus.
-    // The prompt asks to "increase Step-up to 8%" as part of the recommendation.
-    // I will interpret this as: Try to fix current deficit by reducing wants.
-    // Then, suggest a standard growth strategy (like 8% step up) to prevent future deficits.
 
     let reductionNeededRatio = deficit / totalDiscretionary;
     let reductionPercentage = 0;
@@ -55,87 +62,187 @@ const CorrectionEngine = () => {
     let message = "";
 
     if (reductionNeededRatio <= 1) {
-        // We can cover the deficit just by reducing wants
-        reductionPercentage = Math.ceil(reductionNeededRatio * 100);
-        message = `To reach a positive surplus, reduce your Discretionary spending by ${reductionPercentage}%.`;
-        
-        // Add the step-up suggestion as requested if it's currently low
-        if (currentStepUp < 0.08) {
-            newStepUp = 0.08;
-            message += ` We also recommend increasing your Step-up SIP to ${newStepUp * 100}% to accelerate future wealth.`;
-        }
+      reductionPercentage = Math.ceil(reductionNeededRatio * 100);
+      message = `To reach a positive surplus, reduce your Discretionary spending by ${reductionPercentage}%.`;
+
+      if (currentStepUp < 0.08) {
+        newStepUp = 0.08;
+        message += ` System also recommends increasing your Step-up SIP to ${newStepUp * 100}% to accelerate future wealth.`;
+      }
     } else {
-        // Cannot cover deficit entirely with wants
-        reductionPercentage = 100;
-        message = `Even cutting 100% of Discretionary spending leaves a deficit. You must reduce Basic Needs or Goal Contributions.`;
+      reductionPercentage = 100;
+      message = `Even cutting 100% of Discretionary spending leaves a deficit. You must reduce Basic Needs or Goal Contributions.`;
     }
 
     return {
-        message,
-        reductionPercentage,
-        newStepUp,
-        actionable: reductionNeededRatio <= 1,
-        discretionaryExpenses
+      message,
+      reductionPercentage,
+      newStepUp,
+      actionable: reductionNeededRatio <= 1,
+      discretionaryExpenses,
+      deficit,
     };
-
   }, [surplus, expenses, currentStepUp]);
 
   const applyRecommendation = () => {
     if (!recommendation || !recommendation.actionable) return;
 
     // Apply expense reductions
-    const reductionMultiplier = 1 - (recommendation.reductionPercentage / 100);
-    recommendation.discretionaryExpenses.forEach(exp => {
-        dispatch(updateExpense({
-            ...exp,
-            amount: Math.max(0, Math.round(exp.amount * reductionMultiplier))
-        }));
+    const reductionMultiplier = 1 - recommendation.reductionPercentage / 100;
+    recommendation.discretionaryExpenses.forEach((exp) => {
+      dispatch(
+        updateExpense({
+          ...exp,
+          amount: Math.max(0, Math.round(exp.amount * reductionMultiplier)),
+        }),
+      );
     });
 
     // Apply Step-up increase
     if (recommendation.newStepUp !== currentStepUp) {
-        dispatch(setStepUpPercentage(recommendation.newStepUp));
+      dispatch(setStepUpPercentage(recommendation.newStepUp));
     }
+
+    setHasSucceeded(true);
+    setTimeout(() => setHasSucceeded(false), 5000);
   };
 
-  if (surplus >= 0) {
-    return null; // Hide if there's no deficit
+  if (surplus >= 0 && !hasSucceeded) {
+    return null;
   }
 
   return (
-    <Card sx={{ mt: 3, mb: 4, bgcolor: '#fff3e0', border: '1px solid #ffcc80' }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <AutoFixHighIcon sx={{ color: 'warning.dark', mr: 1 }} />
-          <Typography variant="h6" color="warning.dark">
-            Correction Engine
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 3,
+        border: "1px solid",
+        borderColor: alpha(theme.palette.warning.main, 0.3),
+        bgcolor: alpha(theme.palette.warning.main, 0.02),
+        boxShadow: "0 2px 12px rgba(0,0,0,0.02)",
+      }}
+    >
+      {/* Header */}
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            p: 0.8,
+            borderRadius: 1.5,
+            bgcolor: alpha(theme.palette.warning.main, 0.1),
+            color: "warning.dark",
+          }}
+        >
+          <AutoFixIcon sx={{ fontSize: "1.2rem" }} />
+        </Box>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 800, color: "text.primary" }}
+        >
+          Discretionary Correction Engine
+        </Typography>
+      </Stack>
+
+      {hasSucceeded ? (
+        <Box
+          sx={{
+            textAlign: "center",
+            py: 3,
+            bgcolor: alpha(theme.palette.success.main, 0.05),
+            border: `1px dashed ${alpha(theme.palette.success.main, 0.3)}`,
+            borderRadius: 2,
+          }}
+        >
+          <SuccessIcon
+            sx={{ fontSize: 40, mb: 1, color: theme.palette.success.main }}
+          />
+          <Typography
+            variant="subtitle2"
+            sx={{
+              color: theme.palette.success.dark,
+              fontWeight: 800,
+              textTransform: "uppercase",
+            }}
+          >
+            Correction Applied
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ fontWeight: 600, color: "text.secondary" }}
+          >
+            Discretionary expenses have been successfully optimized.
           </Typography>
         </Box>
-        
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          You have a current deficit of <strong>{formatCurrency(Math.abs(surplus), currency)}</strong>.
-        </Alert>
-
-        {recommendation && (
-            <Box>
-                <Typography variant="body1" paragraph>
-                    {recommendation.message}
+      ) : (
+        <Box>
+          <Grid container alignItems="center" sx={{ mb: 2 }}>
+            <Grid item xs={12}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={1}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  bgcolor: alpha(theme.palette.warning.main, 0.1),
+                  border: `1px dashed ${alpha(theme.palette.warning.main, 0.4)}`,
+                }}
+              >
+                <WarningIcon sx={{ color: theme.palette.warning.dark }} />
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: "warning.dark" }}
+                >
+                  Current Deficit: {currency}
+                  {formatCurrency(recommendation?.deficit || Math.abs(surplus))}
                 </Typography>
-                
-                {recommendation.actionable && (
-                    <Button 
-                        variant="contained" 
-                        color="warning" 
-                        onClick={applyRecommendation}
-                        startIcon={<AutoFixHighIcon />}
-                    >
-                        Apply Auto-Correction
-                    </Button>
-                )}
+              </Stack>
+            </Grid>
+          </Grid>
+
+          {recommendation && (
+            <Box>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: "block",
+                  mb: 2,
+                  fontWeight: 600,
+                  color: "text.secondary",
+                  fontSize: "0.75rem",
+                  lineHeight: 1.6,
+                }}
+              >
+                {recommendation.message}
+              </Typography>
+
+              {recommendation.actionable && (
+                <Button
+                  variant="contained"
+                  color="warning"
+                  onClick={applyRecommendation}
+                  fullWidth
+                  disableElevation
+                  startIcon={<AutoFixIcon />}
+                  sx={{
+                    fontWeight: 800,
+                    textTransform: "none",
+                    borderRadius: 1.5,
+                    transition: "transform 0.2s",
+                    "&:hover": {
+                      transform: "translateY(-1px)",
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.warning.main, 0.3)}`,
+                    },
+                  }}
+                >
+                  Execute Auto-Correction
+                </Button>
+              )}
             </Box>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </Box>
+      )}
+    </Box>
   );
 };
 

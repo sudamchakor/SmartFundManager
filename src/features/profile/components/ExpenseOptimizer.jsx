@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Card, CardContent, Typography, Box, Slider } from "@mui/material";
+import { Box, Typography, Slider, useTheme, alpha, Stack } from "@mui/material";
+import { Tune as OptimizeIcon } from "@mui/icons-material";
 import {
   selectProfileExpenses,
   selectTotalMonthlyIncome,
@@ -12,6 +13,7 @@ import { selectCurrency } from "../../../store/emiSlice";
 import { formatCurrency } from "../../../utils/formatting";
 
 const ExpenseOptimizer = () => {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const currency = useSelector(selectCurrency);
 
@@ -20,9 +22,7 @@ const ExpenseOptimizer = () => {
   const goalContributions = useSelector(selectTotalMonthlyGoalContributions);
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
 
-  // Local state to handle slider dragging smoothly before dispatching to Redux
   const [localExpenses, setLocalExpenses] = useState(expenses);
-  // Store the initial expenses to calculate the static max limit for sliders
   const [initialExpenses] = useState(expenses);
 
   useEffect(() => {
@@ -43,7 +43,6 @@ const ExpenseOptimizer = () => {
     }
   };
 
-  // Calculate current dynamic deficit/surplus based on local state
   const totalLocalExpenses = localExpenses.reduce(
     (sum, exp) => sum + exp.amount,
     0,
@@ -52,139 +51,244 @@ const ExpenseOptimizer = () => {
     totalIncome - totalLocalExpenses - goalContributions - (monthlyEmi || 0);
   const isDeficit = currentDynamicSurplus < 0;
 
+  // Map slider colors to themes based on expense category
+  const getSliderThemeColor = (category) => {
+    switch (category) {
+      case "basic":
+        return "info";
+      case "discretionary":
+        return "warning";
+      default:
+        return "primary";
+    }
+  };
+
+  const getLabelColor = (category) => {
+    switch (category) {
+      case "basic":
+        return theme.palette.info.main;
+      case "discretionary":
+        return theme.palette.warning.main;
+      default:
+        return theme.palette.primary.main;
+    }
+  };
+
   return (
-    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <CardContent
-        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+    <Box
+      sx={{
+        p: 2.5,
+        borderRadius: 3,
+        border: "1px solid",
+        borderColor: alpha(theme.palette.divider, 0.1),
+        bgcolor: theme.palette.background.paper,
+        boxShadow: `0 2px 12px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Technical Header */}
+      <Stack
+        direction="row"
+        spacing={1.5}
+        alignItems="flex-start"
+        sx={{ mb: 3 }}
       >
-        <Typography variant="h6" gutterBottom>
-          Expense Optimizer
-        </Typography>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          gutterBottom
-          sx={{ mb: 3 }}
-        >
-          Adjust your current expenses to see how it affects your monthly cash
-          flow.
-        </Typography>
-
         <Box
           sx={{
-            flexGrow: 1,
-            overflowY: "auto",
-            overflowX: "hidden",
-            px: 2,
-            py: 1,
-          }}
-        >
-          {localExpenses.map((expense) => {
-            // Find the initial expense amount to use for a stable max calculation
-            const initialExpense = initialExpenses.find(e => e.id === expense.id) || expense;
-            const initialAmount = initialExpense.amount;
-            
-            // Calculate max limit based on category and initial amount, NOT the current changing amount
-            let maxLimit;
-            if (expense.category === "basic") {
-              maxLimit = Math.max(
-                totalIncome * 2,
-                initialAmount * 1.5,
-                500000,
-              );
-            } else if (expense.category === "discretionary") {
-              maxLimit = Math.max(totalIncome, initialAmount * 2, 200000);
-            } else {
-              maxLimit = Math.max(totalIncome * 2, initialAmount * 2, 500000);
-            }
-
-            return (
-              <Box key={expense.id} sx={{ mb: 3 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    mb: 1,
-                  }}
-                >
-                  <Typography variant="subtitle2">
-                    {expense.name} ({expense.category})
-                  </Typography>
-                  <Typography variant="subtitle2" color="primary.main">
-                    {formatCurrency(expense.amount, currency)}
-                  </Typography>
-                </Box>
-                <Box sx={{ px: 1 }}>
-                  <Slider
-                    value={expense.amount}
-                    min={0}
-                    max={maxLimit}
-                    step={100}
-                    onChange={(e, val) => handleSliderChange(expense.id, val)}
-                    onChangeCommitted={() =>
-                      handleSliderChangeCommitted(expense.id)
-                    }
-                    valueLabelDisplay="auto"
-                    valueLabelFormat={(val) => formatCurrency(val, currency)}
-                  />
-                </Box>
-              </Box>
-            );
-          })}
-
-          <Box sx={{ mb: 3 }}>
-            <Box
-              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
-            >
-              <Typography variant="subtitle2">Loan EMIs (Fixed)</Typography>
-              <Typography variant="subtitle2" color="text.secondary">
-                {formatCurrency(monthlyEmi || 0, currency)}
-              </Typography>
-            </Box>
-            <Box sx={{ px: 1 }}>
-              <Slider
-                value={monthlyEmi || 0}
-                disabled
-                max={Math.max(totalIncome * 2, monthlyEmi * 2, 500000)}
-              />
-            </Box>
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            mt: 2,
-            p: 2,
-            borderRadius: 1,
-            bgcolor: isDeficit ? "#ffebee" : "#e8f5e9", // light red vs light green
-            transition: "background-color 0.3s ease",
             display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            p: 1,
+            borderRadius: 2,
+            bgcolor: alpha(theme.palette.secondary.main, 0.1),
+            color: "secondary.main",
           }}
         >
-          <Typography
-            variant="subtitle1"
-            sx={{
-              fontWeight: "bold",
-              color: isDeficit ? "#c62828" : "#2e7d32",
-            }}
-          >
-            {isDeficit ? "Current Deficit:" : "Current Surplus:"}
-          </Typography>
+          <OptimizeIcon fontSize="small" />
+        </Box>
+        <Box>
           <Typography
             variant="h6"
+            sx={{ fontWeight: 800, color: "text.primary" }}
+          >
+            Expense Optimizer
+          </Typography>
+          <Typography
+            variant="caption"
             sx={{
-              fontWeight: "bold",
-              color: isDeficit ? "#c62828" : "#2e7d32",
+              fontWeight: 600,
+              color: "text.secondary",
+              display: "block",
+              mt: 0.5,
             }}
           >
-            {isDeficit ? "-" : ""}
-            {formatCurrency(Math.abs(currentDynamicSurplus), currency)}
+            Simulate adjustments to your current expenses to see the real-time
+            impact on your monthly cash flow.
           </Typography>
         </Box>
-      </CardContent>
-    </Card>
+      </Stack>
+
+      <Box sx={{ flexGrow: 1, overflowY: "auto", overflowX: "hidden", pr: 1 }}>
+        {localExpenses.map((expense) => {
+          const initialExpense =
+            initialExpenses.find((e) => e.id === expense.id) || expense;
+          const initialAmount = initialExpense.amount;
+
+          let maxLimit;
+          if (expense.category === "basic") {
+            maxLimit = Math.max(totalIncome * 2, initialAmount * 1.5, 500000);
+          } else if (expense.category === "discretionary") {
+            maxLimit = Math.max(totalIncome, initialAmount * 2, 200000);
+          } else {
+            maxLimit = Math.max(totalIncome * 2, initialAmount * 2, 500000);
+          }
+
+          const labelColor = getLabelColor(expense.category);
+
+          return (
+            <Box key={expense.id} sx={{ mb: 2.5 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="flex-end"
+                sx={{ mb: 0.5 }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    color: "text.secondary",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  {expense.name}{" "}
+                  <Box
+                    component="span"
+                    sx={{ color: labelColor, opacity: 0.8 }}
+                  >
+                    ({expense.category})
+                  </Box>
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ fontWeight: 900, color: labelColor }}
+                >
+                  {currency}
+                  {formatCurrency(expense.amount)}
+                </Typography>
+              </Stack>
+              <Slider
+                color={getSliderThemeColor(expense.category)}
+                value={expense.amount}
+                min={0}
+                max={maxLimit}
+                step={100}
+                onChange={(e, val) => handleSliderChange(expense.id, val)}
+                onChangeCommitted={() =>
+                  handleSliderChangeCommitted(expense.id)
+                }
+                sx={{
+                  py: 1,
+                  "& .MuiSlider-thumb": { width: 14, height: 14 },
+                  "& .MuiSlider-track": { height: 4 },
+                  "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
+                }}
+              />
+            </Box>
+          );
+        })}
+
+        {/* Fixed EMI Reference */}
+        <Box sx={{ mb: 2 }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="flex-end"
+            sx={{ mb: 0.5 }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 800,
+                textTransform: "uppercase",
+                color: "text.disabled",
+                letterSpacing: 0.5,
+              }}
+            >
+              Loan EMIs (Fixed)
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{ fontWeight: 900, color: "text.disabled" }}
+            >
+              {currency}
+              {formatCurrency(monthlyEmi || 0)}
+            </Typography>
+          </Stack>
+          <Slider
+            value={monthlyEmi || 0}
+            disabled
+            max={Math.max(totalIncome * 2, (monthlyEmi || 0) * 2, 500000)}
+            sx={{
+              py: 1,
+              "& .MuiSlider-thumb": { width: 12, height: 12 },
+              "& .MuiSlider-track": { height: 4 },
+            }}
+          />
+        </Box>
+      </Box>
+
+      {/* Dynamic Status Output Terminal */}
+      <Box
+        sx={{
+          mt: 2,
+          p: 2,
+          borderRadius: 2,
+          bgcolor: alpha(
+            isDeficit ? theme.palette.error.main : theme.palette.success.main,
+            0.05,
+          ),
+          border: "1px dashed",
+          borderColor: alpha(
+            isDeficit ? theme.palette.error.main : theme.palette.success.main,
+            0.3,
+          ),
+          transition: "all 0.3s ease",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            color: isDeficit
+              ? theme.palette.error.dark
+              : theme.palette.success.dark,
+          }}
+        >
+          {isDeficit ? "Current Deficit" : "Current Surplus"}
+        </Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 900,
+            letterSpacing: -0.5,
+            color: isDeficit
+              ? theme.palette.error.main
+              : theme.palette.success.main,
+          }}
+        >
+          {isDeficit ? "-" : ""}
+          {currency}
+          {formatCurrency(Math.abs(currentDynamicSurplus))}
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
