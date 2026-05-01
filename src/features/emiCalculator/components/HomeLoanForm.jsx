@@ -1,7 +1,19 @@
 import React from "react";
-import styled from "styled-components";
-import { Box, Paper, Typography, Grid } from "@mui/material"; // Removed Divider
-import { useDispatch, useSelector } from "react-redux"; // Import useDispatch and useSelector
+import {
+  Box,
+  Typography,
+  Grid,
+  Divider,
+  Stack,
+  useTheme,
+  alpha,
+} from "@mui/material";
+import {
+  Assignment as DetailsIcon,
+  TrendingUp as IncrementIcon,
+  ReceiptLong as ExpenseIcon,
+} from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
 import {
   updateLoanDetails,
   updateExpenses,
@@ -10,8 +22,8 @@ import {
   selectLoanDetails,
   selectExpenses,
   selectCurrency,
-} from "../../../store/emiSlice"; // Import Redux actions and selectors
-import { selectCalculatedValues } from "../utils/emiCalculator"; // Import selectCalculatedValues from emiCalculator
+} from "../../../store/emiSlice";
+import { selectCalculatedValues } from "../utils/emiCalculator";
 import {
   AmountInput,
   AmountWithUnitInput,
@@ -21,32 +33,43 @@ import {
   convertAmount,
   convertTenure,
   convertYearlyPaymentIncrease,
-} from "../utils/emiCalculator"; // Import conversion helpers
+} from "../utils/emiCalculator";
 
-const StyledPaper = styled(Paper)`
-  padding: 24px;
-  margin-bottom: 24px;
-`;
-
-const SectionHeader = styled(Box)`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-`;
+const SubsectionHeader = ({ icon, title, color }) => (
+  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+    <Box
+      sx={{
+        display: "flex",
+        p: 0.8,
+        borderRadius: 1.5,
+        bgcolor: alpha(color, 0.1),
+        color: color,
+      }}
+    >
+      {React.cloneElement(icon, { fontSize: "small" })}
+    </Box>
+    <Typography
+      variant="subtitle1"
+      sx={{ fontWeight: 700, color: "text.primary" }}
+    >
+      {title}
+    </Typography>
+  </Stack>
+);
 
 const HomeLoanForm = () => {
-  const dispatch = useDispatch(); // Initialize useDispatch
-  const loanDetails = useSelector(selectLoanDetails); // Use useSelector for loanDetails
-  const expenses = useSelector(selectExpenses); // Use useSelector for expenses
-  const calculatedValues = useSelector(selectCalculatedValues); // Use useSelector for calculatedValues
-  const currency = useSelector(selectCurrency); // Use useSelector for currency
+  const theme = useTheme();
+  const dispatch = useDispatch();
+  const loanDetails = useSelector(selectLoanDetails);
+  const expenses = useSelector(selectExpenses);
+  const calculatedValues = useSelector(selectCalculatedValues);
+  const currency = useSelector(selectCurrency);
 
   const handleUnitChange = (unitField, amountField, event) => {
     const newUnit = event.target.value;
     const oldUnit = loanDetails[unitField];
     const currentAmount = loanDetails[amountField];
-    let convertedAmount; // Removed redundant initialization
+    let convertedAmount;
 
     if (unitField === "tenureUnit") {
       convertedAmount = convertTenure(currentAmount, oldUnit, newUnit);
@@ -55,13 +78,11 @@ const HomeLoanForm = () => {
         currentAmount,
         oldUnit,
         newUnit,
-        calculatedValues.emi, // Pass the calculated EMI
+        calculatedValues.emi,
       );
     } else {
       let baseValue = loanDetails.homeValue;
-      if (unitField === "feesUnit") {
-        baseValue = calculatedValues.loanAmount;
-      }
+      if (unitField === "feesUnit") baseValue = calculatedValues.loanAmount;
       convertedAmount = convertAmount(
         currentAmount,
         oldUnit,
@@ -69,175 +90,172 @@ const HomeLoanForm = () => {
         baseValue,
       );
     }
-
     dispatch(
       changeLoanUnit({ unitField, amountField, newUnit, convertedAmount }),
-    ); // Dispatch Redux action
+    );
   };
 
   const handleChange = (field, event) => {
     let value = parseFloat(event.target.value);
     if (isNaN(value)) value = 0;
-    dispatch(updateLoanDetails({ key: field, value })); // Dispatch Redux action
+    dispatch(updateLoanDetails({ key: field, value }));
   };
 
   const handleExpenseUnitChange = (unitField, amountField, event) => {
     const newUnit = event.target.value;
     const oldUnit = expenses[unitField];
     const currentAmount = expenses[amountField];
-    const baseValue = loanDetails.homeValue; // Expenses are typically based on home value
-
+    const baseValue = loanDetails.homeValue;
     const convertedAmount = convertAmount(
       currentAmount,
       oldUnit,
       newUnit,
       baseValue,
     );
-
     dispatch(
       changeExpenseUnit({ unitField, amountField, newUnit, convertedAmount }),
-    ); // Dispatch Redux action
+    );
   };
 
   const handleExpenseChange = (field, event) => {
     let value = parseFloat(event.target.value);
     if (isNaN(value)) value = 0;
-    dispatch(updateExpenses({ key: field, value })); // Dispatch Redux action
+    dispatch(updateExpenses({ key: field, value }));
   };
 
   return (
-    <>
-      <StyledPaper elevation={3}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ fontWeight: 600, color: "text.primary" }}
-        >
-          Home Loan Details
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountInput
-              label="Home Value (HV)"
-              value={loanDetails.homeValue}
-              onChange={(e) => handleChange("homeValue", e)}
-              currency={currency}
-              placeholder="Enter home value"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountWithUnitInput
-              label="Margin / Down Payment"
-              value={loanDetails.marginAmount}
-              onAmountChange={(e) => handleChange("marginAmount", e)}
-              unitValue={loanDetails.marginUnit}
-              onUnitChange={(e) =>
-                handleUnitChange("marginUnit", "marginAmount", e)
-              }
-              unitOptions={[
-                { value: "Rs", label: currency },
-                { value: "%", label: "%" },
-              ]}
-              placeholder="Enter margin amount"
-            />
-            <Typography variant="caption" color="textSecondary">
-              Value in {currency}:{" "}
-              {(calculatedValues?.marginInRs ?? 0).toFixed(2)}
-            </Typography>
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountInput
-              label="Loan Insurance (LI)"
-              value={loanDetails.loanInsurance}
-              onChange={(e) => handleChange("loanInsurance", e)}
-              currency={currency}
-              placeholder="Enter loan insurance"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountInput
-              label="Loan Amount"
-              value={(calculatedValues?.loanAmount ?? 0).toFixed(2)}
-              disabled={true}
-              currency={currency}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountInput
-              label="Interest Rate"
-              value={loanDetails.interestRate}
-              onChange={(e) => handleChange("interestRate", e)}
-              currency="%"
-              placeholder="Enter interest rate"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountWithUnitInput
-              label="Loan Tenure"
-              value={loanDetails.loanTenure}
-              onAmountChange={(e) => handleChange("loanTenure", e)}
-              unitValue={loanDetails.tenureUnit}
-              onUnitChange={(e) =>
-                handleUnitChange("tenureUnit", "loanTenure", e)
-              }
-              unitOptions={[
-                { value: "years", label: "Y" },
-                { value: "months", label: "M" },
-              ]}
-              placeholder="Enter tenure"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountWithUnitInput
-              label="Loan Fees & Charges"
-              value={loanDetails.loanFees}
-              onAmountChange={(e) => handleChange("loanFees", e)}
-              unitValue={loanDetails.feesUnit}
-              onUnitChange={(e) => handleUnitChange("feesUnit", "loanFees", e)}
-              unitOptions={[
-                { value: "Rs", label: currency },
-                { value: "%", label: "%" },
-              ]}
-              placeholder="Enter fees"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <DatePickerInput
-              label="Start Month & Year"
-              value={loanDetails.startDate}
-              onChange={(newValue) =>
-                dispatch(
-                  updateLoanDetails({ key: "startDate", value: newValue }),
-                )
-              } // Dispatch Redux action
-            />
-          </Grid>
+    <Box>
+      {/* SECTION 1: CORE LOAN DETAILS */}
+      <SubsectionHeader
+        title="Home Loan Details"
+        icon={<DetailsIcon />}
+        color={theme.palette.primary.main}
+      />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountInput
+            label="Home Value (HV)"
+            value={loanDetails.homeValue}
+            onChange={(e) => handleChange("homeValue", e)}
+            currency={currency}
+            placeholder="Enter home value"
+          />
         </Grid>
-      </StyledPaper>
 
-      <StyledPaper elevation={3}>
-        <SectionHeader>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountWithUnitInput
+            label="Margin / Down Payment"
+            value={loanDetails.marginAmount}
+            onAmountChange={(e) => handleChange("marginAmount", e)}
+            unitValue={loanDetails.marginUnit}
+            onUnitChange={(e) =>
+              handleUnitChange("marginUnit", "marginAmount", e)
+            }
+            unitOptions={[
+              { value: "Rs", label: currency },
+              { value: "%", label: "%" },
+            ]}
+          />
           <Typography
-            variant="h6"
-            sx={{ fontWeight: 600, color: "text.primary" }}
+            variant="caption"
+            sx={{
+              mt: 0.5,
+              display: "block",
+              fontWeight: 500,
+              color: "text.secondary",
+            }}
           >
-            Yearly Payment Increment
+            Total: {currency}{" "}
+            {(calculatedValues?.marginInRs ?? 0).toLocaleString("en-IN")}
           </Typography>
-        </SectionHeader>
-        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-          Plan how much you want to increase your payment on a yearly basis.
-          This helps you close your loan earlier and saves on interest.
-        </Typography>
+        </Grid>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountInput
+            label="Loan Insurance (LI)"
+            value={loanDetails.loanInsurance}
+            onChange={(e) => handleChange("loanInsurance", e)}
+            currency={currency}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountInput
+            label="Loan Amount"
+            value={(calculatedValues?.loanAmount ?? 0).toFixed(2)}
+            disabled={true}
+            currency={currency}
+            sx={{
+              bgcolor: alpha(theme.palette.action.disabledBackground, 0.05),
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountInput
+            label="Interest Rate"
+            value={loanDetails.interestRate}
+            onChange={(e) => handleChange("interestRate", e)}
+            currency="%"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountWithUnitInput
+            label="Loan Tenure"
+            value={loanDetails.loanTenure}
+            onAmountChange={(e) => handleChange("loanTenure", e)}
+            unitValue={loanDetails.tenureUnit}
+            onUnitChange={(e) =>
+              handleUnitChange("tenureUnit", "loanTenure", e)
+            }
+            unitOptions={[
+              { value: "years", label: "Y" },
+              { value: "months", label: "M" },
+            ]}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountWithUnitInput
+            label="Loan Fees & Charges"
+            value={loanDetails.loanFees}
+            onAmountChange={(e) => handleChange("loanFees", e)}
+            unitValue={loanDetails.feesUnit}
+            onUnitChange={(e) => handleUnitChange("feesUnit", "loanFees", e)}
+            unitOptions={[
+              { value: "Rs", label: currency },
+              { value: "%", label: "%" },
+            ]}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <DatePickerInput
+            label="Start Month & Year"
+            value={loanDetails.startDate}
+            onChange={(newValue) =>
+              dispatch(updateLoanDetails({ key: "startDate", value: newValue }))
+            }
+          />
+        </Grid>
+      </Grid>
+
+      <Divider sx={{ my: 4, borderStyle: "dashed" }} />
+
+      {/* SECTION 2: YEARLY INCREMENT */}
+      <SubsectionHeader
+        title="Yearly Payment Increment"
+        icon={<IncrementIcon />}
+        color={theme.palette.success.main}
+      />
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+          Plan a voluntary yearly increase to pay off the principal faster. This
+          significantly reduces your long-term interest burden.
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={4} lg={3}>
             <AmountWithUnitInput
               label="Yearly Payment Increase"
               value={loanDetails.yearlyPaymentIncreaseAmount}
@@ -256,90 +274,92 @@ const HomeLoanForm = () => {
                 { value: "Rs", label: currency },
                 { value: "%", label: "%" },
               ]}
-              placeholder="Enter yearly increase"
             />
-            <Typography variant="caption" color="textSecondary">
-              Value in {currency}:{" "}
-              {(calculatedValues?.yearlyIncreaseAmountRs ?? 0).toFixed(2)}
+            <Typography
+              variant="caption"
+              sx={{
+                mt: 0.5,
+                display: "block",
+                fontWeight: 500,
+                color: "text.secondary",
+              }}
+            >
+              Value: {currency}{" "}
+              {(calculatedValues?.yearlyIncreaseAmountRs ?? 0).toLocaleString(
+                "en-IN",
+              )}
             </Typography>
           </Grid>
         </Grid>
-      </StyledPaper>
+      </Box>
 
-      <StyledPaper elevation={3}>
-        <SectionHeader>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 600, color: "text.primary" }}
-          >
-            Homeowner Expenses
-          </Typography>
-        </SectionHeader>
+      <Divider sx={{ my: 4, borderStyle: "dashed" }} />
 
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountWithUnitInput
-              label="One-time Expenses"
-              value={expenses.oneTimeExpenses}
-              onAmountChange={(e) => handleExpenseChange("oneTimeExpenses", e)}
-              unitValue={expenses.oneTimeUnit}
-              onUnitChange={(e) =>
-                handleExpenseUnitChange("oneTimeUnit", "oneTimeExpenses", e)
-              }
-              unitOptions={[
-                { value: "Rs", label: currency },
-                { value: "%", label: "%" },
-              ]}
-              placeholder="Enter one-time expenses"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountWithUnitInput
-              label="Property Taxes / year"
-              value={expenses.propertyTaxes}
-              onAmountChange={(e) => handleExpenseChange("propertyTaxes", e)}
-              unitValue={expenses.taxesUnit}
-              onUnitChange={(e) =>
-                handleExpenseUnitChange("taxesUnit", "propertyTaxes", e)
-              }
-              unitOptions={[
-                { value: "Rs", label: currency },
-                { value: "%", label: "%" },
-              ]}
-              placeholder="Enter property taxes"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountWithUnitInput
-              label="Home Insurance / year"
-              value={expenses.homeInsurance}
-              onAmountChange={(e) => handleExpenseChange("homeInsurance", e)}
-              unitValue={expenses.homeInsUnit}
-              onUnitChange={(e) =>
-                handleExpenseUnitChange("homeInsUnit", "homeInsurance", e)
-              }
-              unitOptions={[
-                { value: "Rs", label: currency },
-                { value: "%", label: "%" },
-              ]}
-              placeholder="Enter home insurance"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={6} lg={4} xl={3}>
-            <AmountInput
-              label="Maintenance / month"
-              value={expenses.maintenance}
-              onChange={(e) => handleExpenseChange("maintenance", e)}
-              currency={currency}
-              placeholder="Enter maintenance cost"
-            />
-          </Grid>
+      {/* SECTION 3: HOMEOWNER EXPENSES */}
+      <SubsectionHeader
+        title="Homeowner Expenses"
+        icon={<ExpenseIcon />}
+        color={theme.palette.warning.main}
+      />
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountWithUnitInput
+            label="One-time Expenses"
+            value={expenses.oneTimeExpenses}
+            onAmountChange={(e) => handleExpenseChange("oneTimeExpenses", e)}
+            unitValue={expenses.oneTimeUnit}
+            onUnitChange={(e) =>
+              handleExpenseUnitChange("oneTimeUnit", "oneTimeExpenses", e)
+            }
+            unitOptions={[
+              { value: "Rs", label: currency },
+              { value: "%", label: "%" },
+            ]}
+          />
         </Grid>
-      </StyledPaper>
-    </>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountWithUnitInput
+            label="Property Taxes / year"
+            value={expenses.propertyTaxes}
+            onAmountChange={(e) => handleExpenseChange("propertyTaxes", e)}
+            unitValue={expenses.taxesUnit}
+            onUnitChange={(e) =>
+              handleExpenseUnitChange("taxesUnit", "propertyTaxes", e)
+            }
+            unitOptions={[
+              { value: "Rs", label: currency },
+              { value: "%", label: "%" },
+            ]}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountWithUnitInput
+            label="Home Insurance / year"
+            value={expenses.homeInsurance}
+            onAmountChange={(e) => handleExpenseChange("homeInsurance", e)}
+            unitValue={expenses.homeInsUnit}
+            onUnitChange={(e) =>
+              handleExpenseUnitChange("homeInsUnit", "homeInsurance", e)
+            }
+            unitOptions={[
+              { value: "Rs", label: currency },
+              { value: "%", label: "%" },
+            ]}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4} lg={3}>
+          <AmountInput
+            label="Maintenance / month"
+            value={expenses.maintenance}
+            onChange={(e) => handleExpenseChange("maintenance", e)}
+            currency={currency}
+          />
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 

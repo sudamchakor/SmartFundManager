@@ -11,104 +11,145 @@ import {
   Collapse,
   Box,
   Skeleton,
+  Typography,
+  alpha,
+  useTheme,
 } from "@mui/material";
-import { useSelector } from "react-redux"; // Import useSelector
-import { selectCalculatedValues } from "../utils/emiCalculator"; // Import selectCalculatedValues
-import { selectCurrency } from "../../../store/emiSlice"; // Import selectCurrency
-import { useTheme } from "@mui/material/styles";
+import { useSelector } from "react-redux";
+import { selectCalculatedValues } from "../utils/emiCalculator";
+import { selectCurrency } from "../../../store/emiSlice";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
-// Define a common style for cell borders for better readability and maintenance.
-// Reduced padding to decrease row height.
-const cellBorderStyle = {
-  border: "1px solid rgba(224, 224, 224, 1)",
-  padding: "6px 8px",
-};
+// Formatting helper
+const formatVal = (val, curr) =>
+  `${curr} ${Math.round(val).toLocaleString("en-IN")}`;
 
 const Row = ({ yearData, currency }) => {
   const [open, setOpen] = useState(false);
+  const theme = useTheme();
+
+  const cellStyle = {
+    py: 1,
+    px: 1.5,
+    fontSize: "0.85rem",
+    borderColor: alpha(theme.palette.divider, 0.1),
+  };
 
   return (
     <React.Fragment>
-      {/* Main row for the year */}
-      <TableRow sx={{ "& > *": { borderBottom: "unset" } }}>
-        <TableCell component="th" scope="row" sx={{ ...cellBorderStyle, width: "15%", p: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', p: 0.5, pl: 1 }}>
+      <TableRow
+        sx={{
+          bgcolor: open ? alpha(theme.palette.primary.main, 0.05) : "inherit",
+          "&:nth-of-type(odd)": {
+            bgcolor: open
+              ? alpha(theme.palette.primary.main, 0.08)
+              : alpha(theme.palette.primary.main, 0.02),
+          },
+          transition: "background-color 0.2s",
+        }}
+      >
+        <TableCell sx={{ ...cellStyle, fontWeight: 800 }}>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
             <IconButton
-              aria-label="expand row"
               size="small"
               onClick={() => setOpen(!open)}
-              sx={{ mr: 1, padding: '2px' }}
+              sx={{ mr: 1, color: theme.palette.primary.main }}
             >
-              {open ? <RemoveCircleOutlineIcon fontSize="small" /> : <AddCircleOutlineIcon fontSize="small" />}
+              {open ? (
+                <RemoveCircleOutlineIcon fontSize="small" />
+              ) : (
+                <AddCircleOutlineIcon fontSize="small" />
+              )}
             </IconButton>
             {yearData.year}
           </Box>
         </TableCell>
-        <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-          {currency}
-          {yearData.totalPrincipal}
+        <TableCell align="right" sx={{ ...cellStyle, fontWeight: 600 }}>
+          {formatVal(yearData.totalPrincipal, currency)}
         </TableCell>
-        <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-          {currency}
-          {yearData.totalInterest}
+        <TableCell align="right" sx={{ ...cellStyle, fontWeight: 600 }}>
+          {formatVal(yearData.totalInterest, currency)}
         </TableCell>
-        <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-          {currency}
-          {yearData.totalPrepayment}
+        <TableCell align="right" sx={{ ...cellStyle, fontWeight: 600 }}>
+          {formatVal(yearData.totalPrepayment, currency)}
         </TableCell>
-        <TableCell align="right" sx={{ ...cellBorderStyle, width: "15%" }}>
-          {currency}
-          {yearData.totalPrincipal +
-            yearData.totalInterest +
-            yearData.totalPrepayment}
+        <TableCell
+          align="right"
+          sx={{ ...cellStyle, fontWeight: 800, color: "primary.main" }}
+        >
+          {formatVal(
+            yearData.totalPrincipal +
+              yearData.totalInterest +
+              yearData.totalPrepayment,
+            currency,
+          )}
         </TableCell>
-        <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-          {currency}
-          {yearData.yearEndBalance}
+        <TableCell align="right" sx={{ ...cellStyle, fontWeight: 600 }}>
+          {formatVal(yearData.yearEndBalance, currency)}
         </TableCell>
-        <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
+        <TableCell align="right" sx={{ ...cellStyle, fontWeight: 800 }}>
           {yearData.paidPercent}%
         </TableCell>
       </TableRow>
-      {/* Collapsible row for the months */}
+
+      {/* Monthly Breakdown (Sub-rows) */}
       <TableRow>
-        <TableCell style={{ padding: 0, border: 0 }} colSpan={7}>
+        <TableCell style={{ padding: 0 }} colSpan={7}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ margin: 0 }}>
-              <Table size="small" aria-label="purchases" sx={{ tableLayout: "fixed", width: "100%" }}>
+            <Box sx={{ bgcolor: alpha(theme.palette.grey[500], 0.03), p: 1 }}>
+              <Table size="small">
                 <TableBody>
                   {yearData.months.map((monthRow) => (
-                    <TableRow key={monthRow.date}>
+                    <TableRow
+                      key={monthRow.date}
+                      sx={{ "&:hover": { bgcolor: "white" } }}
+                    >
                       <TableCell
-                        component="th"
-                        scope="row"
-                        sx={{ ...cellBorderStyle, width: "15%", pl: 5 }}
+                        sx={{
+                          ...cellStyle,
+                          width: "15%",
+                          border: 0,
+                          pl: 6,
+                          color: "text.secondary",
+                        }}
                       >
                         {monthRow.date.split(" ")[0]}
                       </TableCell>
-                      <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                        {currency}
-                        {monthRow.principal}
+                      <TableCell
+                        align="right"
+                        sx={{ ...cellStyle, width: "14%", border: 0 }}
+                      >
+                        {formatVal(monthRow.principal, currency)}
                       </TableCell>
-                      <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                        {currency}
-                        {monthRow.interest}
+                      <TableCell
+                        align="right"
+                        sx={{ ...cellStyle, width: "14%", border: 0 }}
+                      >
+                        {formatVal(monthRow.interest, currency)}
                       </TableCell>
-                      <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                        {currency}
-                        {monthRow.prepayment}
+                      <TableCell
+                        align="right"
+                        sx={{ ...cellStyle, width: "14%", border: 0 }}
+                      >
+                        {formatVal(monthRow.prepayment, currency)}
                       </TableCell>
-                      <TableCell align="right" sx={{ ...cellBorderStyle, width: "15%" }}>
-                        {currency}
-                        {monthRow.totalPayment}
+                      <TableCell
+                        align="right"
+                        sx={{ ...cellStyle, width: "15%", border: 0 }}
+                      >
+                        {formatVal(monthRow.totalPayment, currency)}
                       </TableCell>
-                      <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                        {currency}
-                        {monthRow.balance}
+                      <TableCell
+                        align="right"
+                        sx={{ ...cellStyle, width: "14%", border: 0 }}
+                      >
+                        {formatVal(monthRow.balance, currency)}
                       </TableCell>
-                      <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
+                      <TableCell
+                        align="right"
+                        sx={{ ...cellStyle, width: "14%", border: 0 }}
+                      >
                         {monthRow.paidPercent}%
                       </TableCell>
                     </TableRow>
@@ -124,11 +165,10 @@ const Row = ({ yearData, currency }) => {
 };
 
 const PaymentScheduleTable = () => {
-  const calculatedValues = useSelector(selectCalculatedValues); // Use useSelector
-  const currency = useSelector(selectCurrency); // Use useSelector
-  // isCalculating was removed as it's not part of the Redux state
-  const schedule = calculatedValues.schedule;
   const theme = useTheme();
+  const calculatedValues = useSelector(selectCalculatedValues);
+  const currency = useSelector(selectCurrency);
+  const schedule = calculatedValues.schedule || [];
 
   const groupedSchedule = useMemo(() => {
     const years = {};
@@ -136,7 +176,7 @@ const PaymentScheduleTable = () => {
       const year = row.date.split(" ")[1];
       if (!years[year]) {
         years[year] = {
-          year: year,
+          year,
           totalPrincipal: 0,
           totalInterest: 0,
           totalPrepayment: 0,
@@ -144,113 +184,82 @@ const PaymentScheduleTable = () => {
           months: [],
         };
       }
-      years[year].totalPrincipal += Math.round(row.principal);
-      years[year].totalInterest += Math.round(row.interest);
-      years[year].totalPrepayment += Math.round(row.prepayment);
-      years[year].yearEndBalance = Math.round(row.balance);
-      years[year].paidPercent = Math.round(row.paidPercent);
+      years[year].totalPrincipal += row.principal;
+      years[year].totalInterest += row.interest;
+      years[year].totalPrepayment += row.prepayment;
+      years[year].yearEndBalance = row.balance;
+      years[year].paidPercent = row.paidPercent;
       years[year].months.push(row);
     });
     return Object.values(years);
   }, [schedule]);
 
-  // Using a different, unified background color for the header for a cleaner look
-  const headerCellStyle = {
-    color: theme.palette.text.primary,
-    fontWeight: "bold",
-    ...cellBorderStyle,
-  };
+  const headerStyle = (bgColor) => ({
+    bgcolor: bgColor,
+    color: "white",
+    fontWeight: 800,
+    fontSize: "0.75rem",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    py: 1.5,
+    border: 0,
+  });
 
-  // The isCalculating state was removed, so this block will be removed or adapted if a similar state is added to Redux.
-  // For now, assuming calculation is always "done" when schedule is available.
-  if (!schedule || schedule.length === 0) { // Check if schedule is empty to show skeleton
+  if (!schedule.length) {
     return (
-      <TableContainer component={Paper} variant="outlined">
-        <Table size="small" sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="collapsible table">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ ...headerCellStyle, width: "15%", backgroundColor: theme.palette.grey[200] }}>Year</TableCell>
-              <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
-                Principal
-              </TableCell>
-              <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.secondary.main, color: theme.palette.secondary.contrastText }}>
-                Interest
-              </TableCell>
-              <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.success.main, color: theme.palette.success.contrastText }}>
-                Prepayment
-              </TableCell>
-              <TableCell align="right" sx={{ ...headerCellStyle, width: "15%", backgroundColor: theme.palette.info.main, color: theme.palette.info.contrastText }}>
-                Total Payment
-              </TableCell>
-              <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.warning.main, color: theme.palette.warning.contrastText }}>
-                Balance
-              </TableCell>
-              <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.grey[200] }}>Loan Paid To Date</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={index}>
-                <TableCell sx={{ ...cellBorderStyle, width: "15%" }}>
-                  <Skeleton variant="text" width="60%" />
-                </TableCell>
-                <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                  <Skeleton variant="text" width="80%" />
-                </TableCell>
-                <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                  <Skeleton variant="text" width="80%" />
-                </TableCell>
-                <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                  <Skeleton variant="text" width="80%" />
-                </TableCell>
-                <TableCell align="right" sx={{ ...cellBorderStyle, width: "15%" }}>
-                  <Skeleton variant="text" width="80%" />
-                </TableCell>
-                <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                  <Skeleton variant="text" width="80%" />
-                </TableCell>
-                <TableCell align="right" sx={{ ...cellBorderStyle, width: "14%" }}>
-                  <Skeleton variant="text" width="50%" />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
     );
   }
 
   return (
-    <TableContainer component={Paper} variant="outlined">
-      <Table size="small" sx={{ minWidth: 650, tableLayout: "fixed" }} aria-label="collapsible table">
+    <TableContainer
+      component={Paper}
+      elevation={0}
+      sx={{
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 3,
+        overflow: "auto",
+      }}
+    >
+      <Table size="small" stickyHeader sx={{ minWidth: 800 }}>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ ...headerCellStyle, width: "15%", backgroundColor: theme.palette.grey[200] }}>Year</TableCell>
-            <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}>
+            <TableCell sx={headerStyle(theme.palette.grey[800])}>
+              Year
+            </TableCell>
+            <TableCell
+              align="right"
+              sx={headerStyle(theme.palette.success.main)}
+            >
               Principal
             </TableCell>
-            <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.secondary.main, color: theme.palette.secondary.contrastText }}>
+            <TableCell align="right" sx={headerStyle(theme.palette.error.main)}>
               Interest
             </TableCell>
-            <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.success.main, color: theme.palette.success.contrastText }}>
+            <TableCell
+              align="right"
+              sx={headerStyle(theme.palette.warning.main)}
+            >
               Prepayment
             </TableCell>
-            <TableCell align="right" sx={{ ...headerCellStyle, width: "15%", backgroundColor: theme.palette.info.main, color: theme.palette.info.contrastText }}>
+            <TableCell
+              align="right"
+              sx={headerStyle(theme.palette.primary.main)}
+            >
               Total Payment
             </TableCell>
-            <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.warning.main, color: theme.palette.warning.contrastText }}>
+            <TableCell align="right" sx={headerStyle(theme.palette.grey[700])}>
               Balance
             </TableCell>
-            <TableCell align="right" sx={{ ...headerCellStyle, width: "14%", backgroundColor: theme.palette.grey[200] }}>Loan Paid To Date</TableCell>
+            <TableCell align="right" sx={headerStyle(theme.palette.grey[800])}>
+              Paid %
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {groupedSchedule.map((yearData) => (
-            <Row
-              key={yearData.year}
-              yearData={yearData}
-              currency={currency}
-            />
+            <Row key={yearData.year} yearData={yearData} currency={currency} />
           ))}
         </TableBody>
       </Table>

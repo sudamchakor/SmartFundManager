@@ -1,55 +1,56 @@
 import React from "react";
-import styled from "styled-components";
-import { Box, Typography, Grid, Paper, CircularProgress } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux"; // Import useDispatch and useSelector
+import { Box, Typography, Grid, Stack, useTheme, alpha } from "@mui/material";
+import {
+  Payments as PaymentsIcon,
+  EventRepeat as RepeatIcon,
+  CalendarMonth as MonthlyIcon,
+  EventAvailable as OneTimeIcon,
+} from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
 import {
   updatePrepayments,
   selectPrepayments,
   selectCurrency,
-} from "../../../store/emiSlice"; // Import Redux actions and selectors
-import { AmountInput, DatePickerInput } from "../../../components/common/CommonComponents";
+} from "../../../store/emiSlice";
+import {
+  AmountInput,
+  DatePickerInput,
+} from "../../../components/common/CommonComponents";
 
-const StyledPaper = styled(Paper)`
-  padding: 24px;
-  margin-bottom: 24px;
-  position: relative;
-`;
-
-const PrepaymentsHeader = styled(Box)`
-  margin-bottom: 24px;
-`;
-
-const PrepaymentsGrid = styled(Grid)`
-  position: relative;
-`;
-
-const LoadingOverlay = styled(Box)`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.85);
-  z-index: 10;
-  border-radius: 4px;
-`;
-
-const InputContainer = styled(Box)`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 100%;
-
-  @media (max-width: 600px) {
-    min-width: 100%;
-  }
-`;
+/**
+ * Clean internal header for the prepayment categories
+ */
+const SubCategoryHeader = ({ icon, title, color }) => (
+  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        p: 0.5,
+        borderRadius: 1,
+        bgcolor: alpha(color, 0.1),
+        color: color,
+      }}
+    >
+      {React.cloneElement(icon, { sx: { fontSize: "1.1rem" } })}
+    </Box>
+    <Typography
+      variant="body2"
+      sx={{
+        fontWeight: 700,
+        color: "text.primary",
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+      }}
+    >
+      {title}
+    </Typography>
+  </Stack>
+);
 
 const PrepaymentSection = ({
   title,
+  icon,
+  iconColor,
   amountValue,
   onAmountChange,
   dateLabel,
@@ -58,39 +59,35 @@ const PrepaymentSection = ({
   currency,
 }) => (
   <Grid item xs={12} sm={6} md={3}>
-    <InputContainer>
-      <Typography
-        variant="subtitle2"
-        gutterBottom
-        sx={{ fontWeight: 600, color: "text.primary" }}
-      >
-        {title}
-      </Typography>
-      <AmountInput
-        label="Amount"
-        value={amountValue}
-        onChange={onAmountChange}
-        currency={currency}
-        aria-label={`${title} amount`}
-      />
-      <DatePickerInput
-        label={dateLabel}
-        value={dateValue}
-        onChange={onDateChange}
-      />
-    </InputContainer>
+    <Box sx={{ height: "100%" }}>
+      <SubCategoryHeader title={title} icon={icon} color={iconColor} />
+      <Stack spacing={2}>
+        <AmountInput
+          label="Amount"
+          value={amountValue}
+          onChange={onAmountChange}
+          currency={currency}
+        />
+        <DatePickerInput
+          label={dateLabel}
+          value={dateValue}
+          onChange={onDateChange}
+        />
+      </Stack>
+    </Box>
   </Grid>
 );
 
 const PrepaymentsForm = () => {
-  const dispatch = useDispatch(); // Initialize useDispatch
-  const prepayments = useSelector(selectPrepayments); // Use useSelector for prepayments
-  const currency = useSelector(selectCurrency); // Use useSelector for currency
+  const theme = useTheme();
+  const dispatch = useDispatch();
+  const prepayments = useSelector(selectPrepayments);
+  const currency = useSelector(selectCurrency);
 
   const handleAmountChange = (type, event) => {
     let value = parseFloat(event.target.value);
     if (isNaN(value)) value = 0;
-    dispatch(updatePrepayments({ type, key: "amount", value })); // Dispatch Redux action
+    dispatch(updatePrepayments({ type, key: "amount", value }));
   };
 
   const handleDateChange = (type, newValue) => {
@@ -99,29 +96,17 @@ const PrepaymentsForm = () => {
         type,
         key: type === "oneTime" ? "date" : "startDate",
         value: newValue,
-      })
-    ); // Dispatch Redux action
+      }),
+    );
   };
 
   return (
-    <>
-      <PrepaymentsHeader>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 600, color: "text.primary" }}
-        >
-          Partial Prepayments
-        </Typography>
-      </PrepaymentsHeader>
-
-      <PrepaymentsGrid
-        container
-        spacing={2}
-        role="region"
-        aria-label="Prepayments section"
-      >
+    <Box>
+      <Grid container spacing={4}>
         <PrepaymentSection
-          title="Monthly Payment"
+          title="Monthly"
+          icon={<MonthlyIcon />}
+          iconColor={theme.palette.primary.main}
           amountValue={prepayments.monthly.amount}
           onAmountChange={(e) => handleAmountChange("monthly", e)}
           dateLabel="Starting from"
@@ -131,7 +116,9 @@ const PrepaymentsForm = () => {
         />
 
         <PrepaymentSection
-          title="Yearly Payment"
+          title="Yearly"
+          icon={<RepeatIcon />}
+          iconColor={theme.palette.success.main}
           amountValue={prepayments.yearly.amount}
           onAmountChange={(e) => handleAmountChange("yearly", e)}
           dateLabel="Starting from"
@@ -141,7 +128,9 @@ const PrepaymentsForm = () => {
         />
 
         <PrepaymentSection
-          title="Quarterly Payment"
+          title="Quarterly"
+          icon={<RepeatIcon />}
+          iconColor={theme.palette.info.main}
           amountValue={prepayments.quarterly.amount}
           onAmountChange={(e) => handleAmountChange("quarterly", e)}
           dateLabel="Starting from"
@@ -151,16 +140,37 @@ const PrepaymentsForm = () => {
         />
 
         <PrepaymentSection
-          title="One-time Payment"
+          title="One-time"
+          icon={<OneTimeIcon />}
+          iconColor={theme.palette.warning.main}
           amountValue={prepayments.oneTime.amount}
           onAmountChange={(e) => handleAmountChange("oneTime", e)}
-          dateLabel="In the month of"
+          dateLabel="Payment month"
           dateValue={prepayments.oneTime.date}
           onDateChange={(newValue) => handleDateChange("oneTime", newValue)}
           currency={currency}
         />
-      </PrepaymentsGrid>
-    </>
+      </Grid>
+
+      {/* Strategy Hint */}
+      <Box
+        sx={{
+          mt: 4,
+          p: 2,
+          borderRadius: 2,
+          bgcolor: alpha(theme.palette.success.main, 0.04),
+          border: `1px dashed ${alpha(theme.palette.success.main, 0.2)}`,
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{ color: "success.dark", fontWeight: 600, display: "block" }}
+        >
+          💡 Strategy Tip: Even small regular prepayments significantly reduce
+          your total interest and loan tenure.
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 

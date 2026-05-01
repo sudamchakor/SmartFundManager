@@ -5,33 +5,41 @@ import { selectCalculatedValues } from "../utils/emiCalculator";
 import { selectCurrency, selectExpenses } from "../../../store/emiSlice";
 import { formatCurrency } from "../../../utils/formatting";
 
-const DetailRow = ({ label, value }) => (
-  <Box
-    sx={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      py: 1, // Reduced padding for high density
-      px: 1.5,
-      borderRadius: 1.5,
-      "&:nth-of-type(odd)": { bgcolor: "rgba(0,0,0,0.02)" },
-      "&:hover": { bgcolor: "rgba(0,0,0,0.04)" },
-    }}
-  >
-    <Typography
-      variant="body2"
-      sx={{ fontWeight: 600, color: "text.secondary", fontSize: "0.8rem" }}
+const DetailRow = ({ label, value }) => {
+  const theme = useTheme();
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        py: 1.2,
+        px: 1.5,
+        borderRadius: 1.5,
+        "&:nth-of-type(odd)": {
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
+        },
+        "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.08) },
+        transition: "background-color 0.2s",
+        width: "100%",
+        boxSizing: "border-box",
+      }}
     >
-      {label}
-    </Typography>
-    <Typography
-      variant="body1"
-      sx={{ fontWeight: 800, color: "text.primary", fontSize: "0.9rem" }}
-    >
-      {value}
-    </Typography>
-  </Box>
-);
+      <Typography
+        variant="body2"
+        sx={{ fontWeight: 600, color: "text.secondary", fontSize: "0.85rem" }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="body1"
+        sx={{ fontWeight: 800, color: "text.primary", fontSize: "0.9rem" }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  );
+};
 
 const TotalMonthlyPayment = () => {
   const theme = useTheme();
@@ -48,6 +56,7 @@ const TotalMonthlyPayment = () => {
   const tenureInMonths = calculatedValues.tenureInMonths || 1;
   const averageMonthlyPrepayment =
     Math.round((calculatedValues.totalPrepayments || 0) / tenureInMonths) || 0;
+
   const totalMonthlyPayment =
     emi +
     monthlyTaxes +
@@ -60,11 +69,14 @@ const TotalMonthlyPayment = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
+
         justifyContent: "space-between",
+        width: "100%",
+        boxSizing: "border-box", // Essential to prevent overflow
+        overflow: "hidden",
       }}
     >
-      <Box>
+      <Box sx={{ width: "100%" }}>
         <Typography
           variant="caption"
           sx={{
@@ -76,9 +88,9 @@ const TotalMonthlyPayment = () => {
             display: "block",
           }}
         >
-          Ongoing Expenses
+          Breakdown
         </Typography>
-        <Stack spacing={0.25}>
+        <Stack spacing={0.5} sx={{ width: "100%" }}>
           <DetailRow
             label="Monthly EMI"
             value={formatCurrency(emi, currency)}
@@ -104,13 +116,15 @@ const TotalMonthlyPayment = () => {
 
       <Box
         sx={{
-          mt: 2, // Reduced margin
-          p: 2, // Reduced padding
-          borderRadius: 3,
+          mt: 3,
+          p: 2.5, // Added padding so text doesn't touch the edges
+          borderRadius: 4,
           textAlign: "center",
-          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+          bgcolor: theme.palette.primary.main,
           color: "primary.contrastText",
           boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
+          width: "100%",
+          boxSizing: "border-box", // Critical for containment
         }}
       >
         <Typography
@@ -118,15 +132,18 @@ const TotalMonthlyPayment = () => {
           sx={{
             fontWeight: 800,
             textTransform: "uppercase",
-            opacity: 0.8,
+            opacity: 0.9,
             display: "block",
             mb: 0.5,
-            fontSize: "0.65rem",
+            letterSpacing: 1,
           }}
         >
           Total Monthly Outflow
         </Typography>
-        <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -0.5 }}>
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: 900, fontSize: { xs: "1.5rem", sm: "2rem" } }}
+        >
           {formatCurrency(totalMonthlyPayment, currency)}
         </Typography>
       </Box>
