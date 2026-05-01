@@ -15,18 +15,26 @@ import {
   Slide,
   useMediaQuery,
   useTheme,
-  Fab,
+  alpha,
+  Stack,
   SpeedDial,
   SpeedDialAction,
   SpeedDialIcon,
+  IconButton,
 } from "@mui/material";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import AddIcon from "@mui/icons-material/Add";
-import SchoolIcon from "@mui/icons-material/School";
-import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
-import EditableGoalItem from "../../../components/common/EditableGoalItem";
-import GoalForm from "../components/GoalForm";
-import BridgeGapModal from "../components/BridgeGapModal"; // Import new modal
+import {
+  TrendingUp as TrendingUpIcon,
+  Add as AddIcon,
+  School as SchoolIcon,
+  HealthAndSafety as HealthAndSafetyIcon,
+  ListAlt as ListIcon,
+  AutoGraph as GraphIcon,
+  PieChart as PieIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
+
+// Redux & Selectors
+import { useSelector, useDispatch } from "react-redux";
 import {
   selectGoals,
   selectConsiderInflation,
@@ -43,15 +51,18 @@ import {
   selectCurrentSurplus,
   selectTotalMonthlyIncome,
   selectTotalMonthlyGoalContributions,
-  selectPrioritizedGoalFunding, // Import new selector
+  selectPrioritizedGoalFunding,
 } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
-import { useSelector, useDispatch } from "react-redux";
+
+// Components
+import EditableGoalItem from "../../../components/common/EditableGoalItem";
+import GoalForm from "../components/GoalForm";
+import BridgeGapModal from "../components/BridgeGapModal";
+
+// Charts
 import {
-  Line,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -61,38 +72,64 @@ import {
   ReferenceLine,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
+  Line,
 } from "recharts";
-import CloseIcon from "@mui/icons-material/Close";
 
-const COLORS = [
-  "#0088FE",
-  "#00C49F",
-  "#FFBB28",
-  "#FF8042",
-  "#8884D8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7c7c",
-];
+const StyledPaper = ({ children, sx = {} }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      p: 2.5,
+      borderRadius: 3,
+      border: "1px solid",
+      borderColor: "divider",
+      boxShadow: "0 2px 12px rgba(0,0,0,0.02)",
+      bgcolor: "background.paper",
+      height: "100%",
+      ...sx,
+    }}
+  >
+    {children}
+  </Paper>
+);
+
+const SectionHeader = ({ icon, title, color }) => (
+  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
+    <Box
+      sx={{
+        display: "flex",
+        p: 1,
+        borderRadius: 2,
+        bgcolor: alpha(color || "#1976d2", 0.1),
+        color: color || "primary.main",
+      }}
+    >
+      {icon}
+    </Box>
+    <Typography
+      variant="h6"
+      sx={{ fontWeight: 800, color: "#1a1a1a", fontSize: "1.1rem" }}
+    >
+      {title}
+    </Typography>
+  </Stack>
+);
 
 const Transition = React.forwardRef(function Transition(props, ref) {
-  const { children, ...other } = props;
-  return (
-    <Slide direction="up" ref={ref} {...other}>
-      {children}
-    </Slide>
-  );
+  return <Slide direction="up" ref={ref} {...props} />;
 });
 
 export default function FutureGoalsTab({ goalToEditId }) {
   const dispatch = useDispatch();
   const theme = useTheme();
   const isMediumScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const currency = useSelector(selectCurrency);
 
-  // Use the new prioritized funding selector instead of raw goals
+  // Redux State
   const goalsWithFunding = useSelector(selectPrioritizedGoalFunding) || [];
-  const goals = useSelector(selectGoals) || []; // Keep raw goals for charts
-  
+  const goals = useSelector(selectGoals) || [];
   const considerInflation = useSelector(selectConsiderInflation) || false;
   const currentAge = useSelector(selectCurrentAge) || 30;
   const retirementAge = useSelector(selectRetirementAge) || 60;
@@ -107,55 +144,47 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const careerGrowthType =
     typeof careerGrowthRaw === "object" ? careerGrowthRaw.type : "percentage";
   const totalMonthlyIncome = useSelector(selectTotalMonthlyIncome) || 0;
+  const currentSurplus = useSelector(selectCurrentSurplus) || 0;
   const totalMonthlyGoalContributions =
     useSelector(selectTotalMonthlyGoalContributions) || 0;
   const { emi: monthlyEmi } = useSelector(selectCalculatedValues);
-  const emiState = useSelector(
-    (state) => state.emi || state.emiCalculator || {},
-  );
-  const currency = useSelector(selectCurrency);
+  const emiState = useSelector((state) => state.emi || {});
 
-  const currentSurplus = useSelector(selectCurrentSurplus) || 0;
-
+  // UI State
   const [realValueToggle, setRealValueToggle] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [modalTitle, setModalTitle] = useState("Add New Goal");
   const [currentGoalFormData, setCurrentGoalFormData] = useState(null);
-
-  // State for Bridge Gap Modal
   const [bridgeGapModalOpen, setBridgeGapModalOpen] = useState(false);
   const [selectedGoalForGap, setSelectedGoalForGap] = useState(null);
 
-  const formatCurrency = (val) =>
-    `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
   const currentYear = new Date().getFullYear();
   const calculatedRetirementYear = currentYear + (retirementAge - currentAge);
 
-  useEffect(() => {
-    if (goalToEditId) {
-      const goal = goals.find((g) => g.id === goalToEditId);
-      if (goal) {
-        handleOpenModalForEdit(goal);
-      }
-    }
-  }, [goalToEditId, goals]);
+  const formatCurrency = (val) =>
+    `${currency}${Number(val).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+
+  // --- Handlers ---
+  const handleCloseModal = useCallback(() => {
+    setOpenModal(false);
+    setEditingGoal(null);
+    setCurrentGoalFormData(null);
+  }, []);
 
   const handleModalSave = useCallback(() => {
     if (!currentGoalFormData) return;
-
     const finalGoal = {
       ...currentGoalFormData,
       category: currentGoalFormData.category || "general",
     };
-
     if (editingGoal && editingGoal.id) {
       dispatch(updateGoal({ ...finalGoal, id: editingGoal.id }));
     } else {
       dispatch(addGoal({ ...finalGoal, id: Date.now() }));
     }
     handleCloseModal();
-  }, [dispatch, editingGoal, currentGoalFormData]);
+  }, [dispatch, editingGoal, currentGoalFormData, handleCloseModal]);
 
   const handleOpenModalForEdit = useCallback((goal) => {
     setEditingGoal(goal);
@@ -178,48 +207,19 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setOpenModal(true);
   }, [currentYear]);
 
-  const handleCloseModal = useCallback(() => {
-    setOpenModal(false);
-    setEditingGoal(null);
-    setCurrentGoalFormData(null);
-    setModalTitle("Add New Goal");
-  }, []);
-
-  const handleOpenBridgeGapModal = (goal) => {
-      setSelectedGoalForGap(goal);
-      setBridgeGapModalOpen(true);
-  };
-
-  const handleCloseBridgeGapModal = () => {
-      setBridgeGapModalOpen(false);
-      setSelectedGoalForGap(null);
-  };
-
+  // --- Template Applications ---
   const applyRetirementGoal = useCallback(() => {
     const yearsToRetirement = retirementAge - currentAge;
-    if (yearsToRetirement < 0) {
-      alert(
-        "Retirement age is in the past. Please adjust your retirement age.",
-      );
-      return;
-    }
-
     const monthlyBasicExpenses = profileExpenses
       .filter((e) => e.category === "basic")
       .reduce((sum, e) => sum + e.amount, 0);
-    let yearlyExpenses = monthlyBasicExpenses * 12;
-
-    let targetAmount = Math.round(yearlyExpenses / 0.04);
-
+    let targetAmount = Math.round((monthlyBasicExpenses * 12) / 0.04);
     if (considerInflation && yearsToRetirement > 0) {
-      targetAmount =
-        targetAmount * Math.pow(1 + generalInflationRate, yearsToRetirement);
+      targetAmount *= Math.pow(1 + generalInflationRate, yearsToRetirement);
     }
-
-    setEditingGoal(null);
     setCurrentGoalFormData({
       name: "Retirement",
-      targetAmount: targetAmount,
+      targetAmount,
       startYear: currentYear,
       targetYear: currentYear + (yearsToRetirement > 0 ? yearsToRetirement : 1),
       category: "retirement",
@@ -237,42 +237,32 @@ export default function FutureGoalsTab({ goalToEditId }) {
   ]);
 
   const applyEducationGoal = useCallback(() => {
-    const yearsToCollege = 18;
     let targetAmount = 5000000;
-
-    if (considerInflation && yearsToCollege > 0) {
-      targetAmount =
-        targetAmount * Math.pow(1 + educationInflationRate, yearsToCollege);
-    }
-
-    setEditingGoal(null);
+    const yearsToCollege = 18;
+    if (considerInflation)
+      targetAmount *= Math.pow(1 + educationInflationRate, yearsToCollege);
     setCurrentGoalFormData({
-      name: "Child's Higher Education",
+      name: "Child's Higher Ed",
       targetAmount: Math.round(targetAmount),
       startYear: currentYear,
-      targetYear: currentYear + (yearsToCollege > 0 ? yearsToCollege : 1),
+      targetYear: currentYear + yearsToCollege,
       category: "education",
       investmentPlans: [],
     });
-    setModalTitle("Add Child's Higher Education Goal");
+    setModalTitle("Add Higher Education Goal");
     setOpenModal(true);
   }, [considerInflation, educationInflationRate, currentYear]);
 
   const applyEmergencyFundGoal = useCallback(() => {
-    const totalMonthlyOutflow =
+    const totalOutflow =
       profileExpenses.reduce((sum, e) => sum + e.amount, 0) +
       monthlyEmi +
       totalMonthlyGoalContributions;
-    const targetAmount = Math.round(totalMonthlyOutflow * 6);
-
-    const yearsToGoal = 1;
-
-    setEditingGoal(null);
     setCurrentGoalFormData({
       name: "Emergency Fund",
-      targetAmount: targetAmount,
+      targetAmount: Math.round(totalOutflow * 6),
       startYear: currentYear,
-      targetYear: currentYear + yearsToGoal,
+      targetYear: currentYear + 1,
       category: "safety",
       investmentPlans: [],
     });
@@ -283,7 +273,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const actions = [
     {
       icon: <HealthAndSafetyIcon />,
-      name: "Emergency Fund (6M)",
+      name: "Emergency Fund",
       handler: applyEmergencyFundGoal,
     },
     {
@@ -303,6 +293,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
     },
   ];
 
+  // --- Wealth Calculation Logic ---
   const wealthData = useMemo(() => {
     const maxGoalYear = goals.reduce(
       (max, g) => Math.max(max, g.targetYear),
@@ -313,109 +304,40 @@ export default function FutureGoalsTab({ goalToEditId }) {
       currentYear + (retirementAge - currentAge),
       currentYear + 10,
     );
-
-    let currentPrincipalInvested = 0;
-    let currentMarketGains = 0;
-    let currentBonusGains = 0;
     let currentTotalWealth = 0;
-
-    const data = [];
-
-    const totalActiveGoalSips = goals.reduce((acc, goal) => {
-      return (
-        acc +
-        (goal.investmentPlans || []).reduce((planAcc, plan) => {
-          if (plan.type !== "lumpsum" && plan.monthlyContribution > 0) {
-            return planAcc + plan.monthlyContribution;
-          }
-          return planAcc;
-        }, 0)
-      );
-    }, 0);
-
     let currentMonthlyIncome = totalMonthlyIncome;
-    let currentMonthlyOutflowExcludingGoals =
+    let outflowExGoals =
       profileExpenses.reduce((acc, exp) => acc + exp.amount, 0) + monthlyEmi;
-
-    let loanTenureMonths = 0;
-    if (emiState && emiState.tenure) {
-      loanTenureMonths =
-        emiState.tenureType === "years"
-          ? Number(emiState.tenure) * 12
-          : Number(emiState.tenure);
-    }
+    const data = [];
 
     for (let year = currentYear; year <= endYear; year++) {
       const yearsFromNow = year - currentYear;
-      const annualInvestmentReturn = 0.08;
-      const annualBonusReturn = 0.02;
-
-      let previousYearMonthlyIncome = currentMonthlyIncome;
-
-      if (yearsFromNow > 0 && yearsFromNow % 1 === 0) {
-        if (careerGrowthType === "percentage") {
-          currentMonthlyIncome *= 1 + careerGrowthRate;
-        } else {
-          currentMonthlyIncome += careerGrowthRate / 12;
-        }
-      }
-
-      const annualInvestableSurplus =
-        (currentMonthlyIncome -
-          currentMonthlyOutflowExcludingGoals -
-          totalActiveGoalSips) *
-        12;
-
       if (yearsFromNow > 0) {
-        currentMarketGains = currentTotalWealth * annualInvestmentReturn;
-
-        const incomeIncreaseThisYear =
-          (currentMonthlyIncome - previousYearMonthlyIncome) * 12;
-        currentBonusGains = incomeIncreaseThisYear * annualBonusReturn;
-
-        currentPrincipalInvested = annualInvestableSurplus;
-
-        currentTotalWealth =
-          (currentTotalWealth + currentPrincipalInvested) *
-          (1 + annualInvestmentReturn);
-      } else {
-        currentPrincipalInvested =
-          (currentMonthlyIncome -
-            currentMonthlyOutflowExcludingGoals -
-            totalActiveGoalSips) *
-          12;
-        currentTotalWealth = currentPrincipalInvested;
+        currentMonthlyIncome *=
+          1 + (careerGrowthType === "percentage" ? careerGrowthRate : 0);
       }
+      const annualSurplus =
+        (currentMonthlyIncome -
+          outflowExGoals -
+          totalMonthlyGoalContributions) *
+        12;
+      currentTotalWealth = (currentTotalWealth + annualSurplus) * 1.08;
 
       let displayWealth = currentTotalWealth;
-      let displayPrincipal = currentPrincipalInvested;
-      let displayMarketGains = currentMarketGains;
-      let displayBonusGains = currentBonusGains;
-
-      if (realValueToggle && yearsFromNow > 0) {
-        displayWealth =
-          currentTotalWealth / Math.pow(1 + generalInflationRate, yearsFromNow);
-        displayPrincipal =
-          currentPrincipalInvested /
-          Math.pow(1 + generalInflationRate, yearsFromNow);
-        displayMarketGains =
-          currentMarketGains / Math.pow(1 + generalInflationRate, yearsFromNow);
-        displayBonusGains =
-          currentBonusGains / Math.pow(1 + generalInflationRate, yearsFromNow);
-      }
-
-      const cumulativeLoanCost =
-        monthlyEmi * Math.min(yearsFromNow * 12, loanTenureMonths);
+      if (realValueToggle && yearsFromNow > 0)
+        displayWealth /= Math.pow(1 + generalInflationRate, yearsFromNow);
 
       const totalGoalsThisYear = goals.reduce((sum, g) => {
         if (g.targetYear === year) {
           let target = g.targetAmount;
-          if (considerInflation && g.category === "education") {
-            target =
-              target * Math.pow(1 + educationInflationRate, yearsFromNow);
-          } else if (considerInflation) {
-            target = target * Math.pow(1 + generalInflationRate, yearsFromNow);
-          }
+          if (considerInflation)
+            target *= Math.pow(
+              1 +
+                (g.category === "education"
+                  ? educationInflationRate
+                  : generalInflationRate),
+              yearsFromNow,
+            );
           return sum + target;
         }
         return sum;
@@ -423,11 +345,7 @@ export default function FutureGoalsTab({ goalToEditId }) {
 
       data.push({
         year,
-        "Principal Invested": Math.round(displayPrincipal),
-        "Market Gains": Math.round(displayMarketGains),
-        "Bonus Gains": Math.round(displayBonusGains),
         "Total Wealth": Math.round(displayWealth),
-        "Loan Cost": Math.round(cumulativeLoanCost),
         "Goals Target":
           totalGoalsThisYear > 0 ? Math.round(totalGoalsThisYear) : null,
       });
@@ -440,130 +358,120 @@ export default function FutureGoalsTab({ goalToEditId }) {
     totalMonthlyIncome,
     profileExpenses,
     monthlyEmi,
-    emiState,
     careerGrowthRate,
     careerGrowthType,
     realValueToggle,
     considerInflation,
     generalInflationRate,
     educationInflationRate,
+    totalMonthlyGoalContributions,
   ]);
 
   const breakEvenYear = useMemo(() => {
-    const breakEvenPoint = wealthData.find(
+    const point = wealthData.find(
       (d) => d["Total Wealth"] >= d["Goals Target"],
     );
-    return breakEvenPoint ? breakEvenPoint.year : null;
+    return point ? point.year : null;
   }, [wealthData]);
 
   return (
-    <Grid container spacing={4}>
-      <Grid item xs={12}>
-        {currentSurplus < 0 && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Cannot add new goals. Your current surplus is negative.
+    <Grid container spacing={2.5}>
+      {currentSurplus < 0 && (
+        <Grid item xs={12}>
+          <Alert
+            severity="warning"
+            variant="outlined"
+            sx={{ borderRadius: 2, fontWeight: 700 }}
+          >
+            Goal funding is restricted due to negative surplus.
           </Alert>
-        )}
-      </Grid>
+        </Grid>
+      )}
 
       {!isMediumScreen && (
         <Grid item xs={12}>
-          <Paper sx={{ p: 3, mb: 3 }}>
-            <Grid container spacing={2} sx={{ mb: 2 }}>
-              <Grid item xs={12}>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <TrendingUpIcon /> Smart Goal Templates
-                </Typography>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={3}
-                sx={{ display: "flex", justifyContent: "center" }}
-              >
-                <Button variant="outlined" onClick={applyRetirementGoal}>
-                  🎯 Retirement
-                </Button>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={3}
-                sx={{ display: "flex", justifyContent: "center" }}
-              >
-                <Button variant="outlined" onClick={applyEducationGoal}>
-                  🎓 Child's Education
-                </Button>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={3}
-                sx={{ display: "flex", justifyContent: "center" }}
-              >
-                <Button variant="outlined" onClick={applyEmergencyFundGoal}>
-                  🛟 Emergency Fund (6M)
-                </Button>
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={3}
-                sx={{ display: "flex", justifyContent: "center" }}
-              >
+          <StyledPaper sx={{ p: 2 }}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <SectionHeader
+                title="Smart Goal Templates"
+                icon={<TrendingUpIcon />}
+                color={theme.palette.primary.main}
+              />
+              <Stack direction="row" spacing={1.5}>
                 <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<TrendingUpIcon />}
+                  onClick={applyRetirementGoal}
+                >
+                  Retirement
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<SchoolIcon />}
+                  onClick={applyEducationGoal}
+                >
+                  Education
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<HealthAndSafetyIcon />}
+                  onClick={applyEmergencyFundGoal}
+                >
+                  Emergency
+                </Button>
+                <Button
+                  size="small"
                   variant="contained"
+                  startIcon={<AddIcon />}
                   onClick={handleOpenModalForNew}
                   disabled={currentSurplus < 0}
                 >
-                  New Goal
+                  New Custom Goal
                 </Button>
-              </Grid>
-            </Grid>
-          </Paper>
+              </Stack>
+            </Stack>
+          </StyledPaper>
         </Grid>
       )}
 
       <Grid item xs={12} md={4}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                mb: 2,
-              }}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Your Goals ({goalsWithFunding.length})
-              </Typography>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={considerInflation}
-                    onChange={(e) =>
-                      dispatch(setConsiderInflation(e.target.checked))
-                    }
-                  />
-                }
-                label={
-                  <Typography variant="caption">
-                    Inflation ({generalInflationRate * 100}%)
-                  </Typography>
-                }
-              />
-            </Box>
-
-            {goalsWithFunding && goalsWithFunding.length > 0 ? (
+        <StyledPaper>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="flex-start"
+          >
+            <SectionHeader
+              title={`Your Goals (${goalsWithFunding.length})`}
+              icon={<ListIcon />}
+              color="#7b1fa2"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={considerInflation}
+                  onChange={(e) =>
+                    dispatch(setConsiderInflation(e.target.checked))
+                  }
+                />
+              }
+              label={
+                <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                  Inflation
+                </Typography>
+              }
+            />
+          </Stack>
+          <Stack spacing={1.5}>
+            {goalsWithFunding.length > 0 ? (
               goalsWithFunding.map((g) => (
                 <EditableGoalItem
                   key={g.id}
@@ -573,225 +481,177 @@ export default function FutureGoalsTab({ goalToEditId }) {
                   considerInflation={considerInflation}
                   onEdit={handleOpenModalForEdit}
                   onDelete={(id) => dispatch(deleteGoal(id))}
-                  onOpenBridgeGapModal={handleOpenBridgeGapModal} // Pass handler
-                  investmentAmount={(g.investmentPlans || []).reduce(
-                    (sum, plan) => sum + (plan.monthlyContribution || 0),
-                    0,
-                  )}
+                  onOpenBridgeGapModal={(goal) => {
+                    setSelectedGoalForGap(goal);
+                    setBridgeGapModalOpen(true);
+                  }}
                 />
               ))
             ) : (
-              <Paper
-                sx={{ p: 2, textAlign: "center", backgroundColor: "#f5f5f5" }}
+              <Typography
+                variant="body2"
+                color="textSecondary"
+                align="center"
+                sx={{ py: 4 }}
               >
-                <Typography variant="body2" color="textSecondary">
-                  No goals yet. Create one or use a template!
-                </Typography>
-              </Paper>
+                No active goals.
+              </Typography>
             )}
-          </Paper>
-        </Grid>
+          </Stack>
+        </StyledPaper>
       </Grid>
 
       <Grid item xs={12} md={8}>
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  mb: 2,
-                }}
-              >
-                <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                  Wealth Projection vs Goals
-                </Typography>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={realValueToggle}
-                      onChange={(e) => setRealValueToggle(e.target.checked)}
-                    />
-                  }
-                  label={
-                    <Typography variant="caption">
-                      Show Real Value (Inflation Adjusted)
-                    </Typography>
-                  }
-                />
-              </Box>
-              <ResponsiveContainer width="100%" height={400}>
-                <AreaChart
-                  data={wealthData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
+        <Stack spacing={2.5}>
+          <StyledPaper>
+            <Stack direction="row" justifyContent="space-between">
+              <SectionHeader
+                title="Wealth Projection"
+                icon={<GraphIcon />}
+                color="#2e7d32"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={realValueToggle}
+                    onChange={(e) => setRealValueToggle(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                    Real Value
+                  </Typography>
+                }
+              />
+            </Stack>
+            <Box sx={{ height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={wealthData}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke={alpha(theme.palette.divider, 0.1)}
+                  />
+                  <XAxis
+                    dataKey="year"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 700 }}
+                  />
                   <YAxis
                     tickFormatter={(val) => `${currency}${val / 100000}L`}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fontWeight: 700 }}
                   />
                   <RechartsTooltip
-                    formatter={(value, name) => {
-                      if (name === "Goals Target")
-                        return [formatCurrency(value), "Goals Target"];
-                      return [formatCurrency(value), name];
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                      backdropFilter: "blur(8px)",
+                      backgroundColor: alpha("#fff", 0.8),
                     }}
-                    labelFormatter={(label) => `Year: ${label}`}
-                  />
-                  <Legend />
-                  <Area
-                    type="monotone"
-                    dataKey="Principal Invested"
-                    stackId="1"
-                    stroke="#8884d8"
-                    fill="#8884d8"
                   />
                   <Area
                     type="monotone"
-                    dataKey="Market Gains"
-                    stackId="1"
-                    stroke="#82ca9d"
-                    fill="#82ca9d"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="Bonus Gains"
-                    stackId="1"
-                    stroke="#ffc658"
-                    fill="#ffc658"
+                    dataKey="Total Wealth"
+                    stroke={theme.palette.primary.main}
+                    fill={alpha(theme.palette.primary.main, 0.2)}
                   />
                   <Line
                     type="monotone"
                     dataKey="Goals Target"
                     stroke="#ff7c7c"
-                    strokeWidth={2}
+                    strokeWidth={3}
                     dot={false}
                   />
-
-                  {breakEvenYear ? (
+                  {breakEvenYear && (
                     <ReferenceLine
                       x={breakEvenYear}
                       stroke="green"
                       strokeDasharray="3 3"
-                      label="Breakeven Point"
-                    />
-                  ) : null}
-                </AreaChart>
-              </ResponsiveContainer>
-              <Typography
-                variant="caption"
-                color="textSecondary"
-                sx={{ mt: 2, display: "block" }}
-              >
-                * Projected wealth assumes annual investment return of 8%. Bonus
-                gains from income increments are estimated.
-              </Typography>
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                Goal Distribution & Investments
-              </Typography>
-              {goals.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={goals.map((g) => ({
-                      name: g.name.substring(0, 10),
-                      amount: g.targetAmount,
-                      inflated:
-                        considerInflation && g.targetYear > currentYear
-                          ? g.targetAmount *
-                            Math.pow(
-                              1 +
-                                (g.category === "education"
-                                  ? educationInflationRate
-                                  : generalInflationRate),
-                              g.targetYear - currentYear,
-                            )
-                          : g.targetAmount,
-                      monthlyContribution: (g.investmentPlans || []).reduce(
-                        (sum, plan) => sum + (plan.monthlyContribution || 0),
-                        0,
-                      ),
-                      year: g.targetYear,
-                    }))}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis
-                      tickFormatter={(val) => `${currency}${val / 100000}L`}
-                    />
-                    <RechartsTooltip
-                      formatter={(value, name) => {
-                        if (name === "amount")
-                          return [formatCurrency(value), "Target Amount"];
-                        if (name === "inflated")
-                          return [formatCurrency(value), "Inflation-Adjusted"];
-                        if (name === "monthlyContribution")
-                          return [formatCurrency(value), "Monthly Investment"];
-                        return [formatCurrency(value), name];
+                      label={{
+                        value: "Breakeven",
+                        position: "top",
+                        fill: "green",
+                        fontWeight: 800,
                       }}
                     />
-                    <Legend />
-                    <Bar
-                      dataKey="amount"
-                      fill={COLORS[0]}
-                      name="Target Amount"
-                    />
-                    {considerInflation && (
-                      <Bar
-                        dataKey="inflated"
-                        fill={COLORS[1]}
-                        name="Inflation-Adjusted"
-                      />
-                    )}
-                    {goals.some((g) =>
-                      (g.investmentPlans || []).some(
-                        (plan) => (plan.monthlyContribution || 0) > 0,
-                      ),
-                    ) && (
-                      <Bar
-                        dataKey="monthlyContribution"
-                        fill={COLORS[2]}
-                        name="Monthly Investment"
-                      />
-                    )}
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <Typography
-                  variant="body2"
-                  color="textSecondary"
-                  align="center"
-                  sx={{ py: 4 }}
+                  )}
+                </AreaChart>
+              </ResponsiveContainer>
+            </Box>
+          </StyledPaper>
+
+          <StyledPaper>
+            <SectionHeader
+              title="Goal Distribution"
+              icon={<PieIcon />}
+              color="#ed6c02"
+            />
+            <Box sx={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={goals.map((g) => ({
+                    name: g.name.substring(0, 10),
+                    amount: g.targetAmount,
+                  }))}
                 >
-                  No goals added yet
-                </Typography>
-              )}
-            </Paper>
-          </Grid>
-        </Grid>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke={alpha(theme.palette.divider, 0.1)}
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 700 }}
+                  />
+                  <YAxis
+                    tickFormatter={(val) => `${currency}${val / 100000}L`}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <RechartsTooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                    }}
+                  />
+                  <Bar
+                    dataKey="amount"
+                    fill={theme.palette.primary.main}
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </StyledPaper>
+        </Stack>
       </Grid>
 
       {isMediumScreen && (
         <SpeedDial
-          ariaLabel="SpeedDial for goals"
-          sx={{ position: "fixed", bottom: 16, right: 16, zIndex: 99999 }}
+          ariaLabel="Goal Actions"
+          sx={{
+            position: "fixed",
+            // FIX: Lifted to 100px on mobile, 130px on tablet/desktop to clear the footer
+            bottom: { xs: 100, sm: 130 },
+            right: { xs: 16, sm: 24 },
+            zIndex: 1400, // FIX: Ensures it floats above the footer (which is 1300)
+          }}
           icon={<SpeedDialIcon />}
         >
-          {actions.map((action) => (
+          {actions.map((a) => (
             <SpeedDialAction
-              key={action.name}
-              icon={action.icon}
-              tooltipTitle={action.name}
-              tooltipOpen
-              onClick={action.handler}
-              disabled={action.name === "New Custom Goal" && currentSurplus < 0}
+              key={a.name}
+              icon={a.icon}
+              tooltipTitle={a.name}
+              onClick={a.handler}
             />
           ))}
         </SpeedDial>
@@ -800,42 +660,48 @@ export default function FutureGoalsTab({ goalToEditId }) {
       <Dialog
         open={openModal}
         onClose={handleCloseModal}
-        fullWidth
-        maxWidth="md"
         fullScreen
         TransitionComponent={Transition}
-        sx={{
-          marginTop: "5rem",
-        }}
+        sx={{ mt: "5rem" }}
       >
-        <DialogTitle>
+        <DialogTitle
+          sx={{
+            fontWeight: 900,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           {modalTitle}{" "}
-          <CloseIcon onClick={handleCloseModal} sx={{ float: "right" }} />
+          <IconButton onClick={handleCloseModal}>
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-
         <DialogContent dividers>
           {currentGoalFormData && (
             <GoalForm
               goal={currentGoalFormData}
               currentYear={currentYear}
               onSave={setCurrentGoalFormData}
-              retirementYear={calculatedRetirementYear} // Pass retirementYear here
+              retirementYear={calculatedRetirementYear}
             />
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3 }}>
           <Button onClick={handleCloseModal}>Cancel</Button>
-          <Button onClick={handleModalSave} variant="contained">
-            Save
+          <Button
+            onClick={handleModalSave}
+            variant="contained"
+            sx={{ px: 4, borderRadius: 2 }}
+          >
+            Save Goal
           </Button>
         </DialogActions>
       </Dialog>
-      
-      {/* Bridge Gap Modal */}
-      <BridgeGapModal 
-        open={bridgeGapModalOpen} 
-        onClose={handleCloseBridgeGapModal} 
-        goal={selectedGoalForGap} 
+      <BridgeGapModal
+        open={bridgeGapModalOpen}
+        onClose={() => setBridgeGapModalOpen(false)}
+        goal={selectedGoalForGap}
       />
     </Grid>
   );

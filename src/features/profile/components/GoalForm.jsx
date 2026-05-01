@@ -1,11 +1,45 @@
 import React from "react";
-import { Box, Typography, Divider, Grid, Card } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Divider,
+  Grid,
+  Card,
+  alpha,
+  useTheme,
+  Stack,
+} from "@mui/material";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import AccountTreeIcon from "@mui/icons-material/AccountTree"; // Technical icon for strategies
 import GoalFormHeader from "./GoalFormHeader";
 import InvestmentPlanCard from "./InvestmentPlanCard";
 import useGoalForm from "./useGoalForm";
 
+// Reusable Subsection Header to match overall dashboard
+const SubsectionHeader = ({ icon, title, color }) => (
+  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+    <Box
+      sx={{
+        display: "flex",
+        p: 0.8,
+        borderRadius: 1.5,
+        bgcolor: alpha(color || "#1976d2", 0.1),
+        color: color || "primary.main",
+      }}
+    >
+      {React.cloneElement(icon, { sx: { fontSize: "1.2rem" } })}
+    </Box>
+    <Typography
+      variant="subtitle1"
+      sx={{ fontWeight: 800, color: "text.primary" }}
+    >
+      {title}
+    </Typography>
+  </Stack>
+);
+
 export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
+  const theme = useTheme();
   const {
     editedGoal,
     setEditedGoal,
@@ -24,29 +58,35 @@ export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        gap: 1.5,
-        padding: 3,
+        gap: 1,
+        p: { xs: 1.5, md: 2.5 }, // Tightened padding for density
         overflowX: "hidden",
       }}
     >
+      {/* 1. Main Goal Settings */}
       <GoalFormHeader
         editedGoal={editedGoal}
         setEditedGoal={setEditedGoal}
         currentYear={currentYear}
-        retirementYear={retirementYear} // Pass retirementYear to GoalFormHeader
+        retirementYear={retirementYear}
         handleGenerateInvestmentPlans={handleGenerateInvestmentPlans}
         plans={editedGoal.investmentPlans}
         handleSaveGoal={handleSaveGoal}
       />
 
-      <Divider sx={{ my: 4 }} />
+      <Divider sx={{ my: 3, borderStyle: "dashed", opacity: 0.5 }} />
 
-      <Typography variant="h6" gutterBottom>
-        Investment Plans
-      </Typography>
+      {/* 2. Investment Strategies Section */}
+      <SubsectionHeader
+        title="Investment Strategy & Plans"
+        icon={<AccountTreeIcon />}
+        color={theme.palette.secondary.main}
+      />
+
       <Grid container spacing={2}>
         {editedGoal.investmentPlans.map((plan) => (
-          <Grid item xs={12} sm={12} md={12} lg={6} key={plan.id}>
+          <Grid item xs={12} lg={6} key={plan.id}>
+            {/* Ensure InvestmentPlanCard also uses StyledPaper/Card logic internally */}
             <InvestmentPlanCard
               plan={plan}
               targetAmount={editedGoal.targetAmount}
@@ -56,50 +96,54 @@ export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
             />
           </Grid>
         ))}
-        <Grid
-          item
-          xs={12}
-          sm={12}
-          md={12}
-          lg={6}
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
+
+        {/* 3. The "Add Strategy" Placeholder */}
+        <Grid item xs={12} lg={6}>
           <Card
             onClick={handleAddPlan}
-            sx={(theme) => ({
-              border: `1px dotted ${theme.palette.primary.main}`,
-              color: theme.palette.primary.main,
-              borderRadius: 2,
+            elevation={0}
+            sx={{
+              height: "100%",
+              minHeight: 160,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-
               cursor: "pointer",
-              width: "fit-content",
-              padding: "1.5rem",
-              transition: "all 0.3s ease-in-out",
+              borderRadius: 3,
+              border: `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`,
+              bgcolor: alpha(theme.palette.primary.main, 0.02),
+              transition: "all 0.2s ease-in-out",
               "&:hover": {
-                backgroundColor: theme.palette.primary.main,
-                color: theme.palette.primary.contrastText,
-                borderColor: theme.palette.primary.dark,
-                "& > div": {
-                  borderColor: theme.palette.primary.contrastText,
-                },
+                bgcolor: alpha(theme.palette.primary.main, 0.05),
+                borderColor: theme.palette.primary.main,
+                transform: "translateY(-2px)",
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.1)}`,
               },
-            })}
+            }}
           >
-            <Box
-              sx={(theme) => ({
-                borderRadius: "50%",
-                transition: "border-color 0.3s ease-in-out",
-              })}
+            <AddCircleOutlineIcon
+              sx={{
+                fontSize: "2.5rem",
+                mb: 1,
+                color: theme.palette.primary.main,
+                opacity: 0.7,
+              }}
+            />
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                color: theme.palette.primary.main,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+              }}
             >
-              <AddCircleOutlineIcon sx={{ fontSize: "3rem" }} />
-            </Box>
+              Add New Strategy
+            </Typography>
+            <Typography variant="caption" sx={{ color: "text.disabled" }}>
+              (SIP, Lumpsum, or Custom Plan)
+            </Typography>
           </Card>
         </Grid>
       </Grid>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -6,16 +6,21 @@ import {
   Slider,
   Grid,
   InputAdornment,
+  alpha,
+  useTheme,
+  Stack,
 } from "@mui/material";
+import { Toll as LumpsumIcon } from "@mui/icons-material";
 
-const LumpsumCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) => {
+const LumpsumCalculatorForm = ({
+  onCalculate,
+  sharedState,
+  onSharedStateChange,
+}) => {
+  const theme = useTheme();
   const { totalInvestment, expectedReturnRate, timePeriod } = sharedState;
 
-  useEffect(() => {
-    calculateLumpsum();
-  }, [totalInvestment, expectedReturnRate, timePeriod]);
-
-  const calculateLumpsum = () => {
+  const calculateLumpsum = useCallback(() => {
     const P = totalInvestment;
     const r = expectedReturnRate / 100;
     const n = timePeriod;
@@ -31,7 +36,7 @@ const LumpsumCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }
         year: year,
         invested: Math.round(P),
         returns: Math.round(yearlyValue - P),
-        total: Math.round(yearlyValue)
+        total: Math.round(yearlyValue),
       });
     }
 
@@ -39,28 +44,77 @@ const LumpsumCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }
       investedAmount: Math.round(P),
       estimatedReturns: Math.round(estimatedReturns),
       totalValue: Math.round(totalValue),
-      chartData: chartData
+      chartData: chartData,
     });
+  }, [totalInvestment, expectedReturnRate, timePeriod, onCalculate]);
+
+  useEffect(() => {
+    calculateLumpsum();
+  }, [calculateLumpsum]);
+
+  const labelStyle = {
+    fontWeight: 800,
+    textTransform: "uppercase",
+    fontSize: "0.65rem",
+    color: "text.disabled",
+    letterSpacing: 1,
+    mb: 0.5,
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Lumpsum Details
-      </Typography>
+    <Box sx={{ mt: 1 }}>
+      {/* Internal Subsection Header */}
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+        <LumpsumIcon
+          sx={{
+            fontSize: "1rem",
+            color: theme.palette.primary.main,
+            opacity: 0.8,
+          }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 900,
+            color: "text.primary",
+            textTransform: "uppercase",
+          }}
+        >
+          Lumpsum Parameters
+        </Typography>
+      </Stack>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Total Investment</Typography>
+      {/* 1. Total Investment Input */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Initial Investment</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={totalInvestment}
-              onChange={(e) => onSharedStateChange("totalInvestment", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange("totalInvestment", Number(e.target.value))
+              }
               InputProps={{
-                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                startAdornment: (
+                  <InputAdornment
+                    position="start"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    ₹
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -72,22 +126,49 @@ const LumpsumCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }
           max={5000000}
           step={1000}
           onChange={(e, val) => onSharedStateChange("totalInvestment", val)}
-          valueLabelDisplay="auto"
+          sx={{
+            py: 1,
+            "& .MuiSlider-thumb": { width: 12, height: 12 },
+            "& .MuiSlider-track": { height: 4 },
+            "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
+          }}
         />
       </Box>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Expected Return Rate (p.a)</Typography>
+      {/* 2. Expected Return Rate */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Expected Returns (p.a)</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={expectedReturnRate}
-              onChange={(e) => onSharedStateChange("expectedReturnRate", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange(
+                  "expectedReturnRate",
+                  Number(e.target.value),
+                )
+              }
               InputProps={{
-                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    %
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.success.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -99,22 +180,46 @@ const LumpsumCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }
           max={30}
           step={0.1}
           onChange={(e, val) => onSharedStateChange("expectedReturnRate", val)}
-          valueLabelDisplay="auto"
+          color="success"
+          sx={{
+            py: 1,
+            "& .MuiSlider-thumb": { width: 12, height: 12 },
+            "& .MuiSlider-track": { height: 4 },
+          }}
         />
       </Box>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Time Period (Years)</Typography>
+      {/* 3. Time Period */}
+      <Box sx={{ mb: 1 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Duration (Years)</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={timePeriod}
-              onChange={(e) => onSharedStateChange("timePeriod", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange("timePeriod", Number(e.target.value))
+              }
               InputProps={{
-                endAdornment: <InputAdornment position="end">Yr</InputAdornment>,
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    Yr
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.info.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -126,7 +231,12 @@ const LumpsumCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }
           max={40}
           step={1}
           onChange={(e, val) => onSharedStateChange("timePeriod", val)}
-          valueLabelDisplay="auto"
+          color="info"
+          sx={{
+            py: 1,
+            "& .MuiSlider-thumb": { width: 12, height: 12 },
+            "& .MuiSlider-track": { height: 4 },
+          }}
         />
       </Box>
     </Box>

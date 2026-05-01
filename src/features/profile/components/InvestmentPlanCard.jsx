@@ -7,8 +7,11 @@ import {
   Select,
   MenuItem,
   IconButton,
-  Paper,
   Typography,
+  alpha,
+  useTheme,
+  Stack,
+  Divider, // Imported Divider to fix the gray box issue
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SipCalculatorForm from "../../investment/tabs/SipCalculatorForm";
@@ -17,13 +20,37 @@ import StepUpSipCalculatorForm from "../../investment/tabs/StepUpSipCalculatorFo
 import SwpCalculatorForm from "../../investment/tabs/SwpCalculatorForm";
 import FdCalculatorForm from "../../investment/tabs/FdCalculatorForm";
 
+const DataPoint = ({ label, value, color }) => (
+  <Stack spacing={0.2} sx={{ flex: 1 }}>
+    <Typography
+      variant="caption"
+      sx={{
+        fontWeight: 800,
+        color: "text.disabled",
+        textTransform: "uppercase",
+        fontSize: "0.65rem",
+      }}
+    >
+      {label}
+    </Typography>
+    <Typography
+      variant="body2"
+      sx={{ fontWeight: 900, color: color || "text.primary" }}
+    >
+      {value}
+    </Typography>
+  </Stack>
+);
+
 const InvestmentPlanCard = ({
   plan,
   handlePlanChange,
   handleRemovePlan,
   formatAmount,
-  targetAmount, // Add targetAmount to props
+  targetAmount,
 }) => {
+  const theme = useTheme();
+
   const handleCalculate = useCallback(
     (results) => {
       if (!results) return;
@@ -46,31 +73,26 @@ const InvestmentPlanCard = ({
 
       let monthlyContribution = 0;
       if (plan.type === "sip" || plan.type === "stepUpSip") {
-        // Prioritize results.monthlyContribution from the calculator forms
         monthlyContribution =
-          results.monthlyContribution ?? // Changed from monthlyInvestment
-          plan.monthlyContribution ?? // Changed from monthlyInvestment
+          results.monthlyContribution ??
+          plan.monthlyContribution ??
           plan.amount ??
           0;
       }
 
-      if (plan.investedAmount !== investedAmount) {
+      if (plan.investedAmount !== investedAmount)
         handlePlanChange(plan.id, "investedAmount", investedAmount);
-      }
-      if (plan.estimatedReturns !== estimatedReturns) {
+      if (plan.estimatedReturns !== estimatedReturns)
         handlePlanChange(plan.id, "estimatedReturns", estimatedReturns);
-      }
-      if (plan.totalValue !== totalValue) {
+      if (plan.totalValue !== totalValue)
         handlePlanChange(plan.id, "totalValue", totalValue);
-      }
-      if (plan.monthlyContribution !== monthlyContribution) {
+      if (plan.monthlyContribution !== monthlyContribution)
         handlePlanChange(plan.id, "monthlyContribution", monthlyContribution);
-      }
     },
     [
       plan.id,
       plan.type,
-      plan.monthlyContribution, // Changed from monthlyInvestment
+      plan.monthlyContribution,
       plan.amount,
       plan.investedAmount,
       plan.estimatedReturns,
@@ -80,90 +102,117 @@ const InvestmentPlanCard = ({
   );
 
   return (
-    <Box sx={{ border: "1px solid #e0e0e0", p: 2, mb: 2, borderRadius: 2 }}>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={6} sm={6}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Plan Type</InputLabel>
-            <Select
-              value={plan.type}
-              label="Plan Type"
-              onChange={(e) =>
-                handlePlanChange(plan.id, "type", e.target.value)
-              }
-            >
-              <MenuItem value="sip">SIP</MenuItem>
-              <MenuItem value="lumpsum">Lumpsum</MenuItem>
-              <MenuItem value="stepUpSip">Step-Up SIP</MenuItem>
-              <MenuItem value="swp">SWP</MenuItem>
-              <MenuItem value="fd">Fixed Deposit</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
+    <Box
+      sx={{
+        border: "1px solid",
+        borderColor: alpha(theme.palette.divider, 0.1),
+        p: 2,
+        mb: 2,
+        borderRadius: 3,
+        bgcolor: alpha(theme.palette.background.paper, 0.5),
+        boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
+        position: "relative",
+        transition: "border-color 0.2s",
+        "&:hover": { borderColor: alpha(theme.palette.primary.main, 0.2) },
+      }}
+    >
+      {/* 1. Header Section */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 2 }}
+      >
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel sx={{ fontWeight: 700, fontSize: "0.8rem" }}>
+            Plan Type
+          </InputLabel>
+          <Select
+            value={plan.type}
+            label="Plan Type"
+            onChange={(e) => handlePlanChange(plan.id, "type", e.target.value)}
+            sx={{ borderRadius: 2, fontWeight: 700, fontSize: "0.85rem" }}
+          >
+            <MenuItem value="sip">SIP</MenuItem>
+            <MenuItem value="lumpsum">Lumpsum</MenuItem>
+            <MenuItem value="stepUpSip">Step-Up SIP</MenuItem>
+            <MenuItem value="swp">SWP</MenuItem>
+            <MenuItem value="fd">Fixed Deposit</MenuItem>
+          </Select>
+        </FormControl>
 
-        <Grid
-          item
-          xs={6}
-          sm={6}
+        <IconButton
+          size="small"
+          onClick={() => handleRemovePlan(plan.id)}
           sx={{
-            display: "flex",
-            justifyContent: { xs: "flex-end", sm: "flex-end" },
+            color: theme.palette.error.main,
+            bgcolor: alpha(theme.palette.error.main, 0.05),
+            "&:hover": { bgcolor: alpha(theme.palette.error.main, 0.1) },
           }}
         >
-          <IconButton
-            aria-label="delete"
-            onClick={() => handleRemovePlan(plan.id)}
-            color="error"
-          >
-            <DeleteIcon />
-          </IconButton>
-        </Grid>
-      </Grid>
-      <Box sx={{ mt: 2 }}>
-        <Paper elevation={3} sx={{ p: 2 }}>
-          <Grid container spacing={1} alignItems="center">
-            <Grid item xs={12}>
-              <Typography variant="body2" fontWeight="bold">
-                {plan.details}
-              </Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="body2" color="text.secondary">
-                Invested:{" "}
-                <Typography component="span" fontWeight="bold" color="primary">
-                  ₹{formatAmount(plan.investedAmount)}
-                </Typography>
-              </Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="body2" color="text.secondary">
-                Returns:{" "}
-                <Typography
-                  component="span"
-                  fontWeight="bold"
-                  color="success.main"
-                >
-                  ₹{formatAmount(plan.estimatedReturns)}
-                </Typography>
-              </Typography>
-            </Grid>
-            <Grid item xs={4}>
-              <Typography variant="body2" color="text.secondary">
-                Total Value:{" "}
-                <Typography
-                  component="span"
-                  fontWeight="bold"
-                  color="text.primary"
-                >
-                  ₹{formatAmount(plan.totalValue)}
-                </Typography>
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Stack>
+
+      {/* 2. Technical Summary (Status Bar Style) */}
+      <Box
+        sx={{
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+          mb: 2,
+        }}
+      >
+        <Typography
+          variant="caption"
+          sx={{
+            display: "block",
+            mb: 1,
+            fontWeight: 700,
+            color: "primary.main",
+            textTransform: "uppercase",
+            fontSize: "0.65rem",
+          }}
+        >
+          {plan.details || "Configure Strategy Parameters"}
+        </Typography>
+
+        {/* FIXED: Using standard MUI vertical divider to completely remove the gray blocks */}
+        <Stack
+          direction="row"
+          spacing={2}
+          divider={
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{ borderColor: alpha(theme.palette.divider, 0.2) }}
+            />
+          }
+        >
+          <DataPoint
+            label="Invested"
+            value={`₹${formatAmount(plan.investedAmount)}`}
+          />
+          <DataPoint
+            label="Returns"
+            value={`₹${formatAmount(plan.estimatedReturns)}`}
+            color={theme.palette.success.main}
+          />
+          <DataPoint
+            label="Total Value"
+            value={`₹${formatAmount(plan.totalValue)}`}
+          />
+        </Stack>
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      {/* 3. Calculator Form Area */}
+      <Box
+        sx={{
+          "& .MuiTextField-root": { mb: 1.5 },
+          "& .MuiTypography-root": { fontWeight: 700 }, // Ensures labels in sub-forms are bold
+        }}
+      >
         {plan.type === "sip" && (
           <SipCalculatorForm
             sharedState={plan}

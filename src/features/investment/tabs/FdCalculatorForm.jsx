@@ -1,53 +1,293 @@
-import React, { useEffect } from "react";
-import { Box } from "@mui/material";
-import { calculateFD } from "../../../utils/investmentCalculations";
-import FdCalculatorInputs from "../components/FdCalculatorInputs"; // Import the new input component
+import React, { useEffect, useCallback } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Slider,
+  Grid,
+  InputAdornment,
+  Select,
+  MenuItem,
+  alpha,
+  useTheme,
+  Stack,
+} from "@mui/material";
+import { AccountBalance as FdIcon } from "@mui/icons-material";
 
-const FdCalculator = ({ onCalculate, sharedState, onSharedStateChange }) => {
-  const { principalAmount, interestRate, timePeriod, compoundingFrequency } = sharedState || {};
+const FdCalculatorForm = ({
+  onCalculate,
+  sharedState,
+  onSharedStateChange,
+}) => {
+  const theme = useTheme();
+
+  // Provide fallbacks in case the plan is newly created
+  const {
+    principalAmount = 100000,
+    interestRate = 7,
+    timePeriod = 5,
+    compoundingFrequency = "annually",
+  } = sharedState || {};
+
+  const calculateFd = useCallback(() => {
+    const P = principalAmount || 0;
+    const r = (interestRate || 0) / 100;
+    const t = timePeriod || 0;
+
+    // Determine compounds per year based on frequency
+    let n = 1;
+    if (compoundingFrequency === "quarterly") n = 4;
+    else if (compoundingFrequency === "half-yearly") n = 2;
+    else if (compoundingFrequency === "monthly") n = 12;
+
+    // Compound Interest Formula: A = P(1 + r/n)^(nt)
+    const totalValue = P * Math.pow(1 + r / n, n * t);
+    const estimatedReturns = totalValue - P;
+
+    let chartData = [];
+    for (let year = 1; year <= t; year++) {
+      let yearlyValue = P * Math.pow(1 + r / n, n * year);
+      chartData.push({
+        year: year,
+        invested: Math.round(P),
+        returns: Math.round(yearlyValue - P),
+        total: Math.round(yearlyValue),
+      });
+    }
+
+    if (typeof onCalculate === "function") {
+      onCalculate({
+        investedAmount: Math.round(P),
+        estimatedReturns: Math.round(estimatedReturns),
+        totalValue: Math.round(totalValue),
+        chartData: chartData,
+      });
+    }
+  }, [
+    principalAmount,
+    interestRate,
+    timePeriod,
+    compoundingFrequency,
+    onCalculate,
+  ]);
 
   useEffect(() => {
-    handleCalculate();
-  }, [principalAmount, interestRate, timePeriod, compoundingFrequency]);
+    calculateFd();
+  }, [calculateFd]);
 
-  const handleCalculate = () => {
-    if (principalAmount > 0 && interestRate > 0 && timePeriod > 0) {
-      try {
-        const result = calculateFD(principalAmount, interestRate, timePeriod, compoundingFrequency);
-        if (typeof onCalculate === "function") {
-          onCalculate({
-            investedAmount: principalAmount,
-            estimatedReturns: result.totalValue - principalAmount,
-            totalValue: result.totalValue,
-            chartData: result.chartData,
-          });
-        }
-      } catch (error) {
-        console.error("Error calculating FD:", error);
-      }
-    } else {
-      if (typeof onCalculate === "function") {
-        onCalculate({
-          investedAmount: 0,
-          estimatedReturns: 0,
-          totalValue: 0,
-          chartData: [],
-        });
-      }
-    }
+  const labelStyle = {
+    fontWeight: 800,
+    textTransform: "uppercase",
+    fontSize: "0.65rem",
+    color: "text.disabled",
+    letterSpacing: 1,
+    mb: 0.5,
   };
 
   return (
-    <Box>
-      <FdCalculatorInputs
-        principalAmount={principalAmount}
-        interestRate={interestRate}
-        timePeriod={timePeriod}
-        compoundingFrequency={compoundingFrequency}
-        onSharedStateChange={onSharedStateChange}
-      />
+    <Box sx={{ mt: 1 }}>
+      {/* Internal Subsection Header */}
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+        <FdIcon
+          sx={{
+            fontSize: "1rem",
+            color: theme.palette.primary.main,
+            opacity: 0.8,
+          }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 900,
+            color: "text.primary",
+            textTransform: "uppercase",
+          }}
+        >
+          Fixed Deposit Parameters
+        </Typography>
+      </Stack>
+
+      {/* 1. Principal Amount */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Principal Amount</Typography>
+          </Grid>
+          <Grid item xs={5}>
+            <TextField
+              variant="standard"
+              size="small"
+              value={principalAmount}
+              onChange={(e) =>
+                onSharedStateChange("principalAmount", Number(e.target.value))
+              }
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment
+                    position="start"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    ₹
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
+              }}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+        <Slider
+          value={principalAmount}
+          min={10000}
+          max={5000000}
+          step={5000}
+          onChange={(e, val) => onSharedStateChange("principalAmount", val)}
+          sx={{
+            py: 1,
+            "& .MuiSlider-thumb": { width: 12, height: 12 },
+            "& .MuiSlider-track": { height: 4 },
+            "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
+          }}
+        />
+      </Box>
+
+      {/* 2. Interest Rate */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Interest Rate (p.a)</Typography>
+          </Grid>
+          <Grid item xs={5}>
+            <TextField
+              variant="standard"
+              size="small"
+              value={interestRate}
+              onChange={(e) =>
+                onSharedStateChange("interestRate", Number(e.target.value))
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    %
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.success.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
+              }}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+        <Slider
+          value={interestRate}
+          min={1}
+          max={15}
+          step={0.1}
+          onChange={(e, val) => onSharedStateChange("interestRate", val)}
+          color="success"
+          sx={{ py: 1, "& .MuiSlider-thumb": { width: 12, height: 12 } }}
+        />
+      </Box>
+
+      {/* 3. Time Period */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Duration (Years)</Typography>
+          </Grid>
+          <Grid item xs={5}>
+            <TextField
+              variant="standard"
+              size="small"
+              value={timePeriod}
+              onChange={(e) =>
+                onSharedStateChange("timePeriod", Number(e.target.value))
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    Yr
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.info.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
+              }}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+        <Slider
+          value={timePeriod}
+          min={1}
+          max={20}
+          step={1}
+          onChange={(e, val) => onSharedStateChange("timePeriod", val)}
+          color="info"
+          sx={{ py: 1, "& .MuiSlider-thumb": { width: 12, height: 12 } }}
+        />
+      </Box>
+
+      {/* 4. Compounding Frequency (Dropdown Well) */}
+      <Box sx={{ mb: 1 }}>
+        <Grid container spacing={1} alignItems="center">
+          <Grid item xs={6}>
+            <Typography sx={labelStyle}>Compounding</Typography>
+          </Grid>
+          <Grid item xs={6}>
+            <Select
+              variant="standard"
+              value={compoundingFrequency}
+              onChange={(e) =>
+                onSharedStateChange("compoundingFrequency", e.target.value)
+              }
+              disableUnderline
+              sx={{
+                width: "100%",
+                fontWeight: 900,
+                fontSize: "0.85rem",
+                bgcolor: alpha(theme.palette.secondary.main, 0.05),
+                color: theme.palette.secondary.dark,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 1,
+                "& .MuiSelect-select": { paddingRight: "24px !important" }, // Adjusts for the dropdown arrow
+              }}
+            >
+              <MenuItem value="annually">Annually</MenuItem>
+              <MenuItem value="half-yearly">Half-Yearly</MenuItem>
+              <MenuItem value="quarterly">Quarterly</MenuItem>
+              <MenuItem value="monthly">Monthly</MenuItem>
+            </Select>
+          </Grid>
+        </Grid>
+      </Box>
     </Box>
   );
 };
 
-export default FdCalculator;
+export default FdCalculatorForm;

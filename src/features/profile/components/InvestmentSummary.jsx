@@ -1,174 +1,179 @@
 import React from "react";
-import { Card, CardContent, Typography, Grid } from "@mui/material";
+import { Box, Typography, Grid, alpha, useTheme, Stack } from "@mui/material";
+import {
+  ErrorOutline as WarningIcon,
+  CheckCircleOutline as SuccessIcon,
+} from "@mui/icons-material";
+
+const DataPoint = ({ label, value, color, isLast }) => {
+  const theme = useTheme();
+  return (
+    <Grid
+      item
+      xs={12}
+      sm={6}
+      md={3}
+      sx={{
+        display: "flex",
+        flexDirection: { xs: "row", sm: "column" },
+        justifyContent: { xs: "space-between", sm: "center" },
+        alignItems: { xs: "center", sm: "center" },
+        py: { xs: 1, sm: 0 },
+        // Zebra striping for mobile view
+        borderBottom: {
+          xs: isLast
+            ? "none"
+            : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          sm: "none",
+        },
+        px: 2,
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{
+          fontWeight: 700,
+          color: "text.disabled",
+          textTransform: "uppercase",
+          letterSpacing: 0.5,
+          fontSize: "0.65rem",
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          fontWeight: 900,
+          fontSize: "1rem",
+          color: color || "text.primary",
+          letterSpacing: -0.2,
+        }}
+      >
+        {value}
+      </Typography>
+    </Grid>
+  );
+};
 
 const InvestmentSummary = ({ plans, targetAmount }) => {
+  const theme = useTheme();
+
   const totalInvested = plans.reduce(
-    (sum, plan) => sum + (plan.investedAmount || 0),
+    (sum, p) => sum + (p.investedAmount || 0),
     0,
   );
-
   const totalReturns = plans.reduce(
-    (sum, plan) => sum + (plan.estimatedReturns || 0),
+    (sum, p) => sum + (p.estimatedReturns || 0),
     0,
   );
+  const totalValue = plans.reduce((sum, p) => sum + (p.totalValue || 0), 0);
+  const maxTime = plans.reduce((max, p) => Math.max(max, p.timePeriod || 0), 0);
 
-  const totalValue = plans.reduce(
-    (sum, plan) => sum + (plan.totalValue || 0),
-    0,
-  );
-
-  const maxTimePeriod = plans.reduce(
-    (max, plan) => Math.max(max, plan.timePeriod || 0),
-    0,
-  );
-
-  const isMismatch = totalValue <= (targetAmount || 0); // Ensure targetAmount is treated as a number
+  // Mismatch logic: Highlight if we are short of the target
+  const isShort = totalValue < (targetAmount || 0);
 
   const formatAmount = (amount) =>
     `₹${(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
   return (
-    <Card sx={{ mt: 2, border: isMismatch ? "2px solid red" : "none" }}>
-      <CardContent sx={{ py: { xs: 1, sm: 2 } }}>
-        <Typography gutterBottom sx={{ fontSize: "1rem", fontWeight: 500 }}>
-          Investment Summary
-        </Typography>
-        {isMismatch && (
-          <Typography
-            color="error"
-            variant="body2"
-            gutterBottom
-            sx={{ fontSize: "0.65rem" }}
-          >
-            Warning: The total projected value does not match the target amount.
-          </Typography>
+    <Box
+      sx={{
+        mt: 2,
+        borderRadius: 3,
+        overflow: "hidden",
+        border: "1px solid",
+        borderColor: isShort
+          ? alpha(theme.palette.error.main, 0.3)
+          : alpha(theme.palette.divider, 0.1),
+        bgcolor: isShort
+          ? alpha(theme.palette.error.main, 0.02)
+          : alpha(theme.palette.background.paper, 0.5),
+        transition: "all 0.3s ease",
+      }}
+    >
+      {/* 1. Technical Alert Header */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          bgcolor: isShort
+            ? alpha(theme.palette.error.main, 0.05)
+            : alpha(theme.palette.success.main, 0.05),
+          borderBottom: "1px solid",
+          borderColor: isShort
+            ? alpha(theme.palette.error.main, 0.1)
+            : alpha(theme.palette.success.main, 0.1),
+        }}
+      >
+        {isShort ? (
+          <WarningIcon
+            sx={{ fontSize: "1rem", color: theme.palette.error.main }}
+          />
+        ) : (
+          <SuccessIcon
+            sx={{ fontSize: "1rem", color: theme.palette.success.main }}
+          />
         )}
-        <Grid container spacing={{ xs: 1, sm: 2 }}>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={3}
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "row", sm: "column" },
-              justifyContent: { xs: "space-between", sm: "center" },
-              alignItems: { xs: "baseline", sm: "center" },
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: { xs: "0.85rem", sm: "0.90rem", md: "0.95rem" },
-                textAlign: { xs: "left", sm: "center" },
-              }}
-            >
-              Invested
-            </Typography>
-            <Typography
-              sx={{
-                fontWeight: "bold",
-                fontSize: "1rem", // Reduced font size for xs
-                textAlign: { xs: "right", sm: "center" },
-              }}
-            >
-              {formatAmount(totalInvested)}
-            </Typography>
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={3}
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "row", sm: "column" },
-              justifyContent: { xs: "space-between", sm: "center" },
-              alignItems: { xs: "baseline", sm: "center" },
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: { xs: "0.85rem", sm: "0.90rem", md: "0.95rem" },
-                textAlign: { xs: "left", sm: "center" },
-              }}
-            >
-              Returns
-            </Typography>
-            <Typography
-              color="success.main"
-              sx={{
-                fontWeight: "bold",
-                fontSize: "1rem", // Reduced font size for xs
-                textAlign: { xs: "right", sm: "center" },
-              }}
-            >
-              {formatAmount(totalReturns)}
-            </Typography>
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={3}
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "row", sm: "column" },
-              justifyContent: { xs: "space-between", sm: "center" },
-              alignItems: { xs: "baseline", sm: "center" },
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: { xs: "0.85rem", sm: "0.90rem", md: "0.95rem" },
-                textAlign: { xs: "left", sm: "center" },
-              }}
-            >
-              Total Value
-            </Typography>
-            <Typography
-              color={isMismatch ? "error" : "primary.main"}
-              sx={{
-                fontWeight: "bold",
-                fontSize: "1rem", // Reduced font size for xs
-                textAlign: { xs: "right", sm: "center" },
-              }}
-            >
-              {formatAmount(totalValue)}
-            </Typography>
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            sm={6}
-            md={3}
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "row", sm: "column" },
-              justifyContent: { xs: "space-between", sm: "center" },
-              alignItems: { xs: "baseline", sm: "center" },
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: { xs: "0.85rem", sm: "0.90rem", md: "0.95rem" },
-                textAlign: { xs: "left", sm: "center" },
-              }}
-            >
-              Time Period
-            </Typography>
-            <Typography
-              sx={{
-                fontWeight: "bold",
-                fontSize: "1rem",
-                textAlign: { xs: "right", sm: "center" },
-              }}
-            >
-              {maxTimePeriod} years
-            </Typography>
-          </Grid>
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            color: isShort
+              ? theme.palette.error.dark
+              : theme.palette.success.dark,
+          }}
+        >
+          {isShort
+            ? `Funding Gap: ${formatAmount(targetAmount - totalValue)} remaining`
+            : "Strategy Fully Funded"}
+        </Typography>
+      </Box>
+
+      {/* 2. Data Grid */}
+      <Box sx={{ p: { xs: 0, sm: 2 } }}>
+        <Grid container>
+          <DataPoint label="Invested" value={formatAmount(totalInvested)} />
+          <DataPoint
+            label="Est. Returns"
+            value={formatAmount(totalReturns)}
+            color={theme.palette.success.main}
+          />
+          <DataPoint
+            label="Projected Value"
+            value={formatAmount(totalValue)}
+            color={
+              isShort ? theme.palette.error.main : theme.palette.primary.main
+            }
+          />
+          <DataPoint label="Horizon" value={`${maxTime} Years`} isLast={true} />
         </Grid>
-      </CardContent>
-    </Card>
+      </Box>
+
+      {/* 3. Real-time Status Bar (Optional) */}
+      {isShort && (
+        <Box
+          sx={{
+            width: "100%",
+            height: 4,
+            bgcolor: alpha(theme.palette.error.main, 0.1),
+          }}
+        >
+          <Box
+            sx={{
+              width: `${Math.min((totalValue / targetAmount) * 100, 100)}%`,
+              height: "100%",
+              bgcolor: theme.palette.error.main,
+              transition: "width 0.5s ease-out",
+            }}
+          />
+        </Box>
+      )}
+    </Box>
   );
 };
 

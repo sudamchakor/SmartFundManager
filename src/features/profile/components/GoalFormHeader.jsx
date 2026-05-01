@@ -1,5 +1,18 @@
 import React from "react";
-import { Grid, TextField, Button, Typography } from "@mui/material";
+import {
+  Grid,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  alpha,
+  useTheme,
+  Stack,
+} from "@mui/material";
+import {
+  AutoFixHigh as MagicIcon,
+  ErrorOutline as WarningIcon,
+} from "@mui/icons-material";
 import SliderInput from "../../../components/common/SliderInput";
 import InvestmentSummary from "./InvestmentSummary";
 
@@ -10,106 +23,150 @@ const GoalFormHeader = ({
   retirementYear,
   handleGenerateInvestmentPlans,
   plans,
-  handleSaveGoal,
 }) => {
-  // Updated to use plan.totalValue for consistency with InvestmentSummary
-  const totalAmount = plans.reduce(
-    (sum, plan) => sum + (plan.totalValue || 0),
-    0,
-  );
-  const isMismatch = totalAmount !== editedGoal.targetAmount;
+  const theme = useTheme();
+
   const isTargetYearInvalid = editedGoal.targetYear > retirementYear;
 
-  const onSave = () => {
-    if (isMismatch) {
-      alert(
-        "Warning: The total investment amount does not match the target amount.",
-      );
-    }
-    handleSaveGoal();
-  };
-
   return (
-    <Grid container spacing={2}> {/* Main container with spacing */}
-      <Grid item xs={12} sm={6} md={6} lg={6} xl={4}>
-        <TextField
-          fullWidth
-          label="Goal Name"
-          size="small"
-          value={editedGoal.name || ""}
-          onChange={(e) =>
-            setEditedGoal({ ...editedGoal, name: e.target.value })
-          }
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6} lg={6} xl={4}>
-        <SliderInput
-          label="Target Amount"
-          value={Number(editedGoal.targetAmount) || 0}
-          onChange={(val) =>
-            setEditedGoal({ ...editedGoal, targetAmount: val })
-          }
-          min={0}
-          max={100000000}
-          step={100000}
-          showInput={true}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6} lg={6} xl={4}>
-        <SliderInput
-          label="Start Year"
-          value={Number(editedGoal.startYear) || currentYear}
-          onChange={(val) =>
-            setEditedGoal({ ...editedGoal, startYear: val })
-          }
-          min={currentYear}
-          max={currentYear + 50}
-          step={1}
-          showInput={true}
-        />
-      </Grid>
-      <Grid item xs={12} sm={6} md={6} lg={6} xl={4}>
-        <SliderInput
-          label="Target Year"
-          value={Number(editedGoal.targetYear) || currentYear}
-          onChange={(val) =>
-            setEditedGoal({ ...editedGoal, targetYear: val })
-          }
-          min={currentYear}
-          max={currentYear + 50}
-          step={1}
-          showInput={true}
-          warning={isTargetYearInvalid}
-        />
-        {isTargetYearInvalid && (
-          <Typography variant="caption" color="error">
-            Target year cannot exceed retirement year ({retirementYear}).
-          </Typography>
-        )}
-      </Grid>
-      {/* This Grid item now always takes full width to ensure the button is on its own row */}
-      <Grid item xs={12}>
-        {editedGoal.targetYear > currentYear && (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleGenerateInvestmentPlans}
-            sx={{ mt: 3 }}
-            disabled={editedGoal.targetAmount < 500}
-          >
-            Generate Investment Plans
-          </Button>
-        )}
-      </Grid>
-      {plans && plans.length > 0 && (
-        <Grid item xs={12}>
-          <InvestmentSummary
-            plans={plans}
-            targetAmount={editedGoal.targetAmount}
+    <Box sx={{ width: "100%" }}>
+      <Grid container spacing={2}>
+        {/* 1. Goal Name - High Density */}
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            label="Goal Name"
+            size="small"
+            placeholder="e.g., Retirement, Education..."
+            value={editedGoal.name || ""}
+            onChange={(e) =>
+              setEditedGoal({ ...editedGoal, name: e.target.value })
+            }
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.background.paper, 0.5),
+              },
+              "& .MuiInputLabel-root": { fontWeight: 700 },
+            }}
           />
         </Grid>
-      )}
-    </Grid>
+
+        {/* 2. Target Amount Slider */}
+        <Grid item xs={12} md={6}>
+          <SliderInput
+            label="Target Amount"
+            value={Number(editedGoal.targetAmount) || 0}
+            onChange={(val) =>
+              setEditedGoal({ ...editedGoal, targetAmount: val })
+            }
+            min={0}
+            max={100000000}
+            step={100000}
+            showInput={true}
+          />
+        </Grid>
+
+        {/* 3. Start Year */}
+        <Grid item xs={12} md={6}>
+          <SliderInput
+            label="Start Year"
+            value={Number(editedGoal.startYear) || currentYear}
+            onChange={(val) => setEditedGoal({ ...editedGoal, startYear: val })}
+            min={currentYear}
+            max={currentYear + 50}
+            step={1}
+            showInput={true}
+          />
+        </Grid>
+
+        {/* 4. Target Year with Technical Warning */}
+        <Grid item xs={12} md={6}>
+          <Stack spacing={1}>
+            <SliderInput
+              label="Target Year"
+              value={Number(editedGoal.targetYear) || currentYear}
+              onChange={(val) =>
+                setEditedGoal({ ...editedGoal, targetYear: val })
+              }
+              min={currentYear}
+              max={currentYear + 50}
+              step={1}
+              showInput={true}
+              warning={isTargetYearInvalid}
+            />
+            {isTargetYearInvalid && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  p: 1,
+                  borderRadius: 1.5,
+                  bgcolor: alpha(theme.palette.error.main, 0.05),
+                  border: `1px dashed ${alpha(theme.palette.error.main, 0.3)}`,
+                }}
+              >
+                <WarningIcon
+                  sx={{ fontSize: "1rem", color: theme.palette.error.main }}
+                />
+                <Typography
+                  variant="caption"
+                  sx={{ color: theme.palette.error.dark, fontWeight: 700 }}
+                >
+                  Exceeds retirement year ({retirementYear}).
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+        </Grid>
+
+        {/* 5. Action Bar - Generate Button */}
+        <Grid item xs={12}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-start",
+              pt: 1,
+            }}
+          >
+            {editedGoal.targetYear > currentYear && (
+              <Button
+                variant="contained"
+                disableElevation
+                startIcon={<MagicIcon />}
+                onClick={handleGenerateInvestmentPlans}
+                disabled={editedGoal.targetAmount < 500}
+                sx={{
+                  borderRadius: 2,
+                  px: 3,
+                  fontWeight: 800,
+                  textTransform: "none",
+                  letterSpacing: 0.5,
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-1px)",
+                    boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                  },
+                }}
+              >
+                Auto-Generate Strategies
+              </Button>
+            )}
+          </Box>
+        </Grid>
+
+        {/* 6. Investment Summary Display */}
+        {plans && plans.length > 0 && (
+          <Grid item xs={12}>
+            <InvestmentSummary
+              plans={plans}
+              targetAmount={editedGoal.targetAmount}
+            />
+          </Grid>
+        )}
+      </Grid>
+    </Box>
   );
 };
 

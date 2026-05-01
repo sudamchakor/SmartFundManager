@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -6,87 +6,140 @@ import {
   Slider,
   Grid,
   InputAdornment,
+  alpha,
+  useTheme,
+  Stack,
 } from "@mui/material";
+import { AccountBalanceWallet as SwpIcon } from "@mui/icons-material";
 
-const SwpCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) => {
-  const { totalInvestment, withdrawalPerMonth, expectedReturnRate, timePeriod } = sharedState;
+const SwpCalculatorForm = ({
+  onCalculate,
+  sharedState,
+  onSharedStateChange,
+}) => {
+  const theme = useTheme();
+  const {
+    totalInvestment,
+    withdrawalPerMonth,
+    expectedReturnRate,
+    timePeriod,
+  } = sharedState;
 
-  useEffect(() => {
-    calculateSwp();
-  }, [totalInvestment, withdrawalPerMonth, expectedReturnRate, timePeriod]);
-
-  const calculateSwp = () => {
+  const calculateSwp = useCallback(() => {
     const P = totalInvestment;
     const W = withdrawalPerMonth;
-    const n = timePeriod * 12; // months
-    const i = expectedReturnRate / 100 / 12; // monthly rate
-    
+    const n = timePeriod * 12;
+    const i = expectedReturnRate / 100 / 12;
+
     let currentBalance = P;
     let totalWithdrawn = 0;
     let chartData = [];
 
-    // SWP Calculation
     for (let month = 1; month <= n; month++) {
       if (currentBalance > 0) {
-        // Interest earned for the month
         let interest = currentBalance * i;
-        
-        // Add interest to balance
         currentBalance += interest;
-        
-        // Subtract withdrawal
+
         let actualWithdrawal = Math.min(W, currentBalance);
         currentBalance -= actualWithdrawal;
         totalWithdrawn += actualWithdrawal;
       }
-      
-      // Add data points every 12 months (end of year)
+
       if (month % 12 === 0) {
         chartData.push({
           year: month / 12,
           invested: Math.round(P),
           withdrawn: Math.round(totalWithdrawn),
-          total: Math.round(Math.max(0, currentBalance))
+          total: Math.round(Math.max(0, currentBalance)),
         });
       }
     }
 
-    // Final calculations
     const finalBalance = Math.max(0, currentBalance);
-    // Estimated Returns in SWP context = (Total Withdrawn + Final Balance) - Initial Investment
-    const estimatedReturns = (totalWithdrawn + finalBalance) - P;
+    const estimatedReturns = totalWithdrawn + finalBalance - P;
 
     onCalculate({
       investedAmount: Math.round(P),
-      // To display logically in the same UI as SIP/Lumpsum:
-      // "Estimated Returns" = Total earned above initial investment
-      estimatedReturns: Math.round(estimatedReturns), 
-      // "Total Value" = What's left at the end
+      estimatedReturns: Math.round(estimatedReturns),
       totalValue: Math.round(finalBalance),
-      // We also want to pass totalWithdrawn, but the parent UI might not show it currently
       totalWithdrawn: Math.round(totalWithdrawn),
-      chartData: chartData
+      chartData: chartData,
     });
+  }, [
+    totalInvestment,
+    withdrawalPerMonth,
+    expectedReturnRate,
+    timePeriod,
+    onCalculate,
+  ]);
+
+  useEffect(() => {
+    calculateSwp();
+  }, [calculateSwp]);
+
+  const labelStyle = {
+    fontWeight: 800,
+    textTransform: "uppercase",
+    fontSize: "0.65rem",
+    color: "text.disabled",
+    letterSpacing: 1,
+    mb: 0.5,
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        SWP Details
-      </Typography>
+    <Box sx={{ mt: 1 }}>
+      {/* Internal Subsection Header */}
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+        <SwpIcon
+          sx={{
+            fontSize: "1rem",
+            color: theme.palette.primary.main,
+            opacity: 0.8,
+          }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 900,
+            color: "text.primary",
+            textTransform: "uppercase",
+          }}
+        >
+          SWP Configuration
+        </Typography>
+      </Stack>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Total Investment</Typography>
+      {/* 1. Total Investment */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Initial Corpus</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={totalInvestment}
-              onChange={(e) => onSharedStateChange("totalInvestment", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange("totalInvestment", Number(e.target.value))
+              }
               InputProps={{
-                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                startAdornment: (
+                  <InputAdornment
+                    position="start"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    ₹
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -98,22 +151,48 @@ const SwpCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
           max={50000000}
           step={10000}
           onChange={(e, val) => onSharedStateChange("totalInvestment", val)}
-          valueLabelDisplay="auto"
+          sx={{
+            py: 1,
+            "& .MuiSlider-thumb": { width: 12, height: 12 },
+            "& .MuiSlider-track": { height: 4 },
+          }}
         />
       </Box>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Withdrawal per month</Typography>
+      {/* 2. Monthly Withdrawal */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Monthly Payout</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={withdrawalPerMonth}
-              onChange={(e) => onSharedStateChange("withdrawalPerMonth", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange(
+                  "withdrawalPerMonth",
+                  Number(e.target.value),
+                )
+              }
               InputProps={{
-                startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                startAdornment: (
+                  <InputAdornment
+                    position="start"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    ₹
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.warning.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -125,22 +204,45 @@ const SwpCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
           max={100000}
           step={500}
           onChange={(e, val) => onSharedStateChange("withdrawalPerMonth", val)}
-          valueLabelDisplay="auto"
+          color="warning"
+          sx={{ py: 1, "& .MuiSlider-thumb": { width: 12, height: 12 } }}
         />
       </Box>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Expected Return Rate (p.a)</Typography>
+      {/* 3. Expected Return Rate */}
+      <Box sx={{ mb: 2 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Expected Returns (p.a)</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={expectedReturnRate}
-              onChange={(e) => onSharedStateChange("expectedReturnRate", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange(
+                  "expectedReturnRate",
+                  Number(e.target.value),
+                )
+              }
               InputProps={{
-                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    %
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.success.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -152,22 +254,42 @@ const SwpCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
           max={30}
           step={0.1}
           onChange={(e, val) => onSharedStateChange("expectedReturnRate", val)}
-          valueLabelDisplay="auto"
+          color="success"
+          sx={{ py: 1, "& .MuiSlider-thumb": { width: 12, height: 12 } }}
         />
       </Box>
 
-      <Box sx={{ my: 3 }}>
-        <Grid container spacing={1} alignItems="center">
-          <Grid item xs={6}>
-            <Typography gutterBottom>Time Period (Years)</Typography>
+      {/* 4. Time Period */}
+      <Box sx={{ mb: 1 }}>
+        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
+          <Grid item xs={7}>
+            <Typography sx={labelStyle}>Payout Duration</Typography>
           </Grid>
-          <Grid item xs={6}>
+          <Grid item xs={5}>
             <TextField
+              variant="standard"
               size="small"
               value={timePeriod}
-              onChange={(e) => onSharedStateChange("timePeriod", Number(e.target.value))}
+              onChange={(e) =>
+                onSharedStateChange("timePeriod", Number(e.target.value))
+              }
               InputProps={{
-                endAdornment: <InputAdornment position="end">Yr</InputAdornment>,
+                endAdornment: (
+                  <InputAdornment
+                    position="end"
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
+                  >
+                    Yr
+                  </InputAdornment>
+                ),
+                disableUnderline: true,
+                sx: {
+                  fontWeight: 900,
+                  fontSize: "0.9rem",
+                  bgcolor: alpha(theme.palette.info.main, 0.05),
+                  px: 1,
+                  borderRadius: 1,
+                },
               }}
               fullWidth
             />
@@ -179,7 +301,8 @@ const SwpCalculatorForm = ({ onCalculate, sharedState, onSharedStateChange }) =>
           max={40}
           step={1}
           onChange={(e, val) => onSharedStateChange("timePeriod", val)}
-          valueLabelDisplay="auto"
+          color="info"
+          sx={{ py: 1, "& .MuiSlider-thumb": { width: 12, height: 12 } }}
         />
       </Box>
     </Box>
