@@ -37,7 +37,7 @@ export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
         display: "flex",
         flexDirection: "column",
         gap: 1,
-        p: { xs: 1.5, md: 2.5 }, // Tightened padding for density
+        p: { xs: 0, md: 1 }, // Tightened padding for density
         overflowX: "hidden",
       }}
     >

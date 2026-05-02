@@ -604,11 +604,11 @@ export default function FutureGoalsTab({ goalToEditId }) {
         </Stack>
       </Grid>
 
-      {isMediumScreen && (
+      {isMediumScreen && !openModal&& (
         <ActionSpeedDial
           actions={actions}
           sx={{
-            bottom: { xs: 100, sm: 130 },
+            bottom: { xs: 80, sm: 70 },
             zIndex: 1400, // FIX: Ensures it floats above the footer (which is 1300)
           }}
         />

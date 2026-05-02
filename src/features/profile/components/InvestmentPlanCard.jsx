@@ -21,25 +21,31 @@ import FdCalculatorForm from "../../investment/tabs/FdCalculatorForm";
 import { labelStyle, getWellInputStyle } from "../../../styles/formStyles";
 
 const DataPoint = ({ label, value, color }) => (
-  <Stack spacing={0.2} sx={{ flex: 1 }}>
-    <Typography
-      variant="caption"
-      sx={{
-        fontWeight: 800,
-        color: "text.disabled",
-        textTransform: "uppercase",
-        fontSize: "0.65rem",
-      }}
+    <Stack
+        direction={{ xs: "row", sm: "column" }} // Row on mobile, Column on desktop
+        justifyContent="space-between"
+        alignItems={{ xs: "center", sm: "flex-start" }}
+        spacing={0.2}
+        sx={{ flex: 1, width: "100%" }}
     >
-      {label}
-    </Typography>
-    <Typography
-      variant="body2"
-      sx={{ fontWeight: 900, color: color || "text.primary" }}
-    >
-      {value}
-    </Typography>
-  </Stack>
+        <Typography
+            variant="caption"
+            sx={{
+                fontWeight: 800,
+                color: "text.disabled",
+                textTransform: "uppercase",
+                fontSize: "0.65rem",
+            }}
+        >
+            {label}
+        </Typography>
+        <Typography
+            variant="body2"
+            sx={{ fontWeight: 900, color: color || "text.primary" }}
+        >
+            {value}
+        </Typography>
+    </Stack>
 );
 
 const InvestmentPlanCard = ({
@@ -171,55 +177,82 @@ const InvestmentPlanCard = ({
       </Stack>
 
       {/* 2. Technical Summary (Status Bar Style) */}
-      <Box
-        sx={{
-          p: 1.5,
-          borderRadius: 2,
-          bgcolor: alpha(theme.palette.primary.main, 0.04),
-          border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
-          mb: 2,
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            display: "block",
-            mb: 1,
-            fontWeight: 700,
-            color: "primary.main",
-            textTransform: "uppercase",
-            fontSize: "0.65rem",
-          }}
+        {/* 2. Technical Summary (Status Bar Style) */}
+        <Box
+            sx={{
+                p: { xs: 1, sm: 1.5 }, // Slightly less padding on mobile
+                borderRadius: 2,
+                bgcolor: alpha(theme.palette.primary.main, 0.04),
+                border: `1px solid ${alpha(theme.palette.primary.main, 0.08)}`,
+                mb: 2,
+            }}
         >
-          {plan.details || "Configure Strategy Parameters"}
-        </Typography>
+            <Typography
+                variant="caption"
+                sx={{
+                    display: "block",
+                    mb: 1,
+                    fontWeight: 700,
+                    color: "primary.main",
+                    textTransform: "uppercase",
+                    fontSize: "0.65rem",
+                    textAlign: { xs: "center", sm: "left" }, // Center title on mobile
+                }}
+            >
+                {plan.details || "Configure Strategy Parameters"}
+            </Typography>
 
-        <Stack
-          direction="row"
-          spacing={2}
-          divider={
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ borderColor: alpha(theme.palette.divider, 0.2) }}
-            />
-          }
-        >
-          <DataPoint
-            label="Invested"
-            value={`₹${formatAmount(plan.investedAmount)}`}
-          />
-          <DataPoint
-            label="Returns"
-            value={`₹${formatAmount(plan.estimatedReturns)}`}
-            color={theme.palette.success.main}
-          />
-          <DataPoint
-            label="Total Value"
-            value={`₹${formatAmount(plan.totalValue)}`}
-          />
-        </Stack>
-      </Box>
+            <Stack
+                direction={{ xs: "column", sm: "row" }} // Stack vertically on mobile
+                spacing={{ xs: 1.5, sm: 2 }}
+                divider={
+                    <Divider
+                        orientation="vertical"
+                        flexItem
+                        sx={{
+                            borderColor: alpha(theme.palette.divider, 0.2),
+                            display: { xs: "none", sm: "block" } // Hide vertical divider on mobile
+                        }}
+                    />
+                }
+            >
+                <Stack
+                    direction="row"
+                    justifyContent={{ xs: "space-between", sm: "flex-start" }}
+                    sx={{ width: "100%" }}
+                >
+                    <DataPoint
+                        label="Invested"
+                        value={`₹${formatAmount(plan.investedAmount)}`}
+                    />
+                    {/* Mobile-only divider or spacing can go here if you prefer a 2-column mobile look */}
+                </Stack>
+
+                {/* On mobile, these will now appear as clean rows or a list */}
+                <Stack
+                    direction="row"
+                    justifyContent={{ xs: "space-between", sm: "flex-start" }}
+                    sx={{ width: "100%" }}
+                >
+                    <DataPoint
+                        label="Returns"
+                        value={`₹${formatAmount(plan.estimatedReturns)}`}
+                        color={theme.palette.success.main}
+                    />
+                </Stack>
+
+                <Stack
+                    direction="row"
+                    justifyContent={{ xs: "space-between", sm: "flex-start" }}
+                    sx={{ width: "100%" }}
+                >
+                    <DataPoint
+                        label="Total Value"
+                        value={`₹${formatAmount(plan.totalValue)}`}
+                    />
+                </Stack>
+            </Stack>
+        </Box>
 
       {/* 3. Calculator Form Area */}
       <Box
@@ -231,9 +264,10 @@ const InvestmentPlanCard = ({
         {plan.type === "sip" && (
           <SipCalculatorForm
             sharedState={{ ...plan, monthlyInvestment: plan.monthlyContribution }}
-            onSharedStateChange={(field, value) =>
-              handlePlanChange(plan.id, field, value)
-            }
+            onSharedStateChange={(field, value) => {
+              const targetField = field === "monthlyInvestment" ? "monthlyContribution" : field;
+              handlePlanChange(plan.id, targetField, value);
+            }}
             onCalculate={handleCalculate}
             targetAmount={targetAmount}
           />
@@ -254,9 +288,10 @@ const InvestmentPlanCard = ({
               ...plan,
               initialMonthlyInvestment: plan.monthlyContribution,
             }}
-            onSharedStateChange={(field, value) =>
-              handlePlanChange(plan.id, field, value)
-            }
+            onSharedStateChange={(field, value) => {
+              const targetField = field === "initialMonthlyInvestment" ? "monthlyContribution" : field;
+              handlePlanChange(plan.id, targetField, value);
+            }}
             onCalculate={handleCalculate}
             targetAmount={targetAmount}
           />
