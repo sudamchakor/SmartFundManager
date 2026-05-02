@@ -12,7 +12,7 @@ import {
   Legend,
   ReferenceLine,
 } from "recharts";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material";
 import { useSelector } from "react-redux";
 import { selectCurrency } from "../../../store/emiSlice";
 import dayjs from "dayjs";
@@ -41,7 +41,7 @@ const roundToNiceNumber = (val, roundUp) => {
 };
 
 // Custom Legend to show struck-through or faded text for disabled items
-const renderLegend = (props, hiddenLines) => {
+const renderLegend = (props, hiddenLines, theme) => {
   const { payload, onClick } = props;
   return (
     <ul
@@ -64,7 +64,7 @@ const renderLegend = (props, hiddenLines) => {
               marginRight: 20,
               display: "flex",
               alignItems: "center",
-              color: isHidden ? "#999" : "#000",
+              color: isHidden ? theme.palette.text.disabled : theme.palette.text.primary,
               textDecoration: isHidden ? "line-through" : "none",
               opacity: isHidden ? 0.5 : 1,
             }}
@@ -307,10 +307,17 @@ export default function ProjectedCashFlowChart({
           />
           <RechartsTooltip
             formatter={(value, name) => [formatCurrency(value), name]}
+            contentStyle={{
+              borderRadius: "12px",
+              border: "none",
+              boxShadow: `0 8px 24px ${alpha(theme.palette.common.black || "#000", 0.12)}`,
+              backgroundColor: alpha(theme.palette.background.paper, 0.9),
+              backdropFilter: "blur(8px)",
+            }}
           />
 
           <Legend
-            content={(props) => renderLegend(props, hiddenLines)}
+            content={(props) => renderLegend(props, hiddenLines, theme)}
             onClick={handleLegendClick}
           />
 

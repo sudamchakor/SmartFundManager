@@ -17,6 +17,9 @@ import {
   LightbulbOutlined as LightbulbIcon,
 } from "@mui/icons-material";
 import { generateTaxReportPDF } from "../../utils/taxReportGenerator";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "../../store/emiSlice";
+import DetailRow from "../common/DetailRow";
 
 const TaxSummary = ({
   taxComparison,
@@ -27,6 +30,7 @@ const TaxSummary = ({
   hraBreakdown,
 }) => {
   const theme = useTheme();
+  const currency = useSelector(selectCurrency) || "₹";
   const [activeTab, setActiveTab] = useState("old");
 
   const handleTabChange = (event, newValue) => {
@@ -47,40 +51,10 @@ const TaxSummary = ({
       }}
     >
       <Stack spacing={1}>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, color: "text.secondary" }}
-          >
-            Gross Income
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 800 }}>
-            ₹ {Math.round(regime.grossIncome).toLocaleString("en-IN")}
-          </Typography>
-        </Stack>
-        <Stack direction="row" justifyContent="space-between">
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, color: "text.secondary" }}
-          >
-            Deductions
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 800 }}>
-            - ₹ {Math.round(regime.deductions).toLocaleString("en-IN")}
-          </Typography>
-        </Stack>
+        <DetailRow label="Gross Income" value={`${currency} ${Math.round(regime.grossIncome).toLocaleString("en-IN")}`} />
+        <DetailRow label="Deductions" value={`- ${currency} ${Math.round(regime.deductions).toLocaleString("en-IN")}`} />
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, color: "text.secondary" }}
-          >
-            Taxable Income
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 800 }}>
-            ₹ {Math.round(regime.taxableIncome).toLocaleString("en-IN")}
-          </Typography>
-        </Stack>
+        <DetailRow label="Taxable Income" value={`${currency} ${Math.round(regime.taxableIncome).toLocaleString("en-IN")}`} />
         <Stack direction="row" justifyContent="space-between">
           <Typography
             variant="body2"
@@ -98,7 +72,7 @@ const TaxSummary = ({
                   : "error.main",
             }}
           >
-            ₹ {Math.round(regime.tax).toLocaleString("en-IN")}
+            {currency} {Math.round(regime.tax).toLocaleString("en-IN")}
           </Typography>
         </Stack>
       </Stack>
@@ -138,7 +112,7 @@ const TaxSummary = ({
 
       {hraBreakdown.eligibleHra > 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Rent expense detected. Potential HRA deduction of ₹
+          Rent expense detected. Potential HRA deduction of {currency}
           {hraBreakdown.eligibleHra.toLocaleString("en-IN")} calculated.
         </Alert>
       )}
@@ -197,8 +171,8 @@ const TaxSummary = ({
             sx={{ fontWeight: 700, color: "text.primary" }}
           >
             Saves{" "}
-            <strong>
-              ₹ {Math.round(taxComparison.savings).toLocaleString("en-IN")}
+            <strong style={{ whiteSpace: "nowrap" }}>
+              {currency} {Math.round(taxComparison.savings).toLocaleString("en-IN")}
             </strong>{" "}
             in liabilities.
           </Typography>
@@ -216,12 +190,12 @@ const TaxSummary = ({
           </Typography>
           <Typography variant="caption" sx={{ mb: 2, display: "block" }}>
             You could save an additional{" "}
-            <strong>
-              ₹{breakEven.potentialSavings.toLocaleString("en-IN")}
+            <strong style={{ whiteSpace: "nowrap" }}>
+              {currency} {breakEven.potentialSavings.toLocaleString("en-IN")}
             </strong>{" "}
             in the Old Regime if you invest{" "}
-            <strong>
-              ₹{breakEven.investmentNeeded.toLocaleString("en-IN")}
+            <strong style={{ whiteSpace: "nowrap" }}>
+              {currency} {breakEven.investmentNeeded.toLocaleString("en-IN")}
             </strong>{" "}
             more in Section {breakEven.section}.
           </Typography>

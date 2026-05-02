@@ -34,28 +34,7 @@ import {
   convertTenure,
   convertYearlyPaymentIncrease,
 } from "../utils/emiCalculator";
-
-const SubsectionHeader = ({ icon, title, color }) => (
-  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-    <Box
-      sx={{
-        display: "flex",
-        p: 0.8,
-        borderRadius: 1.5,
-        bgcolor: alpha(color, 0.1),
-        color: color,
-      }}
-    >
-      {React.cloneElement(icon, { fontSize: "small" })}
-    </Box>
-    <Typography
-      variant="subtitle1"
-      sx={{ fontWeight: 700, color: "text.primary" }}
-    >
-      {title}
-    </Typography>
-  </Stack>
-);
+import SectionHeader from "../../../components/common/SectionHeader";
 
 const HomeLoanForm = () => {
   const theme = useTheme();
@@ -126,7 +105,7 @@ const HomeLoanForm = () => {
   return (
     <Box>
       {/* SECTION 1: CORE LOAN DETAILS */}
-      <SubsectionHeader
+      <SectionHeader
         title="Home Loan Details"
         icon={<DetailsIcon />}
         color={theme.palette.primary.main}
@@ -244,7 +223,7 @@ const HomeLoanForm = () => {
       <Divider sx={{ my: 4, borderStyle: "dashed" }} />
 
       {/* SECTION 2: YEARLY INCREMENT */}
-      <SubsectionHeader
+      <SectionHeader
         title="Yearly Payment Increment"
         icon={<IncrementIcon />}
         color={theme.palette.success.main}
@@ -296,7 +275,7 @@ const HomeLoanForm = () => {
       <Divider sx={{ my: 4, borderStyle: "dashed" }} />
 
       {/* SECTION 3: HOMEOWNER EXPENSES */}
-      <SubsectionHeader
+      <SectionHeader
         title="Homeowner Expenses"
         icon={<ExpenseIcon />}
         color={theme.palette.warning.main}

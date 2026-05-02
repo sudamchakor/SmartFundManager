@@ -8,6 +8,7 @@ import {
   Typography,
   Box,
   Divider,
+  Grid,
 } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { formatCurrency } from '../../../utils/formatting';
@@ -75,13 +76,5 @@ const BridgeGapModal = ({ open, onClose, goal }) => {
     </Dialog>
   );
 };
-
-// Simple internal mock of Grid to avoid another import issue if Grid isn't available at top level
-const Grid = ({ children, container, item, xs, spacing, sx }) => {
-    if (container) return <div style={{ display: 'flex', flexWrap: 'wrap', margin: spacing ? `-${spacing * 4}px` : 0, ...sx }}>{children}</div>;
-    const width = xs ? `${(xs / 12) * 100}%` : '100%';
-    return <div style={{ width, padding: '8px', boxSizing: 'border-box' }}>{children}</div>;
-}
-
 
 export default BridgeGapModal;

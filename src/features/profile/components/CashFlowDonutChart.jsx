@@ -12,6 +12,7 @@ import {
 import { useSelector } from "react-redux";
 import { selectCurrency } from "../../../store/emiSlice";
 import { selectCurrentSurplus } from "../../../store/profileSlice";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 // STRICT THEME: Replaced hardcoded #fff and #ccc with background.paper and divider
 const CustomTooltip = ({ active, payload, currency, theme }) => {
@@ -141,26 +142,11 @@ export default function CashFlowDonutChart({ donutData }) {
         flexDirection: "column",
       }}
     >
-      {/* Technical Header */}
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            p: 1,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.warning.main, 0.1),
-            color: "warning.main",
-          }}
-        >
-          <PieChartIcon fontSize="small" />
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 800, color: "text.primary" }}
-        >
-          Monthly Cash Flow Breakdown
-        </Typography>
-      </Stack>
+      <SectionHeader
+        title="Monthly Cash Flow Breakdown"
+        icon={<PieChartIcon />}
+        color={theme.palette.warning.main}
+      />
 
       {/* Chart Container */}
       <Box sx={{ flexGrow: 1, minHeight: 250 }}>

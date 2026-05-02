@@ -25,6 +25,8 @@ import {
 } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
 import { formatCurrency } from "../../../utils/formatting";
+import SectionHeader from "../../../components/common/SectionHeader";
+import { labelStyle } from "../../../styles/formStyles";
 
 const AutoBalancer = () => {
   const theme = useTheme();
@@ -128,15 +130,6 @@ const AutoBalancer = () => {
     return null;
   }
 
-  const labelStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    fontSize: "0.65rem",
-    color: "secondary.main",
-    letterSpacing: 1,
-    mb: 0.5,
-  };
-
   return (
     <Box
       sx={{
@@ -148,26 +141,11 @@ const AutoBalancer = () => {
         boxShadow: "0 2px 12px rgba(0,0,0,0.02)",
       }}
     >
-      {/* Header */}
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            p: 0.8,
-            borderRadius: 1.5,
-            bgcolor: alpha(theme.palette.secondary.main, 0.1),
-            color: "secondary.main",
-          }}
-        >
-          <BuildIcon sx={{ fontSize: "1.2rem" }} />
-        </Box>
-        <Typography
-          variant="subtitle1"
-          sx={{ fontWeight: 800, color: "text.primary" }}
-        >
-          Deficit Resolution Engine
-        </Typography>
-      </Stack>
+      <SectionHeader
+        title="Deficit Resolution Engine"
+        icon={<BuildIcon />}
+        color={theme.palette.secondary.main}
+      />
 
       {hasSucceeded ? (
         <Box

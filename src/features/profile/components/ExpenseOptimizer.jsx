@@ -11,6 +11,7 @@ import {
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
 import { selectCurrency } from "../../../store/emiSlice";
 import { formatCurrency } from "../../../utils/formatting";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 const ExpenseOptimizer = () => {
   const theme = useTheme();
@@ -88,45 +89,12 @@ const ExpenseOptimizer = () => {
         flexDirection: "column",
       }}
     >
-      {/* Technical Header */}
-      <Stack
-        direction="row"
-        spacing={1.5}
-        alignItems="flex-start"
-        sx={{ mb: 3 }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            p: 1,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.secondary.main, 0.1),
-            color: "secondary.main",
-          }}
-        >
-          <OptimizeIcon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 800, color: "text.primary" }}
-          >
-            Expense Optimizer
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 600,
-              color: "text.secondary",
-              display: "block",
-              mt: 0.5,
-            }}
-          >
-            Simulate adjustments to your current expenses to see the real-time
-            impact on your monthly cash flow.
-          </Typography>
-        </Box>
-      </Stack>
+      <SectionHeader
+        title="Expense Optimizer"
+        subtitle="Simulate adjustments to your current expenses to see the real-time impact on your monthly cash flow."
+        icon={<OptimizeIcon />}
+        color={theme.palette.secondary.main}
+      />
 
       <Box sx={{ flexGrow: 1, overflowY: "auto", overflowX: "hidden", pr: 1 }}>
         {localExpenses.map((expense) => {

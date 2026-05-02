@@ -15,36 +15,7 @@ import {
   AmountInput,
   DatePickerInput,
 } from "../../../components/common/CommonComponents";
-
-/**
- * Clean internal header for the prepayment categories
- */
-const SubCategoryHeader = ({ icon, title, color }) => (
-  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-    <Box
-      sx={{
-        display: "flex",
-        p: 0.5,
-        borderRadius: 1,
-        bgcolor: alpha(color, 0.1),
-        color: color,
-      }}
-    >
-      {React.cloneElement(icon, { sx: { fontSize: "1.1rem" } })}
-    </Box>
-    <Typography
-      variant="body2"
-      sx={{
-        fontWeight: 700,
-        color: "text.primary",
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-      }}
-    >
-      {title}
-    </Typography>
-  </Stack>
-);
+import SectionHeader from "../../../components/common/SectionHeader";
 
 const PrepaymentSection = ({
   title,
@@ -59,7 +30,7 @@ const PrepaymentSection = ({
 }) => (
   <Grid item xs={12} sm={6} md={3}>
     <Box sx={{ height: "100%" }}>
-      <SubCategoryHeader title={title} icon={icon} color={iconColor} />
+      <SectionHeader title={title} icon={icon} color={iconColor} />
       <Stack spacing={2}>
         <AmountInput
           label="Amount"

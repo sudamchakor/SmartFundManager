@@ -13,9 +13,13 @@ import {
   Cell,
 } from "recharts";
 import { Box, Typography, useTheme, alpha } from "@mui/material";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "../../store/emiSlice";
+import { formatCurrency } from "../../utils/formatting";
 
 const TaxBreakdownChart = ({ taxComparison, calculatedSalary }) => {
   const theme = useTheme();
+  const currency = useSelector(selectCurrency) || "₹";
 
   const barData = [
     {
@@ -62,10 +66,24 @@ const TaxBreakdownChart = ({ taxComparison, calculatedSalary }) => {
           </Typography>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(theme.palette.divider, 0.1)} />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 700 }} />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(val) => formatCurrency(val, currency)}
+                tick={{ fontSize: 11, fontWeight: 700 }}
+              />
+              <Tooltip
+                formatter={(value, name) => [formatCurrency(value, currency), name]}
+                contentStyle={{
+                  borderRadius: "12px",
+                  border: "none",
+                  boxShadow: `0 8px 24px ${alpha(theme.palette.common.black || "#000", 0.12)}`,
+                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
+                  backdropFilter: "blur(8px)",
+                }}
+              />
               <Legend />
               <Bar dataKey="Basic Tax" stackId="a" fill={theme.palette.primary.main} />
               <Bar
@@ -103,7 +121,16 @@ const TaxBreakdownChart = ({ taxComparison, calculatedSalary }) => {
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                formatter={(value, name) => [formatCurrency(value, currency), name]}
+                contentStyle={{
+                  borderRadius: "12px",
+                  border: "none",
+                  boxShadow: `0 8px 24px ${alpha(theme.palette.common.black || "#000", 0.12)}`,
+                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
+                  backdropFilter: "blur(8px)",
+                }}
+              />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

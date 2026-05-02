@@ -2,10 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
-  TextField,
-  Slider,
   Grid,
-  InputAdornment,
   Select,
   MenuItem,
   alpha,
@@ -15,6 +12,7 @@ import {
 import { AccountBalance as FdIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { selectCurrency } from "../../../store/emiSlice";
+import InvestmentSlider, { investmentLabelStyle } from "../../../components/common/InvestmentSlider";
 
 const FdCalculatorForm = ({
   onCalculate,
@@ -82,15 +80,6 @@ const FdCalculatorForm = ({
     calculateFd();
   }, [calculateFd]);
 
-  const labelStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    fontSize: "0.65rem",
-    color: "text.disabled",
-    letterSpacing: 1,
-    mb: 0.5,
-  };
-
   return (
     <Box sx={{ mt: 1 }}>
       {/* Internal Subsection Header */}
@@ -114,187 +103,47 @@ const FdCalculatorForm = ({
         </Typography>
       </Stack>
 
-      {/* 1. Principal Amount */}
-      <Box sx={{ mb: 2 }}>
-        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
-          <Grid item xs={7}>
-            <Typography sx={labelStyle}>Principal Amount</Typography>
-          </Grid>
-          <Grid item xs={5}>
-            <TextField
-              variant="standard"
-              size="small"
-              value={principalAmount}
-              onChange={(e) =>
-                onSharedStateChange("principalAmount", Number(e.target.value))
-              }
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment
-                    position="start"
-                    sx={{
-                      "& p": {
-                        fontWeight: 900,
-                        fontSize: "0.8rem",
-                        color: "primary.main",
-                      },
-                    }}
-                  >
-                    {currency}
-                  </InputAdornment>
-                ),
-                disableUnderline: true,
-                sx: {
-                  fontWeight: 900,
-                  fontSize: "0.9rem",
-                  bgcolor: alpha(theme.palette.primary.main, 0.05),
-                  px: 1,
-                  borderRadius: 1,
-                  textAlign: "right",
-                },
-              }}
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-        <Slider
-          value={principalAmount}
-          min={10000}
-          max={5000000}
-          step={5000}
-          onChange={(e, val) => onSharedStateChange("principalAmount", val)}
-          sx={{
-            py: 1,
-            "& .MuiSlider-thumb": { width: 12, height: 12 },
-            "& .MuiSlider-track": { height: 4 },
-            "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
-          }}
-        />
-      </Box>
+      <InvestmentSlider
+        label="Principal Amount"
+        value={principalAmount}
+        min={10000}
+        max={5000000}
+        step={5000}
+        onChange={(val) => onSharedStateChange("principalAmount", val)}
+        color="primary"
+        adornment={currency}
+        adornmentPosition="start"
+      />
 
-      {/* 2. Interest Rate */}
-      <Box sx={{ mb: 2 }}>
-        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
-          <Grid item xs={7}>
-            <Typography sx={labelStyle}>Interest Rate (p.a)</Typography>
-          </Grid>
-          <Grid item xs={5}>
-            <TextField
-              variant="standard"
-              size="small"
-              value={interestRate}
-              onChange={(e) =>
-                onSharedStateChange("interestRate", Number(e.target.value))
-              }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment
-                    position="end"
-                    sx={{
-                      "& p": {
-                        fontWeight: 900,
-                        fontSize: "0.8rem",
-                        color: "success.main",
-                      },
-                    }}
-                  >
-                    %
-                  </InputAdornment>
-                ),
-                disableUnderline: true,
-                sx: {
-                  fontWeight: 900,
-                  fontSize: "0.9rem",
-                  bgcolor: alpha(theme.palette.success.main, 0.05),
-                  px: 1,
-                  borderRadius: 1,
-                  textAlign: "right",
-                },
-              }}
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-        <Slider
-          value={interestRate}
-          min={1}
-          max={15}
-          step={0.1}
-          onChange={(e, val) => onSharedStateChange("interestRate", val)}
-          color="success"
-          sx={{
-            py: 1,
-            "& .MuiSlider-thumb": { width: 12, height: 12 },
-            "& .MuiSlider-track": { height: 4 },
-            "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
-          }}
-        />
-      </Box>
+      <InvestmentSlider
+        label="Interest Rate (p.a)"
+        value={interestRate}
+        min={1}
+        max={15}
+        step={0.1}
+        onChange={(val) => onSharedStateChange("interestRate", val)}
+        color="success"
+        adornment="%"
+        adornmentPosition="end"
+      />
 
-      {/* 3. Time Period */}
-      <Box sx={{ mb: 2 }}>
-        <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
-          <Grid item xs={7}>
-            <Typography sx={labelStyle}>Duration (Years)</Typography>
-          </Grid>
-          <Grid item xs={5}>
-            <TextField
-              variant="standard"
-              size="small"
-              value={timePeriod}
-              onChange={(e) =>
-                onSharedStateChange("timePeriod", Number(e.target.value))
-              }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment
-                    position="end"
-                    sx={{
-                      "& p": {
-                        fontWeight: 900,
-                        fontSize: "0.8rem",
-                        color: "info.main",
-                      },
-                    }}
-                  >
-                    Yr
-                  </InputAdornment>
-                ),
-                disableUnderline: true,
-                sx: {
-                  fontWeight: 900,
-                  fontSize: "0.9rem",
-                  bgcolor: alpha(theme.palette.info.main, 0.05),
-                  px: 1,
-                  borderRadius: 1,
-                  textAlign: "right",
-                },
-              }}
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-        <Slider
-          value={timePeriod}
-          min={1}
-          max={20}
-          step={1}
-          onChange={(e, val) => onSharedStateChange("timePeriod", val)}
-          color="info"
-          sx={{
-            py: 1,
-            "& .MuiSlider-thumb": { width: 12, height: 12 },
-            "& .MuiSlider-track": { height: 4 },
-            "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
-          }}
-        />
-      </Box>
+      <InvestmentSlider
+        label="Duration (Years)"
+        value={timePeriod}
+        min={1}
+        max={20}
+        step={1}
+        onChange={(val) => onSharedStateChange("timePeriod", val)}
+        color="info"
+        adornment="Yr"
+        adornmentPosition="end"
+      />
 
       {/* 4. Compounding Frequency (Dropdown Well) */}
       <Box sx={{ mb: 1 }}>
         <Grid container spacing={1} alignItems="center">
           <Grid item xs={6}>
-            <Typography sx={labelStyle}>Compounding</Typography>
+            <Typography sx={investmentLabelStyle}>Compounding</Typography>
           </Grid>
           <Grid item xs={6}>
             <Select

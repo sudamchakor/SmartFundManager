@@ -5,46 +5,7 @@ import { selectCalculatedValues } from "../../features/emiCalculator/utils/emiCa
 import { selectExpenses, selectCurrency } from "../../store/emiSlice";
 import { Box, Typography, Grid, Stack, alpha, useTheme } from "@mui/material";
 import { formatCurrency } from "../../utils/formatting";
-
-const LegendRow = ({ label, value, color }) => {
-  const theme = useTheme();
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        py: 1, // Tightened padding
-        px: 1.5,
-        borderRadius: 1.5,
-        // Theme-reactive zebra striping
-        "&:nth-of-type(odd)": {
-          bgcolor: alpha(theme.palette.primary.main, 0.03),
-        },
-        "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.06) },
-        transition: "all 0.2s ease-in-out",
-      }}
-    >
-      <Stack direction="row" spacing={1.5} alignItems="center">
-        <Box
-          sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: color }}
-        />
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: 600, color: "text.secondary", fontSize: "0.8rem" }}
-        >
-          {label}
-        </Typography>
-      </Stack>
-      <Typography
-        variant="body1"
-        sx={{ fontWeight: 800, color: "text.primary", fontSize: "0.85rem" }}
-      >
-        {value}
-      </Typography>
-    </Box>
-  );
-};
+import DetailRow from "../common/DetailRow";
 
 const PieChartComponent = () => {
   const theme = useTheme();
@@ -167,30 +128,30 @@ const PieChartComponent = () => {
       {/* Legend Side */}
       <Grid item xs={12} md={6}>
         <Stack spacing={0.25}>
-          <LegendRow
+          <DetailRow
             label="Down Payment & Fees"
             value={formatCurrency(downPaymentFees, currency)}
-            color={COLORS[0]}
+            indicatorColor={COLORS[0]}
           />
-          <LegendRow
+          <DetailRow
             label="Total Principal"
             value={formatCurrency(principal, currency)}
-            color={COLORS[1]}
+            indicatorColor={COLORS[1]}
           />
-          <LegendRow
+          <DetailRow
             label="Total Prepayments"
             value={formatCurrency(prepayments, currency)}
-            color={COLORS[2]}
+            indicatorColor={COLORS[2]}
           />
-          <LegendRow
+          <DetailRow
             label="Total Interest"
             value={formatCurrency(interest, currency)}
-            color={COLORS[3]}
+            indicatorColor={COLORS[3]}
           />
-          <LegendRow
+          <DetailRow
             label="Taxes & Maintenance"
             value={formatCurrency(taxesInsMaint, currency)}
-            color={COLORS[4]}
+            indicatorColor={COLORS[4]}
           />
 
           {/* Grand Total Highlight */}

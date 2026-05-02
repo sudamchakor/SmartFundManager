@@ -13,6 +13,8 @@ import {
   Grid,
   IconButton,
   MenuItem,
+  useTheme,
+  alpha,
 } from "@mui/material";
 import {
   AttachMoney as IncomeIcon,
@@ -42,6 +44,7 @@ import {
 
 const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
   const investmentTypes = useSelector(selectInvestmentTypes);
   const [newAsset, setNewAsset] = useState({
     label: "",
@@ -160,7 +163,7 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
               sx={{
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  backgroundColor: "#fcfcfc",
+                  backgroundColor: alpha(theme.palette.background.default, 0.5),
                 },
               }}
             />
@@ -185,7 +188,7 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
             gap: 2,
             px: 4, // Re-applies the horizontal padding for the buttons
             py: 2.5,
-            bgcolor: "#fcfcfc",
+            bgcolor: alpha(theme.palette.background.default, 0.5),
           }}
         >
           <Button
@@ -218,14 +221,15 @@ const CorpusForm = ({ onSave, onCancel, assetToEdit, mode }) => {
 
 export default function FinancialModal({ open, onClose, type, asset, mode }) {
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const config = {
-    income: { title: "Income", icon: <IncomeIcon />, color: "#2e7d32" },
-    expense: { title: "Expense", icon: <ExpenseIcon />, color: "#d32f2f" },
+    income: { title: "Income", icon: <IncomeIcon />, color: theme.palette.success.main },
+    expense: { title: "Expense", icon: <ExpenseIcon />, color: theme.palette.error.main },
     corpus: {
       title: "Investment Asset",
       icon: <AssetIcon />,
-      color: "#1976d2",
+      color: theme.palette.primary.main,
     },
   };
 
@@ -330,7 +334,7 @@ export default function FinancialModal({ open, onClose, type, asset, mode }) {
           <Stack direction="row" spacing={2} alignItems="center">
             <Box
               sx={{
-                bgcolor: `${active.color}15`,
+                bgcolor: alpha(active.color, 0.15),
                 color: active.color,
                 p: 1.2,
                 borderRadius: 2.5,
@@ -342,7 +346,7 @@ export default function FinancialModal({ open, onClose, type, asset, mode }) {
             <Box>
               <Typography
                 variant="h6"
-                sx={{ fontWeight: 900, lineHeight: 1.2, color: "#1a1a1a" }}
+                sx={{ fontWeight: 900, lineHeight: 1.2, color: "text.primary" }}
               >
                 {mode === "edit"
                   ? `Edit ${active.title}`
@@ -359,7 +363,7 @@ export default function FinancialModal({ open, onClose, type, asset, mode }) {
           <IconButton
             onClick={onClose}
             size="small"
-            sx={{ bgcolor: "#f5f5f5" }}
+            sx={{ bgcolor: alpha(theme.palette.background.default, 0.8) }}
           >
             <CloseIcon fontSize="inherit" />
           </IconButton>

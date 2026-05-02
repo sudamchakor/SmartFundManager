@@ -6,6 +6,8 @@ import {
   Card,
   CardActionArea,
   Stack,
+  useTheme,
+  alpha,
 } from "@mui/material";
 
 export const themes = [
@@ -47,35 +49,45 @@ export const themes = [
 ];
 
 const ThemeSelector = ({ selectedTheme, onThemeChange, disabled }) => {
+  const theme = useTheme();
+
   return (
     <Grid container spacing={2}>
-      {themes.map((theme) => (
+      {themes.map((themeOption) => (
         // xs={12} makes it 1 per row on mobile
         // sm={6}  makes it 2 per row on tablets
         // md={2.4} keeps it at 5 per row on desktop
-        <Grid item xs={12} sm={6} md={2.4} key={theme.value}>
+        <Grid item xs={12} sm={6} md={2.4} key={themeOption.value}>
           <Card
             variant="outlined"
             sx={{
               borderColor:
-                selectedTheme === theme.value ? "primary.main" : "divider",
+                selectedTheme === themeOption.value
+                  ? "primary.main"
+                  : alpha(theme.palette.divider, 0.2),
               borderWidth: 2,
-              borderRadius: 1.5,
-              boxShadow: selectedTheme === theme.value ? 1 : 0,
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.background.paper, 0.5),
+              boxShadow: selectedTheme === themeOption.value ? `0 4px 20px ${alpha(theme.palette.primary.main, 0.3)}` : 0,
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.1)}`,
+              },
             }}
           >
             <CardActionArea
-              onClick={() => onThemeChange(theme.value)}
+              onClick={() => onThemeChange(themeOption.value)}
               disabled={disabled}
             >
               {/* Responsive height: shorter on mobile to prevent long scrolling */}
               <Stack direction="row" sx={{ height: { xs: 30, sm: 40 } }}>
-                {theme.colors.map((color, index) => (
+                {themeOption.colors.map((color, index) => (
                   <Box
                     key={index}
                     sx={{
                       height: "100%",
-                      width: `${100 / theme.colors.length}%`,
+                      width: `${100 / themeOption.colors.length}%`,
                       backgroundColor: color,
                     }}
                   />
@@ -87,12 +99,12 @@ const ThemeSelector = ({ selectedTheme, onThemeChange, disabled }) => {
                 display="block"
                 sx={{
                   py: 0.5,
-                  fontWeight: selectedTheme === theme.value ? 600 : 400,
+                  fontWeight: selectedTheme === themeOption.value ? 600 : 400,
                   fontSize: "0.75rem",
                   textTransform: "capitalize",
                 }}
               >
-                {theme.name}
+                {themeOption.name}
               </Typography>
             </CardActionArea>
           </Card>

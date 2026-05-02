@@ -18,6 +18,7 @@ import {
   Stack,
   Tooltip,
   Grid,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -25,12 +26,16 @@ import EditIcon from "@mui/icons-material/Edit";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { formatCurrency } from "../../utils/formatting";
+import { selectCurrency } from "../../store/emiSlice";
+import SectionHeader from "../../components/common/SectionHeader";
 
 const CorpusManager = ({ onOpenModal }) => {
+  const theme = useTheme();
   const dispatch = useDispatch();
   const assets = useSelector(selectAllAssets);
   const totalCorpus = useSelector(selectTotalCorpus);
   const weightedAverageReturn = useSelector(selectWeightedAverageReturn);
+  const currency = useSelector(selectCurrency) || "₹";
 
   const handleRemoveAsset = (id) => {
     dispatch(removeAsset(id));
@@ -39,10 +44,10 @@ const CorpusManager = ({ onOpenModal }) => {
   // Helper to determine color based on asset name (simple logic)
   const getAssetColor = (label) => {
     const l = label.toLowerCase();
-    if (l.includes("equity") || l.includes("stock")) return "#2e7d32"; // Green
+    if (l.includes("equity") || l.includes("stock")) return theme.palette.success.main;
     if (l.includes("debt") || l.includes("bond") || l.includes("fd"))
-      return "#0288d1"; // Blue
-    return "#7b1fa2"; // Purple/Other
+      return theme.palette.info.main;
+    return theme.palette.secondary.main;
   };
 
   return (
@@ -55,29 +60,27 @@ const CorpusManager = ({ onOpenModal }) => {
         boxShadow: 1,
       }}
     >
-      <CardHeader
-        sx={{ py: 1.5, px: 2 }}
-        title={
-          <Stack direction="row" spacing={1} alignItems="center">
-            <AccountBalanceWalletIcon color="primary" fontSize="small" />
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-              Investment Corpus
-            </Typography>
-          </Stack>
-        }
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={() => onOpenModal("corpus", null, "add")}
-            sx={{ borderRadius: 1.5, textTransform: "none", px: 2 }}
-          >
-            Add Asset
-          </Button>
-        }
-      />
-      <Divider />
+      <Box
+        sx={{
+          pt: 2.5,
+          px: 2.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        <SectionHeader title="Investment Corpus" icon={<AccountBalanceWalletIcon />} />
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<AddIcon />}
+          onClick={() => onOpenModal("corpus", null, "add")}
+          sx={{ borderRadius: 1.5, textTransform: "none", px: 2, mt: 0.5 }}
+        >
+          Add Asset
+        </Button>
+      </Box>
+      <Divider sx={{ mt: -1 }} />
 
       <CardContent
         sx={{ flexGrow: 1, p: 2, overflowY: "auto", maxHeight: "400px" }}
@@ -134,7 +137,7 @@ const CorpusManager = ({ onOpenModal }) => {
                     variant="body1"
                     sx={{ fontWeight: 800, color: "text.primary" }}
                   >
-                    {formatCurrency(asset.value)}
+                  {formatCurrency(asset.value, currency)}
                   </Typography>
 
                   <Box>
@@ -186,7 +189,7 @@ const CorpusManager = ({ onOpenModal }) => {
               Total Corpus
             </Typography>
             <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.2 }}>
-              {formatCurrency(totalCorpus)}
+              {formatCurrency(totalCorpus, currency)}
             </Typography>
           </Grid>
           <Grid

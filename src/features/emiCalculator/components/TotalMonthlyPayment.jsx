@@ -4,42 +4,7 @@ import { useSelector } from "react-redux";
 import { selectCalculatedValues } from "../utils/emiCalculator";
 import { selectCurrency, selectExpenses } from "../../../store/emiSlice";
 import { formatCurrency } from "../../../utils/formatting";
-
-const DetailRow = ({ label, value }) => {
-  const theme = useTheme();
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        py: 1.2,
-        px: 1.5,
-        borderRadius: 1.5,
-        "&:nth-of-type(odd)": {
-          bgcolor: alpha(theme.palette.primary.main, 0.04),
-        },
-        "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.08) },
-        transition: "background-color 0.2s",
-        width: "100%",
-        boxSizing: "border-box",
-      }}
-    >
-      <Typography
-        variant="body2"
-        sx={{ fontWeight: 600, color: "text.secondary", fontSize: "0.85rem" }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        variant="body1"
-        sx={{ fontWeight: 800, color: "text.primary", fontSize: "0.9rem" }}
-      >
-        {value}
-      </Typography>
-    </Box>
-  );
-};
+import DetailRow from "../../../components/common/DetailRow";
 
 const TotalMonthlyPayment = () => {
   const theme = useTheme();

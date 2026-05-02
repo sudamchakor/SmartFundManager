@@ -6,10 +6,14 @@ import {
   IconButton,
   Stack,
   Divider,
+  useTheme,
+  alpha,
 } from "@mui/material";
 import { InfoOutlined as InfoIcon } from "@mui/icons-material";
 
 const ExemptionRow = ({ label, produced, limited, tooltip }) => {
+  const theme = useTheme();
+
   return (
     <Box>
       <Stack
@@ -50,7 +54,7 @@ const ExemptionRow = ({ label, produced, limited, tooltip }) => {
           </Typography>
         </Stack>
       </Stack>
-      <Divider sx={{ my: 1.5 }} />
+      <Divider sx={{ my: 1.5, borderColor: alpha(theme.palette.divider, 0.1) }} />
     </Box>
   );
 };

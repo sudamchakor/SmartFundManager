@@ -5,13 +5,14 @@ import {
   TextField,
   Button,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   DialogActions,
   Checkbox,
   FormControlLabel,
   Collapse,
+  Typography,
+  useTheme,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
@@ -21,6 +22,7 @@ import {
   expenseCategories,
   taxExpenseCategories,
 } from "../../utils/taxRules";
+import { labelStyle, getWellInputStyle } from "../../styles/formStyles";
 
 const currentYear = new Date().getFullYear();
 
@@ -31,6 +33,7 @@ export default function IncomeExpenseForm({
   onCancel,
   submitLabel = "Save",
 }) {
+  const theme = useTheme();
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
@@ -76,14 +79,15 @@ export default function IncomeExpenseForm({
       <Grid container spacing={2}>
         {!isExpense && (
           <Grid item xs={12} sm={6}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Income Type</InputLabel>
+            <Typography sx={labelStyle}>Income Type</Typography>
+            <FormControl variant="standard" size="small" fullWidth>
               <Select
                 value={formData.incomeType || "Salary"}
-                label="Income Type"
                 onChange={(e) =>
                   setFormData({ ...formData, incomeType: e.target.value })
                 }
+                disableUnderline
+                sx={getWellInputStyle(theme)}
               >
                 {incomeTypes.map((type) => (
                   <MenuItem key={type.value} value={type.value}>
@@ -96,12 +100,14 @@ export default function IncomeExpenseForm({
         )}
 
         <Grid item xs={12} sm={isExpense ? 12 : 6}>
+          <Typography sx={labelStyle}>{isExpense ? "Expense Name" : "Source"}</Typography>
           <TextField
+            variant="standard"
             fullWidth
             size="small"
-            label={isExpense ? "Expense Name" : "Source"}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
           />
         </Grid>
 
@@ -119,14 +125,15 @@ export default function IncomeExpenseForm({
           </Grid>
         ) : (
           <Grid item xs={12} sm={6}>
-            <FormControl size="small" fullWidth>
-              <InputLabel>Frequency</InputLabel>
+            <Typography sx={labelStyle}>Frequency</Typography>
+            <FormControl variant="standard" size="small" fullWidth>
               <Select
                 value={formData.frequency || "monthly"}
-                label="Frequency"
                 onChange={(e) =>
                   setFormData({ ...formData, frequency: e.target.value })
                 }
+                disableUnderline
+                sx={getWellInputStyle(theme)}
               >
                 <MenuItem value="monthly">Monthly</MenuItem>
                 <MenuItem value="quarterly">Quarterly</MenuItem>
@@ -139,14 +146,15 @@ export default function IncomeExpenseForm({
         {isExpense ? (
           <>
             <Grid item xs={12} sm={6}>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Category</InputLabel>
+              <Typography sx={labelStyle}>Category</Typography>
+              <FormControl variant="standard" size="small" fullWidth>
                 <Select
                   value={formData.category || "basic"}
-                  label="Category"
                   onChange={(e) =>
                     setFormData({ ...formData, category: e.target.value })
                   }
+                  disableUnderline
+                  sx={getWellInputStyle(theme)}
                 >
                   {expenseCategories.map((cat) => (
                     <MenuItem key={cat.value} value={cat.value}>
@@ -157,14 +165,15 @@ export default function IncomeExpenseForm({
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <FormControl size="small" fullWidth>
-                <InputLabel>Frequency</InputLabel>
+              <Typography sx={labelStyle}>Frequency</Typography>
+              <FormControl variant="standard" size="small" fullWidth>
                 <Select
                   value={formData.frequency || "monthly"}
-                  label="Frequency"
                   onChange={(e) =>
                     setFormData({ ...formData, frequency: e.target.value })
                   }
+                  disableUnderline
+                  sx={getWellInputStyle(theme)}
                 >
                   <MenuItem value="monthly">Monthly</MenuItem>
                   <MenuItem value="quarterly">Quarterly</MenuItem>
@@ -190,14 +199,15 @@ export default function IncomeExpenseForm({
             </Grid>
             <Grid item xs={12}>
               <Collapse in={formData.isTaxDeductible}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Exemption Category</InputLabel>
+                <Typography sx={labelStyle}>Exemption Category</Typography>
+                <FormControl variant="standard" fullWidth size="small">
                   <Select
                     value={formData.taxCategory}
-                    label="Exemption Category"
                     onChange={(e) =>
                       setFormData({ ...formData, taxCategory: e.target.value })
                     }
+                    disableUnderline
+                    sx={getWellInputStyle(theme)}
                   >
                     {taxExpenseCategories.map((cat) => (
                       <MenuItem key={cat.value} value={cat.value}>
@@ -224,8 +234,8 @@ export default function IncomeExpenseForm({
         )}
 
         <Grid item xs={12} sm={6}>
+          <Typography sx={labelStyle}>Start Year</Typography>
           <DatePicker
-            label="Start Year"
             views={["year", "month"]}
             openTo="month"
             open={startYearOpen}
@@ -240,9 +250,13 @@ export default function IncomeExpenseForm({
             }
             slotProps={{
               textField: {
+                variant: "standard",
                 size: "small",
                 fullWidth: true,
                 onClick: () => setStartYearOpen(true),
+                InputProps: {
+                  disableUnderline: true, sx: getWellInputStyle(theme)
+                }
               },
             }}
             minDate={dayjs(`${currentYear - 50}-01-01`)}
@@ -250,8 +264,8 @@ export default function IncomeExpenseForm({
           />
         </Grid>
         <Grid item xs={12} sm={6}>
+          <Typography sx={labelStyle}>End Year</Typography>
           <DatePicker
-            label="End Year"
             views={["year", "month"]}
             openTo="month"
             open={endYearOpen}
@@ -268,9 +282,13 @@ export default function IncomeExpenseForm({
             }
             slotProps={{
               textField: {
+                variant: "standard",
                 size: "small",
                 fullWidth: true,
                 onClick: () => setEndYearOpen(true),
+                InputProps: {
+                  disableUnderline: true, sx: getWellInputStyle(theme)
+                }
               },
             }}
             minDate={dayjs(

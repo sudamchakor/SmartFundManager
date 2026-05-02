@@ -10,14 +10,13 @@ import {
 } from "@mui/material";
 import DataCard from "../common/DataCard";
 import ExemptionRow from "../common/ExemptionRow";
+import { getWellInputStyle } from "../../styles/formStyles";
 
 const Declarations = ({
   declarations,
   houseProperty,
   handleDeclarationChange,
   updateHouseProperty,
-  wellInputStyle,
-  labelStyle,
 }) => {
   const theme = useTheme();
 
@@ -47,7 +46,7 @@ const Declarations = ({
         InputProps={{
           disableUnderline: true,
           sx: {
-            ...wellInputStyle,
+            ...getWellInputStyle(theme),
             ...(isError && {
               borderColor: theme.palette.error.main,
               "&:hover": {
@@ -78,7 +77,7 @@ const Declarations = ({
             <ExemptionRow
               label="Standard Deduction"
               produced={
-                <Typography sx={{ ...wellInputStyle, textAlign: "right" }}>
+                <Typography sx={{ ...getWellInputStyle(theme), textAlign: "right" }}>
                   ₹75,000
                 </Typography>
               }

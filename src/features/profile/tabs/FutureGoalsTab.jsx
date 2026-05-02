@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Box,
   Grid,
-  Paper,
   Typography,
   FormControlLabel,
   Switch,
@@ -17,9 +16,6 @@ import {
   useTheme,
   alpha,
   Stack,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
   IconButton,
 } from "@mui/material";
 import {
@@ -60,6 +56,9 @@ import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator"
 import EditableGoalItem from "../../../components/common/EditableGoalItem";
 import GoalForm from "../components/GoalForm";
 import BridgeGapModal from "../components/BridgeGapModal";
+import StyledPaper from "../../../components/common/StyledPaper";
+import SectionHeader from "../../../components/common/SectionHeader";
+import ActionSpeedDial from "../../../components/common/ActionSpeedDial";
 
 // Charts
 import {
@@ -75,46 +74,6 @@ import {
   Bar,
   Line,
 } from "recharts";
-
-const StyledPaper = ({ children, sx = {} }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      p: 2.5,
-      borderRadius: 3,
-      border: "1px solid",
-      borderColor: "divider",
-      boxShadow: "0 2px 12px rgba(0,0,0,0.02)",
-      bgcolor: "background.paper",
-      height: "100%",
-      ...sx,
-    }}
-  >
-    {children}
-  </Paper>
-);
-
-const SectionHeader = ({ icon, title, color }) => (
-  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
-    <Box
-      sx={{
-        display: "flex",
-        p: 1,
-        borderRadius: 2,
-        bgcolor: alpha(color || "#1976d2", 0.1),
-        color: color || "primary.main",
-      }}
-    >
-      {icon}
-    </Box>
-    <Typography
-      variant="h6"
-      sx={{ fontWeight: 800, color: "#1a1a1a", fontSize: "1.1rem" }}
-    >
-      {title}
-    </Typography>
-  </Stack>
-);
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -156,10 +115,10 @@ export default function FutureGoalsTab({ goalToEditId }) {
   const [currentGoalFormData, setCurrentGoalFormData] = useState(null);
   const [bridgeGapModalOpen, setBridgeGapModalOpen] = useState(false);
   const [selectedGoalForGap, setSelectedGoalForGap] = useState(null);
+  const [processedGoalId, setProcessedGoalId] = useState(null);
 
   const currentYear = new Date().getFullYear();
   const calculatedRetirementYear = currentYear + (retirementAge - currentAge);
-
 
   // --- Handlers ---
   const handleCloseModal = useCallback(() => {
@@ -202,6 +161,21 @@ export default function FutureGoalsTab({ goalToEditId }) {
     setModalTitle("Add New Goal");
     setOpenModal(true);
   }, [currentYear]);
+
+  // --- Effect to handle incoming edit requests from other tabs ---
+  useEffect(() => {
+    if (!goalToEditId) {
+      setProcessedGoalId(null);
+      return;
+    }
+    if (goalToEditId !== processedGoalId && goals.length > 0) {
+      const goal = goals.find((g) => g.id === goalToEditId);
+      if (goal) {
+        handleOpenModalForEdit(goal);
+        setProcessedGoalId(goalToEditId);
+      }
+    }
+  }, [goalToEditId, processedGoalId, goals, handleOpenModalForEdit]);
 
   // --- Template Applications ---
   const applyRetirementGoal = useCallback(() => {
@@ -631,26 +605,13 @@ export default function FutureGoalsTab({ goalToEditId }) {
       </Grid>
 
       {isMediumScreen && (
-        <SpeedDial
-          ariaLabel="Goal Actions"
+        <ActionSpeedDial
+          actions={actions}
           sx={{
-            position: "fixed",
-            // FIX: Lifted to 100px on mobile, 130px on tablet/desktop to clear the footer
             bottom: { xs: 100, sm: 130 },
-            right: { xs: 16, sm: 24 },
             zIndex: 1400, // FIX: Ensures it floats above the footer (which is 1300)
           }}
-          icon={<SpeedDialIcon />}
-        >
-          {actions.map((a) => (
-            <SpeedDialAction
-              key={a.name}
-              icon={a.icon}
-              tooltipTitle={a.name}
-              onClick={a.handler}
-            />
-          ))}
-        </SpeedDial>
+        />
       )}
 
       <Dialog

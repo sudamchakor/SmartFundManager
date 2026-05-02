@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -6,9 +6,9 @@ import {
   Card,
   CardContent,
   Divider,
-  CardHeader,
   Button,
   Tooltip,
+  useTheme,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
@@ -27,6 +27,7 @@ import {
   selectIndividualGoalInvestmentContributions,
   selectGoals,
   selectCurrentSurplus,
+  deleteGoal,
 } from "../../../store/profileSlice";
 import {
   resetHomeLoanForm,
@@ -37,6 +38,7 @@ import { selectTaxComparison } from "../../../store/taxSlice";
 import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator";
 import { formatCurrency } from "../../../utils/formatting";
 import { useNavigate } from "react-router-dom";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 export default function FinancialSection({
   isIncome,
@@ -46,6 +48,7 @@ export default function FinancialSection({
   const dispatch = useDispatch();
   const currency = useSelector(selectCurrency);
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const incomes = useSelector(selectIncomes) || [];
   const totalIncome = useSelector(selectTotalMonthlyIncome);
@@ -71,34 +74,39 @@ export default function FinancialSection({
   const isBudgetExceeded = !isIncome && investableSurplus < 0;
 
   // Grouping logic to pass investments into the subItems prop
-  const groupedGoals = individualGoalInvestments.reduce((acc, inv) => {
-    if (!acc[inv.goalId]) {
-      const goal = goals.find((g) => g.id === inv.goalId);
-      acc[inv.goalId] = {
-        id: inv.goalId,
-        name: goal?.name || "Goal",
-        amount: 0,
-        frequency: "monthly",
-        investments: [],
-      };
-    }
-    let monthly = inv.amount || 0;
-    if (inv.frequency === "yearly") monthly /= 12;
-    else if (inv.frequency === "quarterly") monthly /= 3;
-
-    acc[inv.goalId].amount += monthly;
-    acc[inv.goalId].investments.push(inv);
-    return acc;
-  }, {});
+  const groupedGoals = useMemo(() => {
+    return individualGoalInvestments.reduce((acc, inv) => {
+      if (!acc[inv.goalId]) {
+        const goal = goals.find((g) => g.id === inv.goalId);
+        acc[inv.goalId] = {
+          id: inv.goalId,
+          name: goal?.name || "Goal",
+          amount: 0,
+          frequency: "monthly",
+          investments: [],
+        };
+      }
+      let monthly = inv.amount || 0;
+      if (inv.frequency === "yearly") monthly /= 12;
+      else if (inv.frequency === "quarterly") monthly /= 3;
+  
+      acc[inv.goalId].amount += monthly;
+      acc[inv.goalId].investments.push(inv);
+      return acc;
+    }, {});
+  }, [individualGoalInvestments, goals]);
 
   // Helper function to determine expense item color for text
-  const getExpenseItemColor = (category) => {
-    if (category === "basic") return "#0288d1";
-    if (category === "discretionary") return "#ed6c02";
-    return "primary.main"; // Default if no category match
-  };
+  const getExpenseItemColor = useCallback(
+    (category) => {
+      if (category === "basic") return theme.palette.info.main;
+      if (category === "discretionary") return theme.palette.warning.main;
+      return theme.palette.primary.main; // Default if no category match
+    },
+    [theme.palette]
+  );
 
-  const getCurrentTaxSlab = () => {
+  const taxRate = useMemo(() => {
     if (!taxComparison) return 0;
     const taxableIncome =
       taxComparison.optimal === "Old Regime"
@@ -109,9 +117,7 @@ export default function FinancialSection({
     if (taxableIncome > 500000) return 0.2;
     if (taxableIncome > 250000) return 0.05;
     return 0;
-  };
-
-  const taxRate = getCurrentTaxSlab();
+  }, [taxComparison]);
 
   return (
     <Card
@@ -124,33 +130,31 @@ export default function FinancialSection({
         overflow: "hidden",
       }}
     >
-      <CardHeader
-        sx={{ py: 1.5, px: 2 }}
-        title={
-          <Stack direction="row" spacing={1} alignItems="center">
-            {isIncome ? (
-              <AttachMoneyIcon color="primary" fontSize="small" />
-            ) : (
-              <MoneyOffIcon color="primary" fontSize="small" />
-            )}
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-              {isIncome ? "Income Details" : "Expense Details"}
-            </Typography>
-          </Stack>
-        }
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<AddIcon />}
-            onClick={() => onOpenModal(isIncome ? "income" : "expense")}
-            sx={{ borderRadius: 1.5 }}
-          >
-            Add
-          </Button>
-        }
-      />
-      <Divider />
+      <Box
+        sx={{
+          pt: 2.5,
+          px: 2.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
+        <SectionHeader
+          title={isIncome ? "Income Details" : "Expense Details"}
+          icon={isIncome ? <AttachMoneyIcon /> : <MoneyOffIcon />}
+          color={isIncome ? theme.palette.success.main : theme.palette.error.main}
+        />
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<AddIcon />}
+          onClick={() => onOpenModal(isIncome ? "income" : "expense")}
+          sx={{ borderRadius: 1.5, mt: 0.5 }}
+        >
+          Add
+        </Button>
+      </Box>
+      <Divider sx={{ mt: -1 }} />
 
       <CardContent
         sx={{
@@ -211,9 +215,9 @@ export default function FinancialSection({
                     expenseRatio={(monthlyEmi / totalIncome) * 100}
                     formatCurrency={formatCurrency}
                     onConfirmDelete={() => dispatch(resetHomeLoanForm())}
-                    isReadOnly={true}
-                    deletionImpactMessage="This will clear your EMI calculator data."
-                    onClick={() => navigate("/calculator")}
+                    isReadOnly={false}
+                    onEdit={() => navigate("/calculator")}
+                    deletionImpactMessage="This will permanently clear your EMI calculator data, including your full loan schedule, property details, and prepayments. This action cannot be undone."
                   />
                 )}
                 {Object.values(groupedGoals).map((goal) => (
@@ -227,7 +231,10 @@ export default function FinancialSection({
                     expenseRatio={(goal.amount / totalIncome) * 100}
                     formatCurrency={formatCurrency}
                     isGoal={true}
+                    isReadOnly={false}
                     onEditGoal={() => onEditGoal(goal.id)}
+                    onConfirmDelete={() => dispatch(deleteGoal(goal.id))}
+                    deletionImpactMessage={`This will permanently delete the goal "${goal.name}" and all its associated investment strategies.`}
                   />
                 ))}
                 {expenses.map((item) => (
@@ -247,7 +254,7 @@ export default function FinancialSection({
                     }
                     formatCurrency={formatCurrency}
                     totalIncome={totalIncome}
-                    getExpenseColor={() => getExpenseItemColor(item.category)}
+                    expenseColor={getExpenseItemColor(item.category)}
                     taxRate={taxRate}
                   />
                 ))}

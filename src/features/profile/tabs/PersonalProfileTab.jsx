@@ -4,9 +4,6 @@ import {
   Box,
   useMediaQuery,
   useTheme,
-  SpeedDial,
-  SpeedDialIcon,
-  SpeedDialAction,
   Card,
   CardContent,
   CardHeader,
@@ -36,6 +33,7 @@ import ProjectedCashFlowChart from "../components/ProjectedCashFlowChart";
 import FinancialSection from "../components/FinancialSection";
 import CorpusManager from "../../corpus/CorpusManager";
 import FinancialModal from "../components/FinancialModal";
+import ActionSpeedDial from "../../../components/common/ActionSpeedDial";
 
 // Selector Imports
 import {
@@ -137,16 +135,19 @@ export default function PersonalProfileTab({ onEditGoal }) {
       icon: <AccountBalanceWallet />,
       name: "Corpus",
       handler: () => handleOpenFinancialModal("corpus", null, "add"),
+      tooltipOpen: true,
     },
     {
       icon: <AttachMoney />,
       name: "Income",
       handler: () => handleOpenFinancialModal("income", null, "add"),
+      tooltipOpen: true,
     },
     {
       icon: <MoneyOff />,
       name: "Expense",
       handler: () => handleOpenFinancialModal("expense", null, "add"),
+      tooltipOpen: true,
     },
   ];
 
@@ -302,24 +303,13 @@ export default function PersonalProfileTab({ onEditGoal }) {
 
       {/* Floating Action Button (Mobile) */}
       {isSmallScreen && (
-        <SpeedDial
-          ariaLabel="SpeedDial for financial actions"
+        <ActionSpeedDial
+          actions={actions}
           sx={{ position: "fixed", bottom: 80, right: 16, zIndex: 9999 }}
-          icon={<SpeedDialIcon />}
           onClose={() => setSpeedDialOpen(false)}
           onOpen={() => setSpeedDialOpen(true)}
           open={speedDialOpen}
-        >
-          {actions.map((action) => (
-            <SpeedDialAction
-              key={action.name}
-              icon={action.icon}
-              tooltipTitle={action.name}
-              onClick={action.handler}
-              tooltipOpen
-            />
-          ))}
-        </SpeedDial>
+        />
       )}
 
       <FinancialModal

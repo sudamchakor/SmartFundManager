@@ -18,6 +18,7 @@ import LumpsumCalculatorForm from "../../investment/tabs/LumpsumCalculatorForm";
 import StepUpSipCalculatorForm from "../../investment/tabs/StepUpSipCalculatorForm";
 import SwpCalculatorForm from "../../investment/tabs/SwpCalculatorForm";
 import FdCalculatorForm from "../../investment/tabs/FdCalculatorForm";
+import { labelStyle, getWellInputStyle } from "../../../styles/formStyles";
 
 const DataPoint = ({ label, value, color }) => (
   <Stack spacing={0.2} sx={{ flex: 1 }}>
@@ -138,23 +139,23 @@ const InvestmentPlanCard = ({
         alignItems="center"
         sx={{ mb: 2 }}
       >
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel sx={{ fontWeight: 700, fontSize: "0.8rem" }}>
-            Plan Type
-          </InputLabel>
-          <Select
-            value={plan.type}
-            label="Plan Type"
-            onChange={(e) => handlePlanChange(plan.id, "type", e.target.value)}
-            sx={{ borderRadius: 2, fontWeight: 700, fontSize: "0.85rem" }}
-          >
-            <MenuItem value="sip">SIP</MenuItem>
-            <MenuItem value="lumpsum">Lumpsum</MenuItem>
-            <MenuItem value="stepUpSip">Step-Up SIP</MenuItem>
-            <MenuItem value="swp">SWP</MenuItem>
-            <MenuItem value="fd">Fixed Deposit</MenuItem>
-          </Select>
-        </FormControl>
+        <Box sx={{ minWidth: 160 }}>
+          <Typography sx={labelStyle}>Plan Type</Typography>
+          <FormControl variant="standard" size="small" fullWidth>
+            <Select
+              value={plan.type}
+              onChange={(e) => handlePlanChange(plan.id, "type", e.target.value)}
+              disableUnderline
+              sx={getWellInputStyle(theme, 'secondary')}
+            >
+              <MenuItem value="sip" sx={{ fontWeight: 700 }}>SIP</MenuItem>
+              <MenuItem value="lumpsum" sx={{ fontWeight: 700 }}>Lumpsum</MenuItem>
+              <MenuItem value="stepUpSip" sx={{ fontWeight: 700 }}>Step-Up SIP</MenuItem>
+              <MenuItem value="swp" sx={{ fontWeight: 700 }}>SWP</MenuItem>
+              <MenuItem value="fd" sx={{ fontWeight: 700 }}>Fixed Deposit</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
         <IconButton
           size="small"

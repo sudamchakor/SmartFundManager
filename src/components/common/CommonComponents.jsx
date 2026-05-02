@@ -11,44 +11,7 @@ import {
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs from "dayjs";
-
-// Shared Metadata Label Component
-const InputLabel = ({ children }) => (
-  <Typography
-    variant="caption"
-    sx={{
-      fontWeight: 800,
-      textTransform: "uppercase",
-      fontSize: "0.65rem",
-      color: "text.secondary",
-      letterSpacing: 0.5,
-      display: "block",
-      mb: 0.5,
-    }}
-  >
-    {children}
-  </Typography>
-);
-
-// Shared "Data Well" Input Styling
-const getWellStyle = (theme) => ({
-  fontWeight: 900,
-  fontSize: "0.95rem",
-  bgcolor: alpha(theme.palette.primary.main, 0.05),
-  color: "primary.main",
-  px: 1.5,
-  py: 0.5,
-  borderRadius: 1.5,
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  transition: "all 0.2s ease-in-out",
-  "&:hover": {
-    bgcolor: alpha(theme.palette.primary.main, 0.08),
-  },
-  "&.Mui-focused": {
-    bgcolor: alpha(theme.palette.primary.main, 0.1),
-    borderColor: alpha(theme.palette.primary.main, 0.3),
-  },
-});
+import { labelStyle, getWellInputStyle } from "../../styles/formStyles";
 
 export const AmountInput = ({
   label,
@@ -63,7 +26,7 @@ export const AmountInput = ({
 
   return (
     <Box sx={{ width: "100%", opacity: disabled ? 0.6 : 1 }}>
-      {label && <InputLabel>{label}</InputLabel>}
+      {label && <Typography sx={labelStyle}>{label}</Typography>}
       <TextField
         variant="standard"
         fullWidth
@@ -108,7 +71,13 @@ export const AmountInput = ({
               %
             </InputAdornment>
           ) : null,
-          sx: getWellStyle(theme),
+          sx: {
+            ...getWellInputStyle(theme),
+            "&.Mui-focused": {
+              bgcolor: alpha(theme.palette.primary.main, 0.1),
+              borderColor: alpha(theme.palette.primary.main, 0.3),
+            },
+          },
         }}
         sx={{
           "& input": { textAlign: "right" },
@@ -134,7 +103,7 @@ export const AmountWithUnitInput = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      {label && <InputLabel>{label}</InputLabel>}
+      {label && <Typography sx={labelStyle}>{label}</Typography>}
 
       {/* Unified Control Strip */}
       <Box
@@ -232,7 +201,7 @@ export const DatePickerInput = ({ label, value, onChange }) => {
 
   return (
     <Box sx={{ width: "100%" }}>
-      {label && <InputLabel>{label}</InputLabel>}
+      {label && <Typography sx={labelStyle}>{label}</Typography>}
       <DatePicker
         views={["year", "month"]}
         openTo="month"
@@ -249,7 +218,7 @@ export const DatePickerInput = ({ label, value, onChange }) => {
             InputProps: {
               disableUnderline: true,
               sx: {
-                ...getWellStyle(theme),
+                ...getWellInputStyle(theme),
                 cursor: "pointer",
                 "& input": { cursor: "pointer", textAlign: "right" },
               },

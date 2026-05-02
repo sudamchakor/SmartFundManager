@@ -11,6 +11,7 @@ import {
 import { TrackChanges as TargetIcon } from "@mui/icons-material";
 import { selectGoals } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 const GoalCoverage = forwardRef((props, ref) => {
   const theme = useTheme();
@@ -58,26 +59,11 @@ const GoalCoverage = forwardRef((props, ref) => {
         flexDirection: "column",
       }}
     >
-      {/* Technical Header */}
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-        <Box
-          sx={{
-            display: "flex",
-            p: 1,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.success.main, 0.1),
-            color: "success.main",
-          }}
-        >
-          <TargetIcon fontSize="small" />
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 800, color: "text.primary" }}
-        >
-          Goal Coverage Status
-        </Typography>
-      </Stack>
+      <SectionHeader
+        title="Goal Coverage Status"
+        icon={<TargetIcon />}
+        color={theme.palette.success.main}
+      />
 
       <Box sx={{ flexGrow: 1, overflowY: "auto", pr: 1 }}>
         {goals.length > 0 ? (

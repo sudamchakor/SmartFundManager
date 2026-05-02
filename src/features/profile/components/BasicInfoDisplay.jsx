@@ -8,6 +8,7 @@ import {
   Divider,
   Stack,
   Avatar,
+  useTheme,
 } from "@mui/material";
 import ShieldIcon from "@mui/icons-material/Shield";
 
@@ -49,6 +50,8 @@ const RetirementTimeline = ({ currentAge, retirementAge }) => {
 };
 
 export default function BasicInfoDisplay({ currentAge, retirementAge }) {
+  const theme = useTheme();
+
   const name = useSelector(selectName);
   const occupation = useSelector(selectOccupation);
   const riskTolerance = useSelector(selectRiskTolerance) || "low";
@@ -91,7 +94,7 @@ export default function BasicInfoDisplay({ currentAge, retirementAge }) {
         <Box>
           <Typography
             variant="subtitle1"
-            sx={{ fontWeight: 800, lineHeight: 1.2, color: "#1a1a1a" }}
+            sx={{ fontWeight: 800, lineHeight: 1.2, color: "text.primary" }}
           >
             {name}
           </Typography>
@@ -179,19 +182,19 @@ export default function BasicInfoDisplay({ currentAge, retirementAge }) {
             label: "Risk",
             val: riskTolerance,
             icon: <ShieldIcon sx={{ fontSize: 16 }} />,
-            col: riskTolerance.toLowerCase() === "low" ? "#2e7d32" : "#ed6c02",
+            col: riskTolerance.toLowerCase() === "low" ? theme.palette.success.main : theme.palette.warning.main,
           },
           {
             label: "Growth",
             val: `${(careerGrowthRate * 100).toFixed(1)}%`,
             icon: <TrendingUpIcon sx={{ fontSize: 16 }} />,
-            col: "#0288d1",
+            col: theme.palette.info.main,
           },
           {
             label: "Inflation",
             val: `${(generalInflationRate * 100).toFixed(1)}%`,
             icon: <GraphicEqIcon sx={{ fontSize: 16 }} />,
-            col: "#7b1fa2",
+            col: theme.palette.secondary.main,
           },
         ].map((item, index) => (
           <Grid item xs={4} key={index}>
@@ -199,11 +202,11 @@ export default function BasicInfoDisplay({ currentAge, retirementAge }) {
               sx={{
                 p: 1.5,
                 borderRadius: 2,
-                bgcolor: "white",
+                bgcolor: "background.paper",
                 border: "1px solid",
-                borderColor: "grey.200",
+                borderColor: "divider",
                 borderLeft: `4px solid ${item.col}`,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                boxShadow: `0 2px 4px rgba(0,0,0,0.02)`,
                 textAlign: "left",
                 height: "100%",
                 display: "flex",
@@ -233,7 +236,7 @@ export default function BasicInfoDisplay({ currentAge, retirementAge }) {
                 variant="body2"
                 sx={{
                   fontWeight: 800,
-                  color: "#333",
+                  color: "text.primary",
                   textTransform: "capitalize",
                 }}
               >

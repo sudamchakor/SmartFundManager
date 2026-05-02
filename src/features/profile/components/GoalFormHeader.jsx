@@ -15,6 +15,7 @@ import {
 } from "@mui/icons-material";
 import SliderInput from "../../../components/common/SliderInput";
 import InvestmentSummary from "./InvestmentSummary";
+import { labelStyle, getWellInputStyle } from "../../../styles/formStyles";
 
 const GoalFormHeader = ({
   editedGoal,
@@ -33,22 +34,17 @@ const GoalFormHeader = ({
       <Grid container spacing={2}>
         {/* 1. Goal Name - High Density */}
         <Grid item xs={12} md={6}>
+          <Typography sx={labelStyle}>Goal Name</Typography>
           <TextField
             fullWidth
-            label="Goal Name"
+            variant="standard"
             size="small"
             placeholder="e.g., Retirement, Education..."
             value={editedGoal.name || ""}
             onChange={(e) =>
               setEditedGoal({ ...editedGoal, name: e.target.value })
             }
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: 2,
-                bgcolor: alpha(theme.palette.background.paper, 0.5),
-              },
-              "& .MuiInputLabel-root": { fontWeight: 700 },
-            }}
+            InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
           />
         </Grid>
 

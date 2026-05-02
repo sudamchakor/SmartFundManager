@@ -4,6 +4,8 @@ import {
   ErrorOutline as WarningIcon,
   CheckCircleOutline as SuccessIcon,
 } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import { selectCurrency } from "../../../store/emiSlice";
 
 const DataPoint = ({ label, value, color, isLast }) => {
   const theme = useTheme();
@@ -57,6 +59,7 @@ const DataPoint = ({ label, value, color, isLast }) => {
 
 const InvestmentSummary = ({ plans, targetAmount }) => {
   const theme = useTheme();
+  const currency = useSelector(selectCurrency) || "₹";
 
   const totalInvested = plans.reduce(
     (sum, p) => sum + (p.investedAmount || 0),
@@ -73,7 +76,7 @@ const InvestmentSummary = ({ plans, targetAmount }) => {
   const isShort = totalValue < (targetAmount || 0);
 
   const formatAmount = (amount) =>
-    `₹${(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+    `${currency} ${(amount || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
   return (
     <Box

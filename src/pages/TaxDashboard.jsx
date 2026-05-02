@@ -59,6 +59,7 @@ import {
   selectProfileExpenses,
 } from "../store/profileSlice";
 import { calculateTax } from "../utils/taxEngine";
+import PageHeader from "../components/common/PageHeader";
 
 const TaxDashboard = () => {
   const theme = useTheme();
@@ -685,60 +686,28 @@ const TaxDashboard = () => {
         </Box>
       )}
 
-      {/* Technical Header */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="flex-end"
-        sx={{ mb: 4 }}
-      >
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Box
-            sx={{
-              display: "flex",
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-            }}
-          >
-            <TaxIcon fontSize="medium" />
-          </Box>
-          <Box>
-            <Typography
-              variant="h5"
+      <PageHeader
+        title="Indian Tax Engine (FY 2025-26)"
+        subtitle="Compute comparative tax liabilities across legislative regimes."
+        icon={TaxIcon}
+        action={
+          <Tooltip title="System Configuration & Rules" arrow>
+            <Button
+              variant="outlined"
+              startIcon={<SettingsIcon />}
+              onClick={() => setSettingsModalOpen(true)}
               sx={{
-                fontWeight: 900,
-                color: "text.primary",
-                letterSpacing: -0.5,
+                fontWeight: 700,
+                borderRadius: 2,
+                textTransform: "uppercase",
+                fontSize: "0.75rem",
               }}
             >
-              Indian Tax Engine (FY 2025-26)
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 600, color: "text.secondary" }}
-            >
-              Compute comparative tax liabilities across legislative regimes.
-            </Typography>
-          </Box>
-        </Stack>
-        <Tooltip title="System Configuration & Rules" arrow>
-          <Button
-            variant="outlined"
-            startIcon={<SettingsIcon />}
-            onClick={() => setSettingsModalOpen(true)}
-            sx={{
-              fontWeight: 700,
-              borderRadius: 2,
-              textTransform: "uppercase",
-              fontSize: "0.75rem",
-            }}
-          >
-            Config
-          </Button>
-        </Tooltip>
-      </Stack>
+              Config
+            </Button>
+          </Tooltip>
+        }
+      />
 
       <Grid container spacing={4}>
         {/* Left Column: Heavy Data Entry */}

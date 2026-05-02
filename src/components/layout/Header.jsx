@@ -125,7 +125,7 @@ const Header = () => {
   };
 
   // Dynamic Contrast Color for the AppBar
-  const contrastColor = theme.palette.primary.contrastText;
+  const contrastColor = theme.palette.primary.contrastText || "#ffffff";
 
   return (
     <AppBar
@@ -181,7 +181,7 @@ const Header = () => {
                   height: 24,
                   alignSelf: "center",
                   mx: 1,
-                  bgcolor: alpha(contrastColor, 0.3), // STRICT THEME
+                bgcolor: alpha(contrastColor, 0.3),
                 }}
               />
               <Button
@@ -191,7 +191,7 @@ const Header = () => {
                   textTransform: "none",
                   fontWeight: 700,
                   color: "inherit",
-                  "&:hover": { bgcolor: alpha(contrastColor, 0.1) }, // STRICT THEME
+                "&:hover": { bgcolor: alpha(contrastColor, 0.1) },
                 }}
               >
                 {currentCalc.label}
@@ -214,10 +214,10 @@ const Header = () => {
                   fontWeight: 700,
                   textTransform: "none",
                   color: "inherit",
-                  borderColor: alpha(contrastColor, 0.5), // STRICT THEME
+                borderColor: alpha(contrastColor, 0.5),
                   "&:hover": {
-                    borderColor: contrastColor, // STRICT THEME
-                    bgcolor: alpha(contrastColor, 0.1), // STRICT THEME
+                  borderColor: contrastColor,
+                  bgcolor: alpha(contrastColor, 0.1),
                   },
                 }}
               >
@@ -259,9 +259,9 @@ const Header = () => {
           <IconButton
             onClick={(e) => setProfileAnchorEl(e.currentTarget)}
             sx={{
-              bgcolor: alpha(contrastColor, 0.1), // STRICT THEME
+              bgcolor: alpha(contrastColor, 0.1),
               color: "inherit",
-              "&:hover": { bgcolor: alpha(contrastColor, 0.2) }, // STRICT THEME
+              "&:hover": { bgcolor: alpha(contrastColor, 0.2) },
             }}
           >
             <ProfileIcon />

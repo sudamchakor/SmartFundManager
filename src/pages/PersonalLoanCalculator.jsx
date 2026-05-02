@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Slider,
-  TextField,
   Typography,
   Grid,
-  InputAdornment,
-  CircularProgress,
   useTheme,
   alpha,
   Stack,
@@ -15,6 +11,9 @@ import {
 import { Payments as LoanIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { selectCurrency } from "../store/emiSlice"; // Assumes you have this based on previous files
+import PageHeader from "../components/common/PageHeader";
+import InputSlider from "../components/common/InputSlider";
+import LoanSummaryTerminal from "../components/common/LoanSummaryTerminal";
 
 const PersonalLoanCalculator = () => {
   const theme = useTheme();
@@ -59,32 +58,6 @@ const PersonalLoanCalculator = () => {
     setLoading(false);
   }, [loanAmount, interestRate, tenure]);
 
-  const handleInputChange = (setter, min, max) => (e) => {
-    let value = e.target.value === "" ? "" : Number(e.target.value);
-    setter(value);
-  };
-
-  // Shared styles for the "Command Center" labels
-  const labelStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    fontSize: "0.75rem",
-    color: "text.secondary",
-    letterSpacing: 0.5,
-  };
-
-  // Shared styles for the tinted input wells
-  const inputWellStyle = {
-    fontWeight: 900,
-    fontSize: "0.95rem",
-    bgcolor: alpha(theme.palette.primary.main, 0.05),
-    color: "primary.main",
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 2,
-    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  };
-
   return (
     <Box
       sx={{
@@ -97,306 +70,61 @@ const PersonalLoanCalculator = () => {
         mx: "auto",
       }}
     >
-      {/* Technical Header */}
-      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
-        <Box
-          sx={{
-            display: "flex",
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: "primary.main",
-          }}
-        >
-          <LoanIcon fontSize="medium" />
-        </Box>
-        <Box>
-          <Typography
-            variant="h5"
-            sx={{ fontWeight: 900, color: "text.primary", letterSpacing: -0.5 }}
-          >
-            Personal Loan Details
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ fontWeight: 600, color: "text.secondary" }}
-          >
-            Configure unsecured debt parameters to calculate monthly
-            liabilities.
-          </Typography>
-        </Box>
-      </Stack>
+      <PageHeader
+        title="Personal Loan Details"
+        subtitle="Configure unsecured debt parameters to calculate monthly liabilities."
+        icon={LoanIcon}
+      />
 
       <Grid container spacing={5}>
         {/* Left Side: Input Controls */}
         <Grid item xs={12} md={7}>
           <Stack spacing={4}>
-            {/* 1. Loan Amount */}
-            <Box>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1.5}
-              >
-                <Typography sx={labelStyle}>Loan Amount</Typography>
-                <TextField
-                  variant="standard"
-                  size="small"
-                  value={loanAmount}
-                  onChange={handleInputChange(setLoanAmount)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment
-                        position="start"
-                        sx={{
-                          "& p": { fontWeight: 900, color: "primary.main" },
-                        }}
-                      >
-                        {currency}
-                      </InputAdornment>
-                    ),
-                    disableUnderline: true,
-                    sx: inputWellStyle,
-                  }}
-                  sx={{ width: 140 }}
-                />
-              </Stack>
-              <Slider
-                value={loanAmount}
-                min={50000}
-                max={5000000}
-                step={10000}
-                onChange={(e, val) => setLoanAmount(val)}
-                color="primary"
-                sx={{
-                  py: 1,
-                  "& .MuiSlider-thumb": { width: 14, height: 14 },
-                  "& .MuiSlider-track": { height: 4 },
-                  "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
-                }}
-              />
-            </Box>
+            <InputSlider
+              label="Loan Amount"
+              value={loanAmount}
+              min={50000}
+              max={5000000}
+              step={10000}
+              onChange={setLoanAmount}
+              adornment={currency}
+              adornmentPosition="start"
+            />
 
-            {/* 2. Interest Rate */}
-            <Box>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1.5}
-              >
-                <Typography sx={labelStyle}>Interest Rate (p.a)</Typography>
-                <TextField
-                  variant="standard"
-                  size="small"
-                  value={interestRate}
-                  onChange={handleInputChange(setInterestRate)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment
-                        position="end"
-                        sx={{
-                          "& p": { fontWeight: 900, color: "primary.main" },
-                        }}
-                      >
-                        %
-                      </InputAdornment>
-                    ),
-                    disableUnderline: true,
-                    sx: inputWellStyle,
-                  }}
-                  sx={{ width: 140 }}
-                />
-              </Stack>
-              <Slider
-                value={interestRate}
-                min={5}
-                max={25}
-                step={0.1}
-                onChange={(e, val) => setInterestRate(val)}
-                color="primary"
-                sx={{
-                  py: 1,
-                  "& .MuiSlider-thumb": { width: 14, height: 14 },
-                  "& .MuiSlider-track": { height: 4 },
-                  "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
-                }}
-              />
-            </Box>
+            <InputSlider
+              label="Interest Rate (p.a)"
+              value={interestRate}
+              min={5}
+              max={25}
+              step={0.1}
+              onChange={setInterestRate}
+              adornment="%"
+              adornmentPosition="end"
+            />
 
-            {/* 3. Tenure */}
-            <Box>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={1.5}
-              >
-                <Typography sx={labelStyle}>Tenure (Years)</Typography>
-                <TextField
-                  variant="standard"
-                  size="small"
-                  value={tenure}
-                  onChange={handleInputChange(setTenure)}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment
-                        position="end"
-                        sx={{
-                          "& p": { fontWeight: 900, color: "primary.main" },
-                        }}
-                      >
-                        YRS
-                      </InputAdornment>
-                    ),
-                    disableUnderline: true,
-                    sx: inputWellStyle,
-                  }}
-                  sx={{ width: 140 }}
-                />
-              </Stack>
-              <Slider
-                value={tenure}
-                min={1}
-                max={15}
-                step={1}
-                onChange={(e, val) => setTenure(val)}
-                color="primary"
-                sx={{
-                  py: 1,
-                  "& .MuiSlider-thumb": { width: 14, height: 14 },
-                  "& .MuiSlider-track": { height: 4 },
-                  "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
-                }}
-              />
-            </Box>
+            <InputSlider
+              label="Tenure (Years)"
+              value={tenure}
+              min={1}
+              max={15}
+              step={1}
+              onChange={setTenure}
+              adornment="YRS"
+              adornmentPosition="end"
+            />
           </Stack>
         </Grid>
 
         {/* Right Side: Dynamic Status Output Terminal */}
         <Grid item xs={12} md={5}>
-          <Box
-            sx={{
-              position: "relative",
-              bgcolor: alpha(theme.palette.primary.main, 0.03),
-              borderRadius: 3,
-              p: 3,
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              border: "1px dashed",
-              borderColor: alpha(theme.palette.primary.main, 0.2),
-              overflow: "hidden",
-            }}
+          <LoanSummaryTerminal
+            title="Loan Summary"
+            monthlyEmi={details.monthlyEmi}
+            totalInterest={details.totalInterest}
+            totalPayable={details.totalPayment}
+            currency={currency}
+            loading={loading}
           >
-            {loading && (
-              <Box
-                sx={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor: alpha(theme.palette.background.paper, 0.8),
-                  backdropFilter: "blur(4px)",
-                  zIndex: 10,
-                }}
-              >
-                <CircularProgress color="primary" />
-              </Box>
-            )}
-
-            <Typography
-              variant="caption"
-              align="center"
-              sx={{
-                fontWeight: 800,
-                textTransform: "uppercase",
-                color: "text.secondary",
-                letterSpacing: 1,
-              }}
-              gutterBottom
-            >
-              Loan Summary
-            </Typography>
-
-            <Box textAlign="center" sx={{ my: 3 }}>
-              <Typography
-                variant="caption"
-                sx={{
-                  textTransform: "uppercase",
-                  fontWeight: 700,
-                  color: "text.disabled",
-                  letterSpacing: 0.5,
-                  display: "block",
-                  mb: 0.5,
-                }}
-              >
-                Monthly EMI
-              </Typography>
-              <Typography
-                variant="h3"
-                sx={{
-                  fontWeight: 900,
-                  color: "primary.main",
-                  letterSpacing: -1,
-                }}
-              >
-                {currency} {details.monthlyEmi.toLocaleString("en-IN")}
-              </Typography>
-            </Box>
-
-            <Stack spacing={2} sx={{ mt: 2 }}>
-              {/* Interest Burden */}
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, color: "text.secondary" }}
-                >
-                  Total Interest Burden
-                </Typography>
-                <Typography
-                  variant="subtitle1"
-                  sx={{ fontWeight: 900, color: "warning.main" }}
-                >
-                  {currency} {details.totalInterest.toLocaleString("en-IN")}
-                </Typography>
-              </Stack>
-
-              <Divider
-                sx={{ borderColor: alpha(theme.palette.divider, 0.1) }}
-              />
-
-              {/* Total Payable */}
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 800, color: "text.primary" }}
-                >
-                  Total Amount Payable
-                </Typography>
-                <Typography
-                  variant="h6"
-                  sx={{ fontWeight: 900, color: "text.primary" }}
-                >
-                  {currency} {details.totalPayment.toLocaleString("en-IN")}
-                </Typography>
-              </Stack>
-            </Stack>
-
             {/* Placeholder for Chart */}
             <Box
               sx={{
@@ -422,7 +150,7 @@ const PersonalLoanCalculator = () => {
                 Chart Visualization Region
               </Typography>
             </Box>
-          </Box>
+          </LoanSummaryTerminal>
         </Grid>
       </Grid>
     </Box>

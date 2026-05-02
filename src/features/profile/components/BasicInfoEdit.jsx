@@ -8,6 +8,8 @@ import {
   Select,
   MenuItem,
   Grid,
+  Typography,
+  useTheme,
 } from "@mui/material";
 import SliderInput from "../../../components/common/SliderInput";
 import SaveIcon from "@mui/icons-material/Save";
@@ -25,6 +27,7 @@ import {
   setCareerGrowthRate,
   setGeneralInflationRate,
 } from "../../../store/profileSlice";
+import { labelStyle, getWellInputStyle } from "../../../styles/formStyles";
 
 export default function BasicInfoEdit({
   currentAge,
@@ -33,6 +36,7 @@ export default function BasicInfoEdit({
   onCancel,
 }) {
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const currentName = useSelector(selectName);
   const currentOccupation = useSelector(selectOccupation);
@@ -79,21 +83,25 @@ export default function BasicInfoEdit({
     <>
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6}>
+          <Typography sx={labelStyle}>Name</Typography>
           <TextField
             fullWidth
+            variant="standard"
             size="small"
-            label="Name"
             value={tempName}
             onChange={(e) => setTempName(e.target.value)}
+            InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
           />
         </Grid>
         <Grid item xs={12} sm={6}>
+          <Typography sx={labelStyle}>Occupation</Typography>
           <TextField
             fullWidth
+            variant="standard"
             size="small"
-            label="Occupation"
             value={tempOccupation}
             onChange={(e) => setTempOccupation(e.target.value)}
+            InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
           />
         </Grid>
         <Grid item xs={12} sm={12}>
@@ -144,12 +152,13 @@ export default function BasicInfoEdit({
           />
         </Grid>
         <Grid item xs={12}>
-          <FormControl size="small" fullWidth>
-            <InputLabel>Risk Tolerance</InputLabel>
+          <Typography sx={labelStyle}>Risk Tolerance</Typography>
+          <FormControl variant="standard" size="small" fullWidth>
             <Select
               value={tempRiskTolerance}
-              label="Risk Tolerance"
               onChange={(e) => setTempRiskTolerance(e.target.value)}
+              disableUnderline
+              sx={getWellInputStyle(theme)}
             >
               <MenuItem value="low">Low</MenuItem>
               <MenuItem value="medium">Medium</MenuItem>

@@ -24,6 +24,7 @@ import {
 } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
 import { formatCurrency } from "../../../utils/formatting";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 const CorrectionEngine = () => {
   const theme = useTheme();
@@ -122,26 +123,11 @@ const CorrectionEngine = () => {
         boxShadow: "0 2px 12px rgba(0,0,0,0.02)",
       }}
     >
-      {/* Header */}
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            p: 0.8,
-            borderRadius: 1.5,
-            bgcolor: alpha(theme.palette.warning.main, 0.1),
-            color: "warning.dark",
-          }}
-        >
-          <AutoFixIcon sx={{ fontSize: "1.2rem" }} />
-        </Box>
-        <Typography
-          variant="subtitle1"
-          sx={{ fontWeight: 800, color: "text.primary" }}
-        >
-          Discretionary Correction Engine
-        </Typography>
-      </Stack>
+      <SectionHeader
+        title="Discretionary Correction Engine"
+        icon={<AutoFixIcon />}
+        color={theme.palette.warning.main}
+      />
 
       {hasSucceeded ? (
         <Box

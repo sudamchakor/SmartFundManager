@@ -10,53 +10,12 @@ import {
   Divider,
 } from "@mui/material";
 import { Security as SecurityIcon } from "@mui/icons-material";
+import PageHeader from "../components/common/PageHeader";
+import { getSectionHeaderStyle, subHeaderStyle, bodyStyle, listStyle } from "../styles/legalStyles";
 
 const PrivacyPolicy = () => {
   const theme = useTheme();
-
-  // Shared Styles for Legal Typography
-  const sectionHeaderStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    color: "primary.main",
-    letterSpacing: 1,
-    fontSize: "0.85rem",
-    mt: 5,
-    mb: 2,
-    borderBottom: `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
-    pb: 1,
-  };
-
-  const subHeaderStyle = {
-    fontWeight: 800,
-    color: "text.primary",
-    mt: 3,
-    mb: 1,
-    fontSize: "1rem",
-  };
-
-  const bodyStyle = {
-    color: "text.secondary",
-    lineHeight: 1.7,
-    mb: 2,
-    fontSize: "0.9rem",
-    fontWeight: 500,
-  };
-
-  const listStyle = {
-    color: "text.secondary",
-    fontSize: "0.9rem",
-    lineHeight: 1.7,
-    paddingLeft: "1.5rem",
-    marginBottom: "1.5rem",
-    "& li": {
-      marginBottom: "0.5rem",
-    },
-    "& strong": {
-      color: "text.primary",
-      fontWeight: 700,
-    },
-  };
+  const sectionHeaderStyle = getSectionHeaderStyle(theme);
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -70,39 +29,11 @@ const PrivacyPolicy = () => {
           boxShadow: `0 4px 24px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
         }}
       >
-        {/* Technical Header */}
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
-          <Box
-            sx={{
-              display: "flex",
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-            }}
-          >
-            <SecurityIcon fontSize="medium" />
-          </Box>
-          <Box>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 900,
-                color: "text.primary",
-                letterSpacing: -0.5,
-              }}
-            >
-              Data Privacy Protocol
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 600, color: "text.secondary" }}
-            >
-              Information collection, usage policies, and system security
-              measures.
-            </Typography>
-          </Box>
-        </Stack>
+        <PageHeader
+          title="Data Privacy Protocol"
+          subtitle="Information collection, usage policies, and system security measures."
+          icon={SecurityIcon}
+        />
 
         <Typography sx={bodyStyle}>
           This Privacy Policy describes Our policies and procedures on the

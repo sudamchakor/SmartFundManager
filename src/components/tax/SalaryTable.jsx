@@ -21,6 +21,7 @@ import {
   Grid,
 } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
+import { getWellInputStyle } from "../../styles/formStyles";
 
 const SalaryTable = ({
   viewMode,
@@ -33,7 +34,6 @@ const SalaryTable = ({
   renderRow,
   openAddModal,
   onAnnualChange,
-  wellInputStyle,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -72,7 +72,7 @@ const SalaryTable = ({
             disabled={isCalculated}
             InputProps={{
               disableUnderline: true,
-              sx: { ...wellInputStyle, width: "100%" },
+              sx: { ...getWellInputStyle(theme), width: "100%" },
             }}
           />
         </TableCell>
@@ -108,7 +108,7 @@ const SalaryTable = ({
                     onChange={(e) => onAnnualChange(item.field, e.target.value * 12)}
                     InputProps={{
                       disableUnderline: true,
-                      sx: { ...wellInputStyle, width: "100%" },
+                      sx: { ...getWellInputStyle(theme), width: "100%" },
                     }}
                   />
                 </CardContent>

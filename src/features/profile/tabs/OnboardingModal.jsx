@@ -45,6 +45,7 @@ import {
 } from "../../../store/profileSlice";
 import SliderInput from "../../../components/common/SliderInput";
 import GoalForm from "../components/GoalForm";
+import { labelStyle, getWellInputStyle } from "../../../styles/formStyles";
 
 const steps = [
   "System Parameters",
@@ -237,28 +238,6 @@ export default function OnboardingModal({ open, onClose }) {
     });
   };
 
-  // Shared Styles
-  const labelStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    fontSize: "0.65rem",
-    color: "text.secondary",
-    letterSpacing: 0.5,
-    display: "block",
-    mb: 0.5,
-  };
-
-  const wellInputStyle = {
-    fontWeight: 800,
-    fontSize: "0.9rem",
-    bgcolor: alpha(theme.palette.primary.main, 0.05),
-    color: "primary.main",
-    px: 1.5,
-    py: 0.5,
-    borderRadius: 1,
-    border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-  };
-
   const renderStepContent = (step) => {
     switch (step) {
       case 0:
@@ -293,7 +272,7 @@ export default function OnboardingModal({ open, onClose }) {
                   onChange={(e) =>
                     setBasicInfoState({ ...basicInfo, name: e.target.value })
                   }
-                  InputProps={{ disableUnderline: true, sx: wellInputStyle }}
+                  InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -309,7 +288,7 @@ export default function OnboardingModal({ open, onClose }) {
                       occupation: e.target.value,
                     })
                   }
-                  InputProps={{ disableUnderline: true, sx: wellInputStyle }}
+                  InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
                 />
               </Grid>
 
@@ -390,7 +369,7 @@ export default function OnboardingModal({ open, onClose }) {
                       })
                     }
                     disableUnderline
-                    sx={wellInputStyle}
+                    sx={getWellInputStyle(theme)}
                   >
                     <MenuItem value="low" sx={{ fontWeight: 700 }}>
                       Conservative (Capital Preservation)
@@ -449,12 +428,7 @@ export default function OnboardingModal({ open, onClose }) {
                     }
                     InputProps={{
                       disableUnderline: true,
-                      sx: {
-                        ...wellInputStyle,
-                        color: "success.main",
-                        bgcolor: alpha(theme.palette.success.main, 0.05),
-                        borderColor: alpha(theme.palette.success.main, 0.1),
-                      },
+                      sx: getWellInputStyle(theme, 'success'),
                     }}
                   />
                 </Grid>
@@ -480,12 +454,7 @@ export default function OnboardingModal({ open, onClose }) {
                         setIncome({ ...income, frequency: e.target.value })
                       }
                       disableUnderline
-                      sx={{
-                        ...wellInputStyle,
-                        color: "success.main",
-                        bgcolor: alpha(theme.palette.success.main, 0.05),
-                        borderColor: alpha(theme.palette.success.main, 0.1),
-                      }}
+                      sx={getWellInputStyle(theme, 'success')}
                     >
                       <MenuItem value="monthly" sx={{ fontWeight: 700 }}>
                         Monthly
@@ -625,12 +594,7 @@ export default function OnboardingModal({ open, onClose }) {
                     }
                     InputProps={{
                       disableUnderline: true,
-                      sx: {
-                        ...wellInputStyle,
-                        color: "warning.main",
-                        bgcolor: alpha(theme.palette.warning.main, 0.05),
-                        borderColor: alpha(theme.palette.warning.main, 0.1),
-                      },
+                      sx: getWellInputStyle(theme, 'warning'),
                     }}
                   />
                 </Grid>
@@ -656,12 +620,7 @@ export default function OnboardingModal({ open, onClose }) {
                         setExpense({ ...expense, category: e.target.value })
                       }
                       disableUnderline
-                      sx={{
-                        ...wellInputStyle,
-                        color: "warning.main",
-                        bgcolor: alpha(theme.palette.warning.main, 0.05),
-                        borderColor: alpha(theme.palette.warning.main, 0.1),
-                      }}
+                      sx={getWellInputStyle(theme, 'warning')}
                     >
                       <MenuItem value="basic" sx={{ fontWeight: 700 }}>
                         Mandatory Need
@@ -681,12 +640,7 @@ export default function OnboardingModal({ open, onClose }) {
                         setExpense({ ...expense, frequency: e.target.value })
                       }
                       disableUnderline
-                      sx={{
-                        ...wellInputStyle,
-                        color: "warning.main",
-                        bgcolor: alpha(theme.palette.warning.main, 0.05),
-                        borderColor: alpha(theme.palette.warning.main, 0.1),
-                      }}
+                      sx={getWellInputStyle(theme, 'warning')}
                     >
                       <MenuItem value="monthly" sx={{ fontWeight: 700 }}>
                         Monthly

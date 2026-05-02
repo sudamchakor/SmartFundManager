@@ -11,6 +11,8 @@ import {
   MenuItem,
   FormControl,
   Button,
+  useTheme,
+  alpha,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -18,6 +20,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import CalculateIcon from '@mui/icons-material/Calculate';
 import { updateGoalPriority } from '../../store/profileSlice';
 import { formatCurrency } from '../../utils/formatting';
+import { getWellInputStyle } from "../../styles/formStyles";
 
 export const EditableGoalItem = ({
   goal,
@@ -27,6 +30,7 @@ export const EditableGoalItem = ({
   onOpenBridgeGapModal,
 }) => {
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const handlePriorityChange = (e) => {
     dispatch(updateGoalPriority({ goalId: goal.id, priority: e.target.value }));
@@ -54,13 +58,21 @@ export const EditableGoalItem = ({
 
   return (
     <Paper
+      elevation={0}
       sx={{
         p: 2,
         mb: 2,
         border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 2,
+        borderColor: alpha(theme.palette.divider, 0.1),
+        bgcolor: alpha(theme.palette.background.paper, 0.5),
+        borderRadius: 3,
         position: 'relative',
+        boxShadow: `0 2px 8px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
+        transition: "all 0.2s",
+        "&:hover": {
+          borderColor: alpha(theme.palette.primary.main, 0.2),
+          boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.05)}`,
+        }
       }}
     >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
@@ -72,7 +84,7 @@ export const EditableGoalItem = ({
             <Chip label={priorityProps.label} color={priorityProps.color} size="small" />
           </Box>
 
-          <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 600, mb: 0.5 }}>
+          <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 900, mb: 0.5 }}>
             Target: {formatCurrency(goal.targetAmount, currency)}
           </Typography>
 
@@ -97,16 +109,21 @@ export const EditableGoalItem = ({
       </Box>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl variant="standard" size="small" sx={{ minWidth: 140 }}>
           <Select
             value={goal.priority || 2}
             onChange={handlePriorityChange}
             displayEmpty
-            inputProps={{ 'aria-label': 'Without label' }}
+            disableUnderline
+            sx={{
+              ...getWellInputStyle(theme, priorityProps.color),
+              fontSize: "0.75rem",
+              py: 0.2,
+            }}
           >
-            <MenuItem value={1}>High Priority</MenuItem>
-            <MenuItem value={2}>Medium Priority</MenuItem>
-            <MenuItem value={3}>Low Priority</MenuItem>
+            <MenuItem value={1} sx={{ fontWeight: 700, fontSize: "0.8rem" }}>High Priority</MenuItem>
+            <MenuItem value={2} sx={{ fontWeight: 700, fontSize: "0.8rem" }}>Medium Priority</MenuItem>
+            <MenuItem value={3} sx={{ fontWeight: 700, fontSize: "0.8rem" }}>Low Priority</MenuItem>
           </Select>
         </FormControl>
         

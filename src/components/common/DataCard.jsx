@@ -4,8 +4,8 @@ import { Box, Typography, useTheme, alpha, Stack } from "@mui/material";
 const DataCard = ({ title, icon, colorToken, children, sx = {} }) => {
   const theme = useTheme();
 
-  // Default to primary color if no specific token is passed
-  const activeColor = colorToken || theme.palette.primary.main;
+  // Resolve the color directly from the theme to prevent alpha() parsing errors
+  const activeColor = !colorToken || colorToken === "primary.main" ? theme.palette.primary.main : colorToken;
 
   return (
     <Box

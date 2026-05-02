@@ -44,6 +44,8 @@ import {
 import { formatCurrency } from "../../../utils/formatting";
 import { selectCurrency } from "../../../store/emiSlice";
 import ScenarioManager from "./ScenarioManager";
+import SectionHeader from "../../../components/common/SectionHeader";
+import ChartTooltip from "../../../components/common/ChartTooltip";
 
 // Helper function to format large numbers for Y-axis ticks
 const formatLargeNumber = (num, currency) => {
@@ -128,60 +130,6 @@ const DataWell = ({ title, value, subValue, tooltipText, colorToken }) => {
   );
 };
 
-// Glassmorphic Chart Tooltip
-const CustomTooltip = ({ active, payload, label, currency }) => {
-  const theme = useTheme();
-  if (active && payload && payload.length) {
-    return (
-      <Box
-        sx={{
-          p: 1.5,
-          borderRadius: 2,
-          bgcolor: alpha(theme.palette.background.paper, 0.85),
-          backdropFilter: "blur(8px)",
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          boxShadow: `0 8px 24px ${alpha(theme.palette.common.black || "#000", 0.12)}`,
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 800,
-            display: "block",
-            mb: 1,
-            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            pb: 0.5,
-          }}
-        >
-          AGE: {label}
-        </Typography>
-        <Stack spacing={0.5}>
-          {payload.map((p) => (
-            <Box
-              key={p.name}
-              sx={{ display: "flex", justifyContent: "space-between", gap: 3 }}
-            >
-              <Typography
-                variant="caption"
-                sx={{ fontWeight: 700, color: "text.secondary" }}
-              >
-                {p.name}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ fontWeight: 900, color: p.color }}
-              >
-                {formatCurrency(p.value, currency)}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Box>
-    );
-  }
-  return null;
-};
-
 const StyledChartPaper = ({ children }) => {
   const theme = useTheme();
   return (
@@ -248,47 +196,28 @@ const WealthProjectionEngine = forwardRef((props, ref) => {
     // mt: 0 applied here to remove the top gap
     <Box sx={{ mt: 0 }} ref={dashboardRef}>
       {/* 1. Header & Post-Tax Toggle */}
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 2.5 }}
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Box
-            sx={{
-              display: "flex",
-              p: 1,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-            }}
-          >
-            <TimelineIcon />
-          </Box>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 800, color: "text.primary" }}
-          >
-            Wealth Projection Engine
-          </Typography>
-        </Stack>
-        <FormControlLabel
-          control={
-            <Switch
-              size="small"
-              checked={postTax}
-              onChange={(e) => dispatch(setPostTax(e.target.checked))}
-              color="primary"
-            />
-          }
-          label={
-            <Typography variant="caption" sx={{ fontWeight: 800 }}>
-              POST-TAX VIEW
-            </Typography>
-          }
-        />
-      </Stack>
+      <SectionHeader
+        title="Wealth Projection Engine"
+        icon={<TimelineIcon />}
+        color={theme.palette.primary.main}
+        action={
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={postTax}
+                onChange={(e) => dispatch(setPostTax(e.target.checked))}
+                color="primary"
+              />
+            }
+            label={
+              <Typography variant="caption" sx={{ fontWeight: 800 }}>
+                POST-TAX VIEW
+              </Typography>
+            }
+          />
+        }
+      />
 
       <ScenarioManager />
 
@@ -421,7 +350,13 @@ const WealthProjectionEngine = forwardRef((props, ref) => {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip content={<CustomTooltip currency={currency} />} />
+                  <Tooltip
+                    content={
+                      <ChartTooltip
+                        valueFormatter={(val) => formatCurrency(val, currency)}
+                      />
+                    }
+                  />
                   <Legend
                     iconType="circle"
                     wrapperStyle={{ fontSize: "12px", fontWeight: 700 }}
@@ -477,7 +412,13 @@ const WealthProjectionEngine = forwardRef((props, ref) => {
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip content={<CustomTooltip currency={currency} />} />
+                  <Tooltip
+                    content={
+                      <ChartTooltip
+                        valueFormatter={(val) => formatCurrency(val, currency)}
+                      />
+                    }
+                  />
                   <Legend
                     iconType="circle"
                     wrapperStyle={{ fontSize: "12px", fontWeight: 700 }}

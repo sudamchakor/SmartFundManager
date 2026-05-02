@@ -13,6 +13,7 @@ import {
   InfoOutlined as InfoIcon,
   WarningAmber as WarningIcon,
 } from "@mui/icons-material";
+import { labelStyle, getWellInputStyle } from "../../styles/formStyles";
 
 export const SliderInput = ({
   label,
@@ -76,11 +77,10 @@ export const SliderInput = ({
       <Typography
         variant="caption"
         sx={{
-          fontWeight: 800,
-          textTransform: "uppercase",
-          color: "text.secondary",
-          letterSpacing: 0.5,
+          ...labelStyle,
           whiteSpace: "normal",
+          mb: 0,
+          display: "inline-block",
         }}
       >
         {label}
@@ -140,14 +140,7 @@ export const SliderInput = ({
             step,
           },
           sx: {
-            fontWeight: 900,
-            fontSize: "0.95rem",
-            bgcolor: alpha(theme.palette[activeColorToken].main, 0.05),
-            color: `${activeColorToken}.main`,
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1.5,
-            border: `1px solid ${alpha(theme.palette[activeColorToken].main, 0.1)}`,
+            ...getWellInputStyle(theme, activeColorToken),
             textAlign: "right",
             minWidth: 100,
             "& input": { textAlign: "right", p: 0 },

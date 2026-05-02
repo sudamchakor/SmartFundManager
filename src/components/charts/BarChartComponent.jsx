@@ -22,6 +22,7 @@ import {
   Stack,
   useTheme,
 } from "@mui/material";
+import { formatCurrency } from "../../utils/formatting";
 
 const BarChartComponent = () => {
   const theme = useTheme();
@@ -141,8 +142,7 @@ const BarChartComponent = () => {
                   variant="caption"
                   sx={{ fontWeight: 800, color: "text.primary" }}
                 >
-                  {currency}
-                  {Math.round(entry.value).toLocaleString("en-IN")}
+                  {formatCurrency(entry.value, currency)}
                 </Typography>
               </Box>
             ))}
@@ -174,7 +174,7 @@ const BarChartComponent = () => {
           <CartesianGrid
             vertical={false}
             stroke={alpha(theme.palette.divider, 0.08)}
-            strokeDasharray="4 4"
+            strokeDasharray="3 3"
           />
           <XAxis
             dataKey="label"

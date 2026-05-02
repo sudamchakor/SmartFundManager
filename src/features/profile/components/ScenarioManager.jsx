@@ -55,7 +55,7 @@ const ScenarioManager = () => {
           sx={{
             bgcolor: alpha(theme.palette.background.paper, 0.5),
             borderRadius: 2,
-            boxShadow: `inset 0 2px 4px ${alpha(theme.palette.common.black, 0.02)}`, // STRICT THEME
+            boxShadow: `inset 0 2px 4px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
             p: 0.5,
             border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             "& .MuiToggleButton-root": {
@@ -73,7 +73,7 @@ const ScenarioManager = () => {
             },
             "& .Mui-selected": {
               bgcolor: `${theme.palette.primary.main} !important`,
-              color: `${theme.palette.primary.contrastText} !important`, // STRICT THEME
+              color: `${theme.palette.primary.contrastText} !important`,
               fontWeight: 800,
               boxShadow: `0 2px 8px ${alpha(theme.palette.primary.main, 0.4)}`,
               zIndex: 1,

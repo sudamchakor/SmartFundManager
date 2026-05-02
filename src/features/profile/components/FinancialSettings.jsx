@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Card,
   CardContent,
-  CardHeader,
   Typography,
   Box,
   Radio,
@@ -20,6 +19,8 @@ import {
   LinearProgress,
   Paper,
   Chip,
+  useTheme,
+  alpha,
 } from "@mui/material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
@@ -33,6 +34,7 @@ import {
   selectRiskProfile,
   updateFinancialSettings,
 } from "../../../store/profileSlice";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 // --- Questionnaire Data ---
 const questions = [
@@ -88,6 +90,7 @@ const questions = [
 
 const FinancialSettings = () => {
   const dispatch = useDispatch();
+  const theme = useTheme();
 
   const currentTaxRegime = useSelector(selectTaxRegime);
   const currentEmergencyTarget = useSelector(selectEmergencyFundTarget);
@@ -145,38 +148,34 @@ const FinancialSettings = () => {
         boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
       }}
     >
-      <CardHeader
-        sx={{ py: 1.5, px: 2, bgcolor: "#fcfcfc" }}
-        title={
-          <Stack direction="row" spacing={1} alignItems="center">
-            <SettingsIcon color="primary" fontSize="small" />
-            <Typography
-              variant="subtitle1"
-              sx={{ fontWeight: 800, color: "#333" }}
-            >
-              Financial Settings
-            </Typography>
-          </Stack>
-        }
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<SaveIcon />}
-            onClick={handleSave}
-            sx={{ borderRadius: 1.5, textTransform: "none", px: 2 }}
-          >
-            Save
-          </Button>
-        }
-      />
-      <Divider />
+      <Box
+        sx={{
+          pt: 2.5,
+          px: 2.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          bgcolor: alpha(theme.palette.background.default, 0.5)
+        }}
+      >
+        <SectionHeader title="Financial Settings" icon={<SettingsIcon />} />
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+          sx={{ borderRadius: 1.5, textTransform: "none", px: 2, mt: 0.5 }}
+        >
+          Save
+        </Button>
+      </Box>
+      <Divider sx={{ mt: -1 }} />
 
       <CardContent
-        sx={{ flexGrow: 1, overflowY: "auto", p: 0, bgcolor: "#fcfcfc" }}
+        sx={{ flexGrow: 1, overflowY: "auto", p: 0, bgcolor: alpha(theme.palette.background.default, 0.5) }}
       >
         {/* 1. Core Controls */}
-        <Box sx={{ p: 2, bgcolor: "#fff", borderBottom: "1px solid #eee" }}>
+        <Box sx={{ p: 2, bgcolor: "background.paper", borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
           <Grid container spacing={2}>
             <Grid item xs={6}>
               <Typography
@@ -296,7 +295,7 @@ const FinancialSettings = () => {
               sx={{
                 p: 1.5,
                 mb: 1.5,
-                border: "1px solid #eef0f2",
+                border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                 borderRadius: 2,
               }}
             >
@@ -305,7 +304,7 @@ const FinancialSettings = () => {
                 sx={{
                   fontWeight: 700,
                   mb: 1,
-                  color: "#333",
+                  color: "text.primary",
                   display: "block",
                   lineHeight: 1.3,
                 }}
@@ -332,7 +331,7 @@ const FinancialSettings = () => {
                     q.options.length > 3 ? "1fr 1fr" : "1fr 1fr 1fr",
                   gap: 0.5,
                   "& .MuiToggleButton-root": {
-                    border: "1px solid #eef0f2 !important",
+                    border: `1px solid ${alpha(theme.palette.divider, 0.1)} !important`,
                     borderRadius: "16px !important",
                     textTransform: "none",
                     fontWeight: 700,

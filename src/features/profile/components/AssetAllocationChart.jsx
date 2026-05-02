@@ -16,60 +16,8 @@ import {
   selectCurrentAge,
   selectRetirementAge,
 } from "../../../store/profileSlice";
-
-// Glassmorphic Chart Tooltip matching the Command Center aesthetic
-const CustomTooltip = ({ active, payload, label }) => {
-  const theme = useTheme();
-  if (active && payload && payload.length) {
-    return (
-      <Box
-        sx={{
-          p: 1.5,
-          borderRadius: 2,
-          bgcolor: alpha(theme.palette.background.paper, 0.85),
-          backdropFilter: "blur(8px)",
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 800,
-            display: "block",
-            mb: 1,
-            borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-            pb: 0.5,
-          }}
-        >
-          AGE: {label}
-        </Typography>
-        <Stack spacing={0.5}>
-          {payload.map((p) => (
-            <Box
-              key={p.name}
-              sx={{ display: "flex", justifyContent: "space-between", gap: 3 }}
-            >
-              <Typography
-                variant="caption"
-                sx={{ fontWeight: 700, color: "text.secondary" }}
-              >
-                {p.name}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{ fontWeight: 900, color: p.color }}
-              >
-                {p.value}%
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
-      </Box>
-    );
-  }
-  return null;
-};
+import SectionHeader from "../../../components/common/SectionHeader";
+import ChartTooltip from "../../../components/common/ChartTooltip";
 
 const AssetAllocationChart = forwardRef((props, ref) => {
   const currentAge = useSelector(selectCurrentAge);
@@ -126,41 +74,12 @@ const AssetAllocationChart = forwardRef((props, ref) => {
         mb: 2.5,
       }}
     >
-      {/* Technical Header */}
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
-        <Box
-          sx={{
-            display: "flex",
-            p: 1,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.secondary.main, 0.1),
-            color: "secondary.main",
-          }}
-        >
-          <AllocationIcon fontSize="small" />
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: 800, color: "text.primary" }}
-        >
-          Asset Allocation Glide Path
-        </Typography>
-      </Stack>
-
-      <Typography
-        variant="caption"
-        sx={{
-          display: "block",
-          mb: 3,
-          fontWeight: 600,
-          color: "text.secondary",
-          fontSize: "0.75rem",
-        }}
-      >
-        Visualizing the shift from high-growth Equity (12% expected return) to
-        safer Debt (7% expected return) as you approach age {retirementAge} to
-        protect your accumulated wealth.
-      </Typography>
+      <SectionHeader
+        title="Asset Allocation Glide Path"
+        subtitle={`Visualizing the shift from high-growth Equity (12% expected return) to safer Debt (7% expected return) as you approach age ${retirementAge} to protect your accumulated wealth.`}
+        icon={<AllocationIcon />}
+        color={theme.palette.secondary.main}
+      />
 
       {/* High-Density Chart */}
       <Box sx={{ width: "100%", height: 320 }}>
@@ -188,7 +107,9 @@ const AssetAllocationChart = forwardRef((props, ref) => {
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip
+              content={<ChartTooltip valueFormatter={(val) => `${val}%`} />}
+            />
             <Legend
               iconType="circle"
               wrapperStyle={{ fontSize: "12px", fontWeight: 700 }}

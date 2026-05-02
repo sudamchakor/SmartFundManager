@@ -14,29 +14,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree"; // Technical icon
 import GoalFormHeader from "./GoalFormHeader";
 import InvestmentPlanCard from "./InvestmentPlanCard";
 import useGoalForm from "./useGoalForm";
-
-// Reusable Subsection Header to match overall dashboard
-const SubsectionHeader = ({ icon, title, color }) => (
-  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-    <Box
-      sx={{
-        display: "flex",
-        p: 0.8,
-        borderRadius: 1.5,
-        bgcolor: alpha(color || "#1976d2", 0.1),
-        color: color || "primary.main",
-      }}
-    >
-      {React.cloneElement(icon, { sx: { fontSize: "1.2rem" } })}
-    </Box>
-    <Typography
-      variant="subtitle1"
-      sx={{ fontWeight: 800, color: "text.primary" }}
-    >
-      {title}
-    </Typography>
-  </Stack>
-);
+import SectionHeader from "../../../components/common/SectionHeader";
 
 export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
   const theme = useTheme();
@@ -77,7 +55,7 @@ export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
       <Divider sx={{ my: 3, borderStyle: "dashed", opacity: 0.5 }} />
 
       {/* 2. Investment Strategies Section */}
-      <SubsectionHeader
+      <SectionHeader
         title="Investment Strategy & Plans"
         icon={<AccountTreeIcon />}
         color={theme.palette.secondary.main}

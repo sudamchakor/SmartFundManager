@@ -10,30 +10,12 @@ import {
   Link,
 } from "@mui/material";
 import { Gavel as GavelIcon } from "@mui/icons-material";
+import PageHeader from "../components/common/PageHeader";
+import { getSectionHeaderStyle, bodyStyle } from "../styles/legalStyles";
 
 const TermsOfService = () => {
   const theme = useTheme();
-
-  // Shared Styles for Legal Typography
-  const sectionHeaderStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    color: "primary.main",
-    letterSpacing: 1,
-    fontSize: "0.85rem",
-    mt: 5,
-    mb: 2,
-    borderBottom: `1px dashed ${alpha(theme.palette.divider, 0.2)}`,
-    pb: 1,
-  };
-
-  const bodyStyle = {
-    color: "text.secondary",
-    lineHeight: 1.7,
-    mb: 2,
-    fontSize: "0.9rem",
-    fontWeight: 500,
-  };
+  const sectionHeaderStyle = getSectionHeaderStyle(theme);
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -47,38 +29,11 @@ const TermsOfService = () => {
           boxShadow: `0 4px 24px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
         }}
       >
-        {/* Technical Header */}
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
-          <Box
-            sx={{
-              display: "flex",
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-            }}
-          >
-            <GavelIcon fontSize="medium" />
-          </Box>
-          <Box>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 900,
-                color: "text.primary",
-                letterSpacing: -0.5,
-              }}
-            >
-              Terms of Service
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 600, color: "text.secondary" }}
-            >
-              Operational guidelines and legal agreements for system usage.
-            </Typography>
-          </Box>
-        </Stack>
+        <PageHeader
+          title="Terms of Service"
+          subtitle="Operational guidelines and legal agreements for system usage."
+          icon={GavelIcon}
+        />
 
         <Typography variant="h2" sx={sectionHeaderStyle}>
           1. System Introduction

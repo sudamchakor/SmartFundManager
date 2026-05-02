@@ -31,6 +31,7 @@ import {
   setThemeMode,
 } from "../store/emiSlice";
 import ThemeSelector from "../components/common/ThemeSelector";
+import PageHeader from "../components/common/PageHeader";
 
 export default function SettingsPage() {
   const dispatch = useDispatch();
@@ -75,38 +76,11 @@ export default function SettingsPage() {
       }}
     >
       <Box sx={{ width: "100%" }}>
-        {/* Technical Header */}
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 4 }}>
-          <Box
-            sx={{
-              display: "flex",
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.primary.main, 0.1),
-              color: "primary.main",
-            }}
-          >
-            <SettingsIcon fontSize="medium" />
-          </Box>
-          <Box>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 900,
-                color: "text.primary",
-                letterSpacing: -0.5,
-              }}
-            >
-              Global Settings
-            </Typography>
-            <Typography
-              variant="caption"
-              sx={{ fontWeight: 600, color: "text.secondary" }}
-            >
-              Configure your system preferences and localization parameters.
-            </Typography>
-          </Box>
-        </Stack>
+        <PageHeader
+          title="Global Settings"
+          subtitle="Configure your system preferences and localization parameters."
+          icon={SettingsIcon}
+        />
 
         {/* Main Settings Panel */}
         <Box

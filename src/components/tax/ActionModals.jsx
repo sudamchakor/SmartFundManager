@@ -20,6 +20,7 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
+import { labelStyle, getWellInputStyle } from "../../styles/formStyles";
 
 export const DynamicRowModal = ({
   open,
@@ -28,56 +29,57 @@ export const DynamicRowModal = ({
   mode,
   label,
   onLabelChange,
-  wellInputStyle,
-  labelStyle,
-}) => (
-  <Dialog
-    open={open}
-    onClose={onClose}
-    PaperProps={{
-      sx: {
-        borderRadius: 3,
-        boxShadow: (theme) =>
-          `0 24px 64px ${alpha(theme.palette.common.black || "#000", 0.2)}`,
-      },
-    }}
-  >
-    <DialogTitle sx={{ fontWeight: 800 }}>
-      {mode === "add" ? "Inject Data Row" : "Modify Data Row"}
-    </DialogTitle>
-    <DialogContent>
-      <Typography sx={labelStyle}>Row Identifier</Typography>
-      <TextField
-        autoFocus
-        variant="standard"
-        fullWidth
-        value={label}
-        onChange={onLabelChange}
-        InputProps={{
-          disableUnderline: true,
-          sx: {
-            ...wellInputStyle,
-            textAlign: "left",
-            "& input": { textAlign: "left" },
-          },
-        }}
-      />
-    </DialogContent>
-    <DialogActions sx={{ p: 2 }}>
-      <Button onClick={onClose} sx={{ fontWeight: 700, color: "text.secondary" }}>
-        Cancel
-      </Button>
-      <Button
-        onClick={onSave}
-        variant="contained"
-        color="primary"
-        sx={{ fontWeight: 800 }}
-      >
-        Apply Change
-      </Button>
-    </DialogActions>
-  </Dialog>
-);
+}) => {
+  const theme = useTheme();
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          borderRadius: 3,
+          boxShadow: `0 24px 64px ${alpha(theme.palette.common.black || "#000", 0.2)}`,
+        },
+      }}
+    >
+      <DialogTitle sx={{ fontWeight: 800 }}>
+        {mode === "add" ? "Inject Data Row" : "Modify Data Row"}
+      </DialogTitle>
+      <DialogContent>
+        <Typography sx={labelStyle}>Row Identifier</Typography>
+        <TextField
+          autoFocus
+          variant="standard"
+          fullWidth
+          value={label}
+          onChange={onLabelChange}
+          InputProps={{
+            disableUnderline: true,
+            sx: {
+              ...getWellInputStyle(theme),
+              textAlign: "left",
+              "& input": { textAlign: "left" },
+            },
+          }}
+        />
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} sx={{ fontWeight: 700, color: "text.secondary" }}>
+          Cancel
+        </Button>
+        <Button
+          onClick={onSave}
+          variant="contained"
+          color="primary"
+          sx={{ fontWeight: 800 }}
+        >
+          Apply Change
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export const SettingsModal = ({
   open,
@@ -90,8 +92,6 @@ export const SettingsModal = ({
   dynamicRows,
   calculatedSalary,
   onInclusionChange,
-  wellInputStyle,
-  labelStyle,
 }) => {
   const theme = useTheme();
 
@@ -120,7 +120,7 @@ export const SettingsModal = ({
               value={age}
               onChange={onAgeChange}
               fullWidth
-              InputProps={{ disableUnderline: true, sx: wellInputStyle }}
+              InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -130,7 +130,7 @@ export const SettingsModal = ({
                 value={settings.isMetro}
                 onChange={(e) => onSettingChange("isMetro", e.target.value)}
                 disableUnderline
-                sx={wellInputStyle}
+                sx={getWellInputStyle(theme)}
               >
                 <MenuItem value="Yes" sx={{ fontWeight: 700 }}>
                   Yes
@@ -148,7 +148,7 @@ export const SettingsModal = ({
               value={settings.pfPercent}
               onChange={(e) => onSettingChange("pfPercent", e.target.value)}
               fullWidth
-              InputProps={{ disableUnderline: true, sx: wellInputStyle }}
+              InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -158,7 +158,7 @@ export const SettingsModal = ({
               value={settings.vpfPercent}
               onChange={(e) => onSettingChange("vpfPercent", e.target.value)}
               fullWidth
-              InputProps={{ disableUnderline: true, sx: wellInputStyle }}
+              InputProps={{ disableUnderline: true, sx: getWellInputStyle(theme) }}
             />
           </Grid>
 
@@ -221,7 +221,7 @@ export const SettingsModal = ({
                           }
                           disableUnderline
                           sx={{
-                            ...wellInputStyle,
+                            ...getWellInputStyle(theme),
                             py: 0,
                             px: 1,
                             "& .MuiSelect-select": { pr: 3 },
@@ -277,7 +277,7 @@ export const SettingsModal = ({
                             }
                             disableUnderline
                             sx={{
-                              ...wellInputStyle,
+                              ...getWellInputStyle(theme),
                               py: 0,
                               px: 1,
                               "& .MuiSelect-select": { pr: 3 },

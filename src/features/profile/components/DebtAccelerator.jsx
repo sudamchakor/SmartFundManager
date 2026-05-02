@@ -24,6 +24,7 @@ import { selectCalculatedValues } from "../../emiCalculator/utils/emiCalculator"
 import { selectExpectedReturnRate } from "../../../store/profileSlice";
 import { selectCurrency } from "../../../store/emiSlice";
 import { formatCurrency as utilFormatCurrency } from "../../../utils/formatting";
+import SectionHeader from "../../../components/common/SectionHeader";
 
 const DebtAccelerator = forwardRef((props, ref) => {
   const theme = useTheme();
@@ -132,45 +133,12 @@ const DebtAccelerator = forwardRef((props, ref) => {
         boxShadow: `0 2px 12px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
       }}
     >
-      {/* Technical Header */}
-      <Stack
-        direction="row"
-        spacing={1.5}
-        alignItems="flex-start"
-        sx={{ mb: 3 }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            p: 1,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette.primary.main, 0.1),
-            color: "primary.main",
-          }}
-        >
-          <SpeedIcon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography
-            variant="h6"
-            sx={{ fontWeight: 800, color: "text.primary" }}
-          >
-            Debt Accelerator
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              fontWeight: 600,
-              color: "text.secondary",
-              display: "block",
-              mt: 0.5,
-            }}
-          >
-            Simulate the financial impact of paying extra towards your loan
-            principal versus investing that surplus in the market.
-          </Typography>
-        </Box>
-      </Stack>
+      <SectionHeader
+        title="Debt Accelerator"
+        subtitle="Simulate the financial impact of paying extra towards your loan principal versus investing that surplus in the market."
+        icon={<SpeedIcon />}
+        color={theme.palette.primary.main}
+      />
 
       {/* Input Configuration */}
       <Box sx={{ mb: 3 }}>
