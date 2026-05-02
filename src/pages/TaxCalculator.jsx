@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { selectThemeMode } from '../store/emiSlice';
 import { themes } from '../components/common/ThemeSelector';
 import TaxDashboard from './TaxDashboard';
+import { themeColors } from '../theme/ThemeConfig';
 
 const TaxCalculator = () => {
   const themeMode = useSelector(selectThemeMode);
@@ -15,7 +16,7 @@ const TaxCalculator = () => {
     currentThemeValue = 'dodgerblue';
   }
 
-  const selectedTheme = themes.find((t) => t.value === currentThemeValue) || themes[0];
+  const selectedTheme = themeColors.find((t) => t.value === currentThemeValue) || themeColors[0];
   const [primary, secondary, background, textPrimary, textSecondary] = selectedTheme.colors;
 
   // Create MUI theme matching the app theme

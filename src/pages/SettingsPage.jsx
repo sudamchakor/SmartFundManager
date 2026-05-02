@@ -1,259 +1,147 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
-  Alert,
-  Box,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  MenuItem,
-  Select,
-  Snackbar,
-  Stack,
-  Switch,
-  Typography,
-  useMediaQuery,
-  useTheme,
-  alpha,
+  Box, Stack, Typography, useTheme, alpha, Grid, Button, Slide, Paper,
+  Select, MenuItem, FormControl, Switch, Snackbar, Alert, Divider
 } from "@mui/material";
 import {
-  SettingsOutlined as SettingsIcon,
   PaletteOutlined as PaletteIcon,
-  PaymentsOutlined as CurrencyIcon,
-  CloudSyncOutlined as SyncIcon,
+  SaveOutlined as SaveIcon,
+  SettingsSuggestOutlined as AdvancedIcon,
+  CloudDoneOutlined as SyncIcon,
+  PaymentsOutlined as CurrencyIcon
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
+
 import {
-  selectAutoSave,
-  selectCurrency,
-  selectThemeMode,
-  setAutoSave,
-  setCurrency,
-  setThemeMode,
+  selectThemeMode, selectDesignSystem, selectVisualStyle, selectCurrency, selectAutoSave,
+  setThemeMode, setDesignSystem, setVisualStyle, setCurrency, setAutoSave
 } from "../store/emiSlice";
+
+import { themePresets, themeColors } from "../theme/ThemeConfig";
 import ThemeSelector from "../components/common/ThemeSelector";
 import PageHeader from "../components/common/PageHeader";
+import VisualCard from "../components/settings/VisualCard";
 
 export default function SettingsPage() {
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  const themeMode = useSelector(selectThemeMode);
-  const currency = useSelector(selectCurrency);
-  const autoSave = useSelector(selectAutoSave);
-
-  const [useSystemDefault, setUseSystemDefault] = useState(false);
+  const saved = useSelector(state => state.emi);
+  const [draft, setDraft] = useState({ ...saved });
   const [openToast, setOpenToast] = useState(false);
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
-  useEffect(() => {
-    if (useSystemDefault) {
-      dispatch(setThemeMode(prefersDarkMode ? "dark" : "light"));
-    }
-  }, [useSystemDefault, prefersDarkMode, dispatch]);
+  useEffect(() => { setDraft({ ...saved }); }, [saved]);
 
-  useEffect(() => {
+  const currentPreset = useMemo(() => {
+    const found = Object.entries(themePresets).find(([_, p]) =>
+        p.arch === draft.designSystem && p.style === draft.visualStyle
+    );
+    return found ? found[0] : "custom";
+  }, [draft.designSystem, draft.visualStyle]);
+
+  const handlePresetChange = (presetKey) => {
+    if (presetKey === "custom") return;
+    const preset = themePresets[presetKey];
+    setDraft({ ...draft, designSystem: preset.arch, visualStyle: preset.style });
+  };
+
+  const isDirty = draft.themeMode !== saved.themeMode ||
+      draft.designSystem !== saved.designSystem ||
+      draft.visualStyle !== saved.visualStyle ||
+      draft.currency !== saved.currency ||
+      draft.autoSave !== saved.autoSave;
+
+  const handleSave = () => {
+    dispatch(setThemeMode(draft.themeMode));
+    dispatch(setDesignSystem(draft.designSystem));
+    dispatch(setVisualStyle(draft.visualStyle));
+    dispatch(setCurrency(draft.currency));
+    dispatch(setAutoSave(draft.autoSave));
     setOpenToast(true);
-    const timer = setTimeout(() => setOpenToast(false), 1500);
-    return () => clearTimeout(timer);
-  }, [themeMode, currency, autoSave]);
-
-  // Reusable label style for Command Center aesthetic
-  const sectionLabelStyle = {
-    fontWeight: 800,
-    textTransform: "uppercase",
-    fontSize: "0.75rem",
-    color: "text.secondary",
-    letterSpacing: 1,
   };
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        p: { xs: 2, md: 4 },
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
-      <Box sx={{ width: "100%" }}>
-        <PageHeader
-          title="Global Settings"
-          subtitle="Configure your system preferences and localization parameters."
-          icon={SettingsIcon}
-        />
+      <Box sx={{ width: "100%", p: { xs: 2, md: 4 }, pb: 15, display: "flex", justifyContent: "center" }}>
+        <Box sx={{ width: "100%", maxWidth: 1000 }}>
+          <PageHeader title="Appearance" subtitle="Customize your dashboard aesthetics." icon={PaletteIcon} />
 
-        {/* Main Settings Panel */}
-        <Box
-          sx={{
-            p: { xs: 2, sm: 4 },
-            borderRadius: 3,
-            border: "1px solid",
-            borderColor: alpha(theme.palette.divider, 0.1),
-            bgcolor: theme.palette.background.paper,
-            boxShadow: `0 4px 24px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
-          }}
-        >
-          <Stack spacing={4}>
-            {/* --- 1. Theme Section --- */}
-            <Box>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 3 }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <PaletteIcon
-                    sx={{ fontSize: "1.2rem", color: "text.secondary" }}
-                  />
-                  <Typography sx={sectionLabelStyle}>
-                    Theme Selection
-                  </Typography>
-                </Stack>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      size="small"
-                      checked={useSystemDefault}
-                      onChange={(e) => setUseSystemDefault(e.target.checked)}
-                      sx={{
-                        color: "text.secondary",
-                        "&.Mui-checked": { color: "primary.main" },
-                      }}
-                    />
-                  }
-                  label={
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 700, color: "text.secondary" }}
-                    >
-                      SYSTEM DEFAULT
-                    </Typography>
-                  }
-                />
-              </Stack>
-              <ThemeSelector
-                selectedTheme={themeMode}
-                onThemeChange={(newTheme) => dispatch(setThemeMode(newTheme))}
-                disabled={useSystemDefault}
-              />
+          <Stack spacing={5}>
+            <Box sx={{ p: 4, bgcolor: alpha(theme.palette.primary.main, 0.03), borderRadius: 6, border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}` }}>
+              <Typography variant="h6" sx={{ mb: 1, fontWeight: 800 }}>Visual Style Gallery</Typography>
+              <FormControl fullWidth sx={{ mt: 2 }}>
+                <Select value={currentPreset} onChange={(e) => handlePresetChange(e.target.value)} sx={{ borderRadius: 3, bgcolor: 'background.paper' }}>
+                  {Object.entries(themePresets).map(([key, p]) => (
+                      <MenuItem key={key} value={key}>{p.name} — {p.desc}</MenuItem>
+                  ))}
+                  <MenuItem value="custom">Manual Configuration (Advanced)</MenuItem>
+                </Select>
+              </FormControl>
             </Box>
 
-            <Divider sx={{ borderColor: alpha(theme.palette.divider, 0.1) }} />
-
-            {/* --- 2. Currency Section --- */}
             <Box>
-              <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-                sx={{ mb: 2 }}
-              >
-                <CurrencyIcon
-                  sx={{ fontSize: "1.2rem", color: "text.secondary" }}
-                />
-                <Typography sx={sectionLabelStyle}>
-                  Localization Currency
-                </Typography>
-              </Stack>
-              <Select
-                value={currency}
-                onChange={(e) => dispatch(setCurrency(e.target.value))}
-                disableUnderline
-                variant="standard"
-                fullWidth
-                sx={{
-                  fontWeight: 800,
-                  fontSize: "1rem",
-                  bgcolor: alpha(theme.palette.primary.main, 0.05),
-                  color: "primary.main",
-                  px: 2,
-                  py: 1.5,
-                  borderRadius: 2,
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-                  transition: "background-color 0.2s",
-                  "&:hover": {
-                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                  },
-                  "& .MuiSelect-select": { paddingRight: "32px !important" },
-                  "& .MuiSvgIcon-root": { color: "primary.main" },
-                }}
-              >
-                <MenuItem value="₹" sx={{ fontWeight: 700 }}>
-                  INR - Indian Rupee (₹)
-                </MenuItem>
-                <MenuItem value="$" sx={{ fontWeight: 700 }}>
-                  USD - US Dollar ($)
-                </MenuItem>
-                <MenuItem value="€" sx={{ fontWeight: 700 }}>
-                  EUR - Euro (€)
-                </MenuItem>
-                <MenuItem value="£" sx={{ fontWeight: 700 }}>
-                  GBP - British Pound (£)
-                </MenuItem>
-              </Select>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 800 }}>Brand Identity</Typography>
+              <ThemeSelector selectedTheme={draft.themeMode} onThemeChange={(v) => setDraft({...draft, themeMode: v})} />
             </Box>
 
-            <Divider sx={{ borderColor: alpha(theme.palette.divider, 0.1) }} />
+            <Divider />
 
-            {/* --- 3. Autosave Toggle Section --- */}
             <Box>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Stack direction="row" spacing={1} alignItems="flex-start">
-                  <SyncIcon
-                    sx={{
-                      fontSize: "1.2rem",
-                      color: "text.secondary",
-                      mt: 0.2,
-                    }}
-                  />
-                  <Box>
-                    <Typography sx={{ ...sectionLabelStyle, mb: 0.5 }}>
-                      Autosave Protocol
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ fontWeight: 600, color: "text.secondary" }}
-                    >
-                      Continuously sync financial data to local browser storage.
-                    </Typography>
-                  </Box>
-                </Stack>
-                <Switch
-                  checked={!!autoSave}
-                  onChange={(e) => dispatch(setAutoSave(e.target.checked))}
-                  color="primary"
-                />
-              </Stack>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}><AdvancedIcon color="primary" /> Fine-Tune Style</Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 700 }}>App Personality</Typography>
+                  <Stack direction="row" spacing={1}>
+                    {['material', 'apple', 'fluent'].map((arch) => (
+                        <Button key={arch} onClick={() => setDraft({...draft, designSystem: arch})} variant={draft.designSystem === arch ? "contained" : "outlined"} sx={{ flex: 1, borderRadius: 2 }}>{arch}</Button>
+                    ))}
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 700 }}>Surface Vibe</Typography>
+                  <Stack direction="row" spacing={1}>
+                    {['flat', 'minimalist', 'glass', 'neumorphic'].map((style) => (
+                        <Button key={style} onClick={() => setDraft({...draft, visualStyle: style})} variant={draft.visualStyle === style ? "contained" : "outlined"} sx={{ flex: 1, borderRadius: 2 }}>{style}</Button>
+                    ))}
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Divider />
+
+            <Box>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 800 }}>Functional Settings</Typography>
+              <Grid container spacing={4}>
+                <Grid item xs={12} md={6}>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}><CurrencyIcon sx={{ fontSize: '1rem' }} /> PREFERRED CURRENCY</Typography>
+                    <Select value={draft.currency} onChange={(e) => setDraft({...draft, currency: e.target.value})} fullWidth size="small" sx={{ borderRadius: 2 }}>
+                      <MenuItem value="₹">Indian Rupee (₹)</MenuItem>
+                      <MenuItem value="$">US Dollar ($)</MenuItem>
+                      <MenuItem value="€">Euro (€)</MenuItem>
+                    </Select>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 2, bgcolor: alpha(theme.palette.divider, 0.05), borderRadius: 3 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}><SyncIcon fontSize="small" /> AUTOSAVE</Typography>
+                    <Switch checked={draft.autoSave} onChange={(e) => setDraft({...draft, autoSave: e.target.checked})} />
+                  </Stack>
+                </Grid>
+              </Grid>
             </Box>
           </Stack>
-        </Box>
 
-        {/* Global Toast Notification */}
-        <Snackbar
-          open={openToast}
-          autoHideDuration={1500}
-          onClose={() => setOpenToast(false)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-          sx={{ mb: 6 }} // Lifted slightly so it doesn't collide with the global footer
-        >
-          <Alert
-            severity="success"
-            variant="filled"
-            sx={{
-              fontWeight: 800,
-              borderRadius: 2,
-              boxShadow: `0 8px 24px ${alpha(theme.palette.success.main, 0.4)}`,
-            }}
-          >
-            System Parameters Updated
-          </Alert>
-        </Snackbar>
+          <Slide direction="up" in={isDirty}>
+            <Paper elevation={24} sx={{ position: 'fixed', bottom: 40, left: '50%', transform: 'translateX(-50%) !important', p: 1.5, borderRadius: 100, bgcolor: 'text.primary', color: 'background.paper', display: 'flex', alignItems: 'center', gap: 4, px: 3, zIndex: 2000 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, ml: 1 }}>Unsaved style changes</Typography>
+              <Stack direction="row" spacing={1}>
+                <Button onClick={() => setDraft({ ...saved })} sx={{ color: alpha(theme.palette.common.white, 0.6), fontWeight: 700 }}>Undo</Button>
+                <Button onClick={handleSave} variant="contained" startIcon={<SaveIcon />} sx={{ borderRadius: 100, px: 4, fontWeight: 800 }}>Save Changes</Button>
+              </Stack>
+            </Paper>
+          </Slide>
+        </Box>
       </Box>
-    </Box>
   );
 }
