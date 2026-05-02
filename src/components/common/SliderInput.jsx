@@ -82,6 +82,7 @@ export const SliderInput = ({
           mb: 0,
           display: "inline-block",
         }}
+        id={`${label}-slider-label`}
       >
         {label}
       </Typography>
@@ -109,6 +110,7 @@ export const SliderInput = ({
       step={step}
       marks={marks}
       color={activeColorToken}
+      aria-labelledby={`${label}-slider-label`}
       sx={{
         flexGrow: 1,
         py: 1,
@@ -132,6 +134,7 @@ export const SliderInput = ({
           }
         }}
         size="small"
+        aria-labelledby={`${label}-slider-label`}
         InputProps={{
           disableUnderline: true,
           inputProps: {

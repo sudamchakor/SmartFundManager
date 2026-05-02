@@ -20,7 +20,9 @@ const initialState = {
   emergencyFundTarget: 6, // in months
   riskProfile: { q1: 3, q2: 3, q3: 3, q4: 3, q5: 3 }, // 5 questions, default to neutral
   totalDebt: 0,
-  incomes: [{ id: 1, name: "Salary", amount: 100000, frequency: "monthly" }],
+  incomes: {
+    1: { id: 1, name: "Salary", amount: 100000, frequency: "monthly" },
+  },
   expenses: [
     {
       id: 1,
@@ -39,8 +41,8 @@ const initialState = {
       frequency: "monthly",
     },
   ],
-  goals: [
-    {
+  goals: {
+    1: {
       id: 1,
       name: "Retirement",
       targetAmount: 20000000,
@@ -49,7 +51,7 @@ const initialState = {
       investmentPlans: [],
       priority: 1, // Add priority
     },
-  ],
+  },
 };
 
 const profileSlice = createSlice({
@@ -118,20 +120,17 @@ const profileSlice = createSlice({
       state.totalDebt = action.payload;
     },
     addIncome: (state, action) => {
-      state.incomes.push({
-        ...action.payload,
-        id:
-          state.incomes.length > 0
-            ? Math.max(...state.incomes.map((i) => i.id)) + 1
-            : 1,
-      });
+      const newId =
+        Object.keys(state.incomes).length > 0
+          ? Math.max(...Object.keys(state.incomes).map(Number)) + 1
+          : 1;
+      state.incomes[newId] = { ...action.payload, id: newId };
     },
     updateIncome: (state, action) => {
-      const index = state.incomes.findIndex((i) => i.id === action.payload.id);
-      if (index !== -1) state.incomes[index] = action.payload;
+      state.incomes[action.payload.id] = action.payload;
     },
     deleteIncome: (state, action) => {
-      state.incomes = state.incomes.filter((i) => i.id !== action.payload);
+      delete state.incomes[action.payload];
     },
     addExpense: (state, action) => {
       state.expenses.push({
@@ -152,67 +151,65 @@ const profileSlice = createSlice({
       state.expenses = state.expenses.filter((e) => e.id !== action.payload);
     },
     deleteGoal: (state, action) => {
-      state.goals = state.goals.filter((g) => g.id !== action.payload);
-      // Re-assign priorities after deletion
-      const sortedGoals = [...state.goals].sort(
-        (a, b) => a.priority - b.priority,
-      );
-      sortedGoals.forEach((goal, i) => {
-        const index = state.goals.findIndex((g) => g.id === goal.id);
-        state.goals[index].priority = i + 1;
+      const deletedGoalPriority = state.goals[action.payload].priority;
+      delete state.goals[action.payload];
+      Object.values(state.goals).forEach((goal) => {
+        if (goal.priority > deletedGoalPriority) {
+          goal.priority -= 1;
+        }
       });
     },
     addGoal: (state, action) => {
-      state.goals.push({
+      const newId =
+        Object.keys(state.goals).length > 0
+          ? Math.max(...Object.keys(state.goals).map(Number)) + 1
+          : 1;
+      state.goals[newId] = {
         ...action.payload,
-        id:
-          state.goals.length > 0
-            ? Math.max(...state.goals.map((g) => g.id)) + 1
-            : 1,
+        id: newId,
         investmentPlans: action.payload.investmentPlans || [],
-        priority: state.goals.length + 1, // Set default priority
-      });
+        priority: Object.keys(state.goals).length + 1,
+      };
     },
     updateGoal: (state, action) => {
-      const index = state.goals.findIndex((g) => g.id === action.payload.id);
-      if (index !== -1) state.goals[index] = action.payload;
+      state.goals[action.payload.id] = action.payload;
     },
     addInvestmentPlan: (state, action) => {
       const { goalId, plan } = action.payload;
-      const goal = state.goals.find((g) => g.id === goalId);
+      const goal = state.goals[goalId];
       if (goal) {
-        goal.investmentPlans.push({
-          ...plan,
-          id:
-            goal.investmentPlans.length > 0
-              ? Math.max(...goal.investmentPlans.map((p) => p.id)) + 1
-              : 1,
-        });
+        const newPlanId =
+          goal.investmentPlans.length > 0
+            ? Math.max(...goal.investmentPlans.map((p) => p.id)) + 1
+            : 1;
+        goal.investmentPlans.push({ ...plan, id: newPlanId });
       }
     },
     updateGoalPriority: (state, action) => {
       const { goalId, priority } = action.payload;
-      const goal = state.goals.find((g) => g.id === goalId);
+      const goal = state.goals[goalId];
       if (goal) {
         goal.priority = priority;
       }
     },
     reorderGoals: (state, action) => {
-      state.goals = action.payload;
+      action.payload.forEach((goal, index) => {
+        state.goals[goal.id].priority = index + 1;
+      });
     },
     addTemplateGoal: (state, action) => {
       const { type, monthlyExpenses } = action.payload;
       let newGoal = {};
-      const nextId =
-        state.goals.length > 0
-          ? Math.max(...state.goals.map((g) => g.id)) + 1
+      const newId =
+        Object.keys(state.goals).length > 0
+          ? Math.max(...Object.keys(state.goals).map(Number)) + 1
           : 1;
-      const priority = state.goals.length + 1;
+      const priority = Object.keys(state.goals).length + 1;
 
       switch (type) {
         case "emergencyFund":
           newGoal = {
-            id: nextId,
+            id: newId,
             name: "Emergency Fund",
             targetAmount: monthlyExpenses * 6,
             targetYear: currentYear + 1,
@@ -223,7 +220,7 @@ const profileSlice = createSlice({
           break;
         case "childEducation":
           newGoal = {
-            id: nextId,
+            id: newId,
             name: "Child's Higher Education",
             targetAmount: 5000000,
             targetYear: currentYear + 18,
@@ -234,7 +231,7 @@ const profileSlice = createSlice({
           break;
         case "retirement":
           newGoal = {
-            id: nextId,
+            id: newId,
             name: "Retirement",
             targetAmount: 20000000,
             targetYear:
@@ -247,7 +244,7 @@ const profileSlice = createSlice({
         default:
           return;
       }
-      state.goals.push(newGoal);
+      state.goals[newId] = newGoal;
     },
     resetProfile: (state) => {
       return initialState;
@@ -308,9 +305,9 @@ export const selectEmergencyFundTarget = (state) =>
   state.profile.emergencyFundTarget;
 export const selectRiskProfile = (state) => state.profile.riskProfile;
 export const selectTotalDebt = (state) => state.profile.totalDebt;
-export const selectIncomes = (state) => state.profile.incomes;
+export const selectIncomes = (state) => Object.values(state.profile.incomes);
 export const selectProfileExpenses = (state) => state.profile.expenses;
-export const selectGoals = (state) => state.profile.goals;
+export const selectGoals = (state) => Object.values(state.profile.goals);
 
 // Derived Selectors
 export const selectTotalMonthlyIncome = createSelector(

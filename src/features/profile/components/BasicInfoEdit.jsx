@@ -83,8 +83,9 @@ export default function BasicInfoEdit({
     <>
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6}>
-          <Typography sx={labelStyle}>Name</Typography>
+          <Typography sx={labelStyle} id="name-label">Name</Typography>
           <TextField
+            aria-labelledby="name-label"
             fullWidth
             variant="standard"
             size="small"
@@ -94,8 +95,9 @@ export default function BasicInfoEdit({
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography sx={labelStyle}>Occupation</Typography>
+          <Typography sx={labelStyle} id="occupation-label">Occupation</Typography>
           <TextField
+            aria-labelledby="occupation-label"
             fullWidth
             variant="standard"
             size="small"
@@ -152,9 +154,10 @@ export default function BasicInfoEdit({
           />
         </Grid>
         <Grid item xs={12}>
-          <Typography sx={labelStyle}>Risk Tolerance</Typography>
+          <Typography sx={labelStyle} id="risk-tolerance-label">Risk Tolerance</Typography>
           <FormControl variant="standard" size="small" fullWidth>
             <Select
+              labelId="risk-tolerance-label"
               value={tempRiskTolerance}
               onChange={(e) => setTempRiskTolerance(e.target.value)}
               disableUnderline

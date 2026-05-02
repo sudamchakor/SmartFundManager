@@ -56,9 +56,13 @@ const Footer = () => {
           >
             © {new Date().getFullYear()}{" "}
             <Link
+              href="/"
               color="primary"
-              onClick={() => navigate("/")}
-              sx={{ fontWeight: 700, textDecoration: "none", cursor: "pointer" }}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/");
+              }}
+              sx={{ fontWeight: 700, textDecoration: "none" }}
             >
               SmartFund Manager
             </Link>
@@ -68,13 +72,16 @@ const Footer = () => {
             {footerLinks.map((link) => (
               <Link
                 key={link.path}
-                onClick={() => navigate(link.path)}
+                href={link.path}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(link.path);
+                }}
                 underline="none"
                 sx={{
                   color: "text.secondary",
                   fontWeight: 600,
                   fontSize: "0.75rem",
-                  cursor: "pointer",
                   "&:hover": { color: "primary.main" },
                 }}
               >

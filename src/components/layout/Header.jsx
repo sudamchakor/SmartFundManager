@@ -38,10 +38,10 @@ import {
   ExpandLess,
   ExpandMore,
   Payments as PersonalLoanIcon,
+  Dashboard as WealthIcon,
 } from "@mui/icons-material";
 
 import { useNavigate, useLocation } from "react-router-dom";
-import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCalculatedValues } from "../../features/emiCalculator/utils/emiCalculator";
 import { resetEmiState } from "../../store/emiSlice";
@@ -90,6 +90,7 @@ const Header = () => {
   const [exportAnchorEl, setExportAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openCalculators, setOpenCalculators] = useState(false);
+  const [openProfile, setOpenProfile] = useState(false);
 
   const currentCalc =
     calculators.find((c) => location.pathname.startsWith(c.path)) ||
@@ -102,6 +103,8 @@ const Header = () => {
     } else if (format === "excel") {
       if (!calculatedValues?.schedule)
         return enqueueSnackbar("No data to export", { variant: "info" });
+      
+      const XLSX = await import("xlsx");
       const ws = XLSX.utils.json_to_sheet(calculatedValues.schedule);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Schedule");
@@ -137,68 +140,69 @@ const Header = () => {
         zIndex: (theme) => theme.zIndex.drawer + 1,
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        {/* LEFT: Logo & Calculator Selector */}
-        <Stack direction="row" spacing={2} alignItems="center">
-          {isMobile && (
-            <IconButton
-              onClick={() => setDrawerOpen(true)}
-              edge="start"
-              color="inherit"
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
+      <Toolbar>
+        <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            {isMobile && (
+              <IconButton
+                onClick={() => setDrawerOpen(true)}
+                edge="start"
+                color="inherit"
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
 
-          <Box
-            onClick={() => handleNavigation("/")}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-              gap: 1,
-            }}
-          >
-            <CalculateIcon sx={{ color: "inherit", fontSize: 32 }} />
-            <Typography
-              variant="h6"
+            <Box
+              onClick={() => handleNavigation("/")}
               sx={{
-                fontWeight: 900,
-                display: { xs: "none", sm: "block" },
-                color: "inherit",
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                gap: 1,
               }}
             >
-              SmartFund Manager
-            </Typography>
-          </Box>
-
-          {!isMobile && (
-            <>
-              <Divider
-                orientation="vertical"
-                flexItem
+              <CalculateIcon sx={{ color: "inherit", fontSize: 32 }} />
+              <Typography
+                variant="h6"
                 sx={{
-                  height: 24,
-                  alignSelf: "center",
-                  mx: 1,
-                bgcolor: alpha(contrastColor, 0.3),
-                }}
-              />
-              <Button
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                endIcon={<ArrowDownIcon />}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 700,
+                  fontWeight: 900,
+                  display: { xs: "none", sm: "block" },
                   color: "inherit",
-                "&:hover": { bgcolor: alpha(contrastColor, 0.1) },
                 }}
               >
-                {currentCalc.label}
-              </Button>
-            </>
-          )}
-        </Stack>
+                SmartFund Manager
+              </Typography>
+            </Box>
+
+            {!isMobile && (
+              <>
+                <Divider
+                  orientation="vertical"
+                  flexItem
+                  sx={{
+                    height: 24,
+                    alignSelf: "center",
+                    mx: 1,
+                  bgcolor: alpha(contrastColor, 0.3),
+                  }}
+                />
+                <Button
+                  onClick={(e) => setAnchorEl(e.currentTarget)}
+                  endIcon={<ArrowDownIcon />}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 700,
+                    color: "inherit",
+                  "&:hover": { bgcolor: alpha(contrastColor, 0.1) },
+                  }}
+                >
+                  {currentCalc.label}
+                </Button>
+              </>
+            )}
+          </Stack>
+        </Box>
 
         {/* RIGHT: Actions */}
         <Stack direction="row" spacing={1} alignItems="center">
@@ -224,16 +228,6 @@ const Header = () => {
                 Export
               </Button>
 
-              <Tooltip title="Reset Local Data">
-                <IconButton
-                  onClick={handleResetData}
-                  size="small"
-                  color="inherit"
-                >
-                  <ResetIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-
               <Tooltip title="Help & FAQ">
                 <IconButton
                   onClick={() => handleNavigation("/faq")}
@@ -241,16 +235,6 @@ const Header = () => {
                   color="inherit"
                 >
                   <HelpIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-
-              <Tooltip title="Settings">
-                <IconButton
-                  onClick={() => handleNavigation("/settings")}
-                  size="small"
-                  color="inherit"
-                >
-                  <SettingsIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </>
@@ -274,6 +258,7 @@ const Header = () => {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
+          disableScrollLock={true}
         >
           {calculators.map((calc) => (
             <MenuItem
@@ -297,6 +282,7 @@ const Header = () => {
           anchorEl={exportAnchorEl}
           open={Boolean(exportAnchorEl)}
           onClose={() => setExportAnchorEl(null)}
+          disableScrollLock={true}
         >
           <MenuItem onClick={() => handleExport("pdf")}>Download PDF</MenuItem>
           <MenuItem onClick={() => handleExport("excel")}>
@@ -308,6 +294,7 @@ const Header = () => {
           anchorEl={profileAnchorEl}
           open={Boolean(profileAnchorEl)}
           onClose={() => setProfileAnchorEl(null)}
+          disableScrollLock={true}
         >
           <MenuItem onClick={() => handleNavigation("/profile?tab=personal")}>
             <ListItemIcon>
@@ -320,6 +307,12 @@ const Header = () => {
               <GoalsIcon fontSize="small" />
             </ListItemIcon>
             Financial Goals
+          </MenuItem>
+          <MenuItem onClick={() => handleNavigation("/profile?tab=wealth")}>
+            <ListItemIcon>
+              <WealthIcon fontSize="small" />
+            </ListItemIcon>
+            Wealth Dashboard
           </MenuItem>
           <Divider />
           <MenuItem onClick={() => handleNavigation("/settings")}>
@@ -394,14 +387,44 @@ const Header = () => {
             <Divider />
 
             {/* Profile & Settings List */}
-            <ListItemButton
-              onClick={() => handleNavigation("/profile?tab=personal")}
-            >
+            <ListItemButton onClick={() => setOpenProfile(!openProfile)}>
               <ListItemIcon>
                 <PersonIcon />
               </ListItemIcon>
               <ListItemText primary="My Profile" />
+              {openProfile ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
+            <Collapse in={openProfile} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItemButton
+                  sx={{ pl: 4 }}
+                  onClick={() => handleNavigation("/profile?tab=personal")}
+                >
+                  <ListItemIcon>
+                    <PersonIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Profile" />
+                </ListItemButton>
+                <ListItemButton
+                  sx={{ pl: 4 }}
+                  onClick={() => handleNavigation("/profile?tab=goals")}
+                >
+                  <ListItemIcon>
+                    <GoalsIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Financial Goals" />
+                </ListItemButton>
+                <ListItemButton
+                  sx={{ pl: 4 }}
+                  onClick={() => handleNavigation("/profile?tab=wealth")}
+                >
+                  <ListItemIcon>
+                    <WealthIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Wealth Dashboard" />
+                </ListItemButton>
+              </List>
+            </Collapse>
 
             <ListItemButton onClick={() => handleNavigation("/settings")}>
               <ListItemIcon>
@@ -415,6 +438,15 @@ const Header = () => {
                 <HelpIcon />
               </ListItemIcon>
               <ListItemText primary="Help & FAQ" />
+            </ListItemButton>
+
+            <Divider />
+
+            <ListItemButton onClick={handleResetData} sx={{ color: "error.main" }}>
+              <ListItemIcon>
+                <ResetIcon color="error" />
+              </ListItemIcon>
+              <ListItemText primary="Clear Data" />
             </ListItemButton>
           </List>
         </Box>

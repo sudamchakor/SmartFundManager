@@ -976,7 +976,7 @@ export default function OnboardingModal({ open, onClose }) {
       }}
     >
       <DialogTitle sx={{ p: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: -0.5 }}>
+        <Typography component="h2" variant="h5" sx={{ fontWeight: 900, letterSpacing: -0.5 }}>
           Initialize Profile Protocol
         </Typography>
         <Typography

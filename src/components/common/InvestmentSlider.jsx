@@ -36,7 +36,7 @@ export default function InvestmentSlider({
     <Box sx={{ mb: 2 }}>
       <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
         <Grid item xs={7}>
-          <Typography sx={investmentLabelStyle}>{label}</Typography>
+          <Typography sx={investmentLabelStyle} id={`${label}-investment-slider-label`}>{label}</Typography>
         </Grid>
         <Grid item xs={5}>
           <TextField
@@ -44,6 +44,7 @@ export default function InvestmentSlider({
             size="small"
             value={value}
             onChange={(e) => onChange(Number(e.target.value))}
+            aria-labelledby={`${label}-investment-slider-label`}
             InputProps={{
               startAdornment:
                 adornmentPosition === "start" && adornment ? (
@@ -88,6 +89,7 @@ export default function InvestmentSlider({
         step={step}
         onChange={(e, val) => onChange(val)}
         color={color}
+        aria-labelledby={`${label}-investment-slider-label`}
         sx={{
           py: 1,
           "& .MuiSlider-thumb": { width: 12, height: 12 },

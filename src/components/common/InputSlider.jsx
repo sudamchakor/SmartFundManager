@@ -49,12 +49,13 @@ export default function InputSlider({
         alignItems="center"
         mb={1.5}
       >
-        <Typography sx={labelStyle}>{label}</Typography>
+        <Typography sx={labelStyle} id={`${label}-slider-label`}>{label}</Typography>
         <TextField
           variant="standard"
           size="small"
           value={value}
           onChange={handleInputChange}
+          aria-labelledby={`${label}-slider-label`}
           InputProps={{
             startAdornment: adornmentPosition === "start" && adornment ? (
               <InputAdornment position="start" sx={{ "& p": { fontWeight: 900, color: "primary.main" } }}>
@@ -79,6 +80,7 @@ export default function InputSlider({
         step={step}
         onChange={handleSliderChange}
         color="primary"
+        aria-labelledby={`${label}-slider-label`}
         sx={{
           py: 1,
           "& .MuiSlider-thumb": { width: 14, height: 14 },

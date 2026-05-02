@@ -79,9 +79,10 @@ export default function IncomeExpenseForm({
       <Grid container spacing={2}>
         {!isExpense && (
           <Grid item xs={12} sm={6}>
-            <Typography sx={labelStyle}>Income Type</Typography>
+            <Typography sx={labelStyle} id="income-type-label">Income Type</Typography>
             <FormControl variant="standard" size="small" fullWidth>
               <Select
+                labelId="income-type-label"
                 value={formData.incomeType || "Salary"}
                 onChange={(e) =>
                   setFormData({ ...formData, incomeType: e.target.value })
@@ -100,8 +101,9 @@ export default function IncomeExpenseForm({
         )}
 
         <Grid item xs={12} sm={isExpense ? 12 : 6}>
-          <Typography sx={labelStyle}>{isExpense ? "Expense Name" : "Source"}</Typography>
+          <Typography sx={labelStyle} id="source-label">{isExpense ? "Expense Name" : "Source"}</Typography>
           <TextField
+            aria-labelledby="source-label"
             variant="standard"
             fullWidth
             size="small"
@@ -125,9 +127,10 @@ export default function IncomeExpenseForm({
           </Grid>
         ) : (
           <Grid item xs={12} sm={6}>
-            <Typography sx={labelStyle}>Frequency</Typography>
+            <Typography sx={labelStyle} id="frequency-label">Frequency</Typography>
             <FormControl variant="standard" size="small" fullWidth>
               <Select
+                labelId="frequency-label"
                 value={formData.frequency || "monthly"}
                 onChange={(e) =>
                   setFormData({ ...formData, frequency: e.target.value })
@@ -146,9 +149,10 @@ export default function IncomeExpenseForm({
         {isExpense ? (
           <>
             <Grid item xs={12} sm={6}>
-              <Typography sx={labelStyle}>Category</Typography>
+              <Typography sx={labelStyle} id="category-label">Category</Typography>
               <FormControl variant="standard" size="small" fullWidth>
                 <Select
+                  labelId="category-label"
                   value={formData.category || "basic"}
                   onChange={(e) =>
                     setFormData({ ...formData, category: e.target.value })
@@ -165,9 +169,10 @@ export default function IncomeExpenseForm({
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Typography sx={labelStyle}>Frequency</Typography>
+              <Typography sx={labelStyle} id="expense-frequency-label">Frequency</Typography>
               <FormControl variant="standard" size="small" fullWidth>
                 <Select
+                  labelId="expense-frequency-label"
                   value={formData.frequency || "monthly"}
                   onChange={(e) =>
                     setFormData({ ...formData, frequency: e.target.value })
@@ -199,9 +204,10 @@ export default function IncomeExpenseForm({
             </Grid>
             <Grid item xs={12}>
               <Collapse in={formData.isTaxDeductible}>
-                <Typography sx={labelStyle}>Exemption Category</Typography>
+                <Typography sx={labelStyle} id="exemption-category-label">Exemption Category</Typography>
                 <FormControl variant="standard" fullWidth size="small">
                   <Select
+                    labelId="exemption-category-label"
                     value={formData.taxCategory}
                     onChange={(e) =>
                       setFormData({ ...formData, taxCategory: e.target.value })
@@ -234,8 +240,9 @@ export default function IncomeExpenseForm({
         )}
 
         <Grid item xs={12} sm={6}>
-          <Typography sx={labelStyle}>Start Year</Typography>
+          <Typography sx={labelStyle} id="start-year-label">Start Year</Typography>
           <DatePicker
+            label="Start Year"
             views={["year", "month"]}
             openTo="month"
             open={startYearOpen}
@@ -254,6 +261,7 @@ export default function IncomeExpenseForm({
                 size: "small",
                 fullWidth: true,
                 onClick: () => setStartYearOpen(true),
+                "aria-labelledby": "start-year-label",
                 InputProps: {
                   disableUnderline: true, sx: getWellInputStyle(theme)
                 }
@@ -264,8 +272,9 @@ export default function IncomeExpenseForm({
           />
         </Grid>
         <Grid item xs={12} sm={6}>
-          <Typography sx={labelStyle}>End Year</Typography>
+          <Typography sx={labelStyle} id="end-year-label">End Year</Typography>
           <DatePicker
+            label="End Year"
             views={["year", "month"]}
             openTo="month"
             open={endYearOpen}
@@ -286,6 +295,7 @@ export default function IncomeExpenseForm({
                 size: "small",
                 fullWidth: true,
                 onClick: () => setEndYearOpen(true),
+                "aria-labelledby": "end-year-label",
                 InputProps: {
                   disableUnderline: true, sx: getWellInputStyle(theme)
                 }

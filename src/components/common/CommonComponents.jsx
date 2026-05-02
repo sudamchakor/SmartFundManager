@@ -26,7 +26,7 @@ export const AmountInput = ({
 
   return (
     <Box sx={{ width: "100%", opacity: disabled ? 0.6 : 1 }}>
-      {label && <Typography sx={labelStyle}>{label}</Typography>}
+      {label && <Typography sx={labelStyle} id={`${label}-amount-input-label`}>{label}</Typography>}
       <TextField
         variant="standard"
         fullWidth
@@ -36,6 +36,7 @@ export const AmountInput = ({
         onChange={onChange}
         onFocus={(e) => e.target.select()}
         placeholder={placeholder}
+        aria-labelledby={`${label}-amount-input-label`}
         inputProps={{
           min: "0",
           step: "0.01",
@@ -103,7 +104,7 @@ export const AmountWithUnitInput = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      {label && <Typography sx={labelStyle}>{label}</Typography>}
+      {label && <Typography sx={labelStyle} id={`${label}-amount-unit-input-label`}>{label}</Typography>}
 
       {/* Unified Control Strip */}
       <Box
@@ -142,6 +143,7 @@ export const AmountWithUnitInput = ({
           onChange={onAmountChange}
           onFocus={(e) => e.target.select()}
           placeholder={placeholder}
+          aria-labelledby={`${label}-amount-unit-input-label`}
           inputProps={{ min: "0", step: "0.01" }}
           InputProps={{ disableUnderline: true }}
         />
@@ -201,8 +203,9 @@ export const DatePickerInput = ({ label, value, onChange }) => {
 
   return (
     <Box sx={{ width: "100%" }}>
-      {label && <Typography sx={labelStyle}>{label}</Typography>}
+      {label && <Typography sx={labelStyle} id={`${label}-date-picker-label`}>{label}</Typography>}
       <DatePicker
+        label={label}
         views={["year", "month"]}
         openTo="month"
         open={open}
@@ -215,6 +218,7 @@ export const DatePickerInput = ({ label, value, onChange }) => {
             variant: "standard",
             fullWidth: true,
             onClick: () => setOpen(true),
+            "aria-labelledby": `${label}-date-picker-label`,
             InputProps: {
               disableUnderline: true,
               sx: {
