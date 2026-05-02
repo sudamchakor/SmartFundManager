@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import {
   Grid,
   Box,
@@ -18,14 +18,15 @@ import {
   Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
+import SuspenseFallback from "../components/common/SuspenseFallback";
 
 // Import the individual components
-import SipCalculatorForm from "../features/investment/tabs/SipCalculatorForm";
-import LumpsumCalculatorForm from "../features/investment/tabs/LumpsumCalculatorForm";
-import StepUpSipCalculatorForm from "../features/investment/tabs/StepUpSipCalculatorForm";
-import SwpCalculatorForm from "../features/investment/tabs/SwpCalculatorForm";
-import FdCalculatorForm from "../features/investment/tabs/FdCalculatorForm";
-import InvestmentChart from "../features/investment/components/InvestmentChart";
+const SipCalculatorForm = lazy(() => import("../features/investment/tabs/SipCalculatorForm"));
+const LumpsumCalculatorForm = lazy(() => import("../features/investment/tabs/LumpsumCalculatorForm"));
+const StepUpSipCalculatorForm = lazy(() => import("../features/investment/tabs/StepUpSipCalculatorForm"));
+const SwpCalculatorForm = lazy(() => import("../features/investment/tabs/SwpCalculatorForm"));
+const FdCalculatorForm = lazy(() => import("../features/investment/tabs/FdCalculatorForm"));
+const InvestmentChart = lazy(() => import("../features/investment/components/InvestmentChart"));
 
 const TAB_ROUTES = [
   "/investment",
@@ -243,41 +244,43 @@ export default function InvestmentCalculator() {
                     height: "100%",
                   }}
                 >
-                  {tabIndex === 0 && (
-                    <SipCalculatorForm
-                      onCalculate={setInvestmentData}
-                      sharedState={sharedState}
-                      onSharedStateChange={handleSharedStateChange}
-                    />
-                  )}
-                  {tabIndex === 1 && (
-                    <LumpsumCalculatorForm
-                      onCalculate={setInvestmentData}
-                      sharedState={sharedState}
-                      onSharedStateChange={handleSharedStateChange}
-                    />
-                  )}
-                  {tabIndex === 2 && (
-                    <StepUpSipCalculatorForm
-                      onCalculate={setInvestmentData}
-                      sharedState={sharedState}
-                      onSharedStateChange={handleSharedStateChange}
-                    />
-                  )}
-                  {tabIndex === 3 && (
-                    <SwpCalculatorForm
-                      onCalculate={setInvestmentData}
-                      sharedState={sharedState}
-                      onSharedStateChange={handleSharedStateChange}
-                    />
-                  )}
-                  {tabIndex === 4 && (
-                    <FdCalculatorForm
-                      onCalculate={setInvestmentData}
-                      sharedState={sharedState}
-                      onSharedStateChange={handleSharedStateChange}
-                    />
-                  )}
+                  <Suspense fallback={<SuspenseFallback />}>
+                    {tabIndex === 0 && (
+                      <SipCalculatorForm
+                        onCalculate={setInvestmentData}
+                        sharedState={sharedState}
+                        onSharedStateChange={handleSharedStateChange}
+                      />
+                    )}
+                    {tabIndex === 1 && (
+                      <LumpsumCalculatorForm
+                        onCalculate={setInvestmentData}
+                        sharedState={sharedState}
+                        onSharedStateChange={handleSharedStateChange}
+                      />
+                    )}
+                    {tabIndex === 2 && (
+                      <StepUpSipCalculatorForm
+                        onCalculate={setInvestmentData}
+                        sharedState={sharedState}
+                        onSharedStateChange={handleSharedStateChange}
+                      />
+                    )}
+                    {tabIndex === 3 && (
+                      <SwpCalculatorForm
+                        onCalculate={setInvestmentData}
+                        sharedState={sharedState}
+                        onSharedStateChange={handleSharedStateChange}
+                      />
+                    )}
+                    {tabIndex === 4 && (
+                      <FdCalculatorForm
+                        onCalculate={setInvestmentData}
+                        sharedState={sharedState}
+                        onSharedStateChange={handleSharedStateChange}
+                      />
+                    )}
+                  </Suspense>
                 </Box>
               </Grid>
 
@@ -359,7 +362,9 @@ export default function InvestmentCalculator() {
 
                       {/* Chart Area */}
                       <Box sx={{ flexGrow: 1, minHeight: 350 }}>
-                        <InvestmentChart data={investmentData.chartData} />
+                        <Suspense fallback={<SuspenseFallback />}>
+                          <InvestmentChart data={investmentData.chartData} />
+                        </Suspense>
                       </Box>
                     </Box>
                   ) : (

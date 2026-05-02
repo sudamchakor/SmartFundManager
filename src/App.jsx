@@ -1,6 +1,6 @@
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, Suspense, lazy } from "react";
 import {Routes, Route, Navigate} from "react-router-dom";
-import { ThemeProvider, CssBaseline, Box, Typography, Button } from "@mui/material";
+import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { HelmetProvider } from "react-helmet-async";
@@ -13,21 +13,22 @@ import { selectThemeMode, selectDesignSystem, selectVisualStyle } from "./store/
 
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import Home from "./pages/Home";
-import SettingsPage from "./pages/SettingsPage";
-import UserProfile from "./pages/UserProfile";
-import TaxCalculator from "./pages/TaxCalculator";
-import InvestmentCalculator from "./pages/InvestmentCalculator";
-import FAQ from "./pages/FAQ";
-import NotFoundPage from "./pages/NotFoundPage";
+import SuspenseFallback from "./components/common/SuspenseFallback";
 
-import "./App.css";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Calculator from "./pages/Calculator";
-import TermsOfService from "./pages/TermsOfService";
-import ContactUs from "./pages/ContactUs";
-import CreditCardEMICalculator from "./pages/CreditCardEmiCalculator";
-import PersonalLoanCalculator from "./pages/PersonalLoanCalculator";
+const Home = lazy(() => import("./pages/Home"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const TaxCalculator = lazy(() => import("./pages/TaxCalculator"));
+const InvestmentCalculator = lazy(() => import("./pages/InvestmentCalculator"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const Calculator = lazy(() => import("./pages/Calculator"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const ContactUs = lazy(() => import("./pages/ContactUs"));
+const CreditCardEMICalculator = lazy(() => import("./pages/CreditCardEmiCalculator"));
+const PersonalLoanCalculator = lazy(() => import("./pages/PersonalLoanCalculator"));
+
 
 const AppContent = () => {
     const themeMode = useSelector(selectThemeMode);
@@ -64,30 +65,32 @@ const AppContent = () => {
                     }}
                 >
                     <Box sx={{ width: '100%', maxWidth: '1440px', mx: 'auto', px: { xs: 2, md: 3 } }}>
-                        <Routes>
-                            {/* Redirects for GH Pages root path logic */}
-                            <Route path="/smart-fund-manager" element={<Navigate to="/" replace />} />
+                        <Suspense fallback={<SuspenseFallback />}>
+                            <Routes>
+                                {/* Redirects for GH Pages root path logic */}
+                                <Route path="/smart-fund-manager" element={<Navigate to="/" replace />} />
 
-                            {/* Core Dashboard Routes */}
-                            <Route path="/" element={<Home />} />
-                            <Route path="/calculator" element={<Calculator />} />
-                            <Route path="/profile" element={<UserProfile />} />
-                            <Route path="/settings" element={<SettingsPage />} />
-                            <Route path="/credit-card-emi" element={<CreditCardEMICalculator/>}/>
-                            <Route path="/personal-loan" element={<PersonalLoanCalculator/>}/>
-                            <Route path="/investment" element={<InvestmentCalculator />} />
-                            <Route path="/investment/sip" element={<InvestmentCalculator />} />
-                            <Route path="/investment/lumpsum" element={<InvestmentCalculator />} />
-                            <Route path="/investment/step-up-sip" element={<InvestmentCalculator />} />
-                            <Route path="/investment/swp" element={<InvestmentCalculator />} />
-                            <Route path="/investment/fd" element={<InvestmentCalculator />} />
-                            <Route path="/tax-calculator" element={<TaxCalculator />} />
-                            <Route path="/faq" element={<FAQ />} />
-                            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                            <Route path="/terms-of-service" element={<TermsOfService />} />
-                            <Route path="/contact-us" element={<ContactUs />} />
-                            <Route path="*" element={<NotFoundPage />} />
-                        </Routes>
+                                {/* Core Dashboard Routes */}
+                                <Route path="/" element={<Home />} />
+                                <Route path="/calculator" element={<Calculator />} />
+                                <Route path="/profile" element={<UserProfile />} />
+                                <Route path="/settings" element={<SettingsPage />} />
+                                <Route path="/credit-card-emi" element={<CreditCardEMICalculator/>}/>
+                                <Route path="/personal-loan" element={<PersonalLoanCalculator/>}/>
+                                <Route path="/investment" element={<InvestmentCalculator />} />
+                                <Route path="/investment/sip" element={<InvestmentCalculator />} />
+                                <Route path="/investment/lumpsum" element={<InvestmentCalculator />} />
+                                <Route path="/investment/step-up-sip" element={<InvestmentCalculator />} />
+                                <Route path="/investment/swp" element={<InvestmentCalculator />} />
+                                <Route path="/investment/fd" element={<InvestmentCalculator />} />
+                                <Route path="/tax-calculator" element={<TaxCalculator />} />
+                                <Route path="/faq" element={<FAQ />} />
+                                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                                <Route path="/terms-of-service" element={<TermsOfService />} />
+                                <Route path="/contact-us" element={<ContactUs />} />
+                                <Route path="*" element={<NotFoundPage />} />
+                            </Routes>
+                        </Suspense>
                     </Box>
                 </Box>
 

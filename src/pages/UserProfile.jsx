@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import {
   Box,
   Tabs,
@@ -13,16 +13,17 @@ import {
   selectDebtFreeCountdown,
 } from "../store/profileSlice";
 import { selectCurrency } from "../store/emiSlice";
-
-// Feature Tabs
-import PersonalProfileTab from "../features/profile/tabs/PersonalProfileTab";
-import FutureGoalsTab from "../features/profile/tabs/FutureGoalsTab";
-import WealthTab from "../features/profile/tabs/WealthTab";
-import OnboardingModal from "../features/profile/tabs/OnboardingModal";
-import FinancialModal from "../features/profile/components/FinancialModal";
 import CustomTabPanel from "../components/CustomTabPanel";
 import PreviewBanner from "../components/PreviewBanner";
 import FloatingStatusIsland from "../components/FloatingStatusIsland";
+import SuspenseFallback from "../components/common/SuspenseFallback";
+
+// Feature Tabs
+const PersonalProfileTab = lazy(() => import("../features/profile/tabs/PersonalProfileTab"));
+const FutureGoalsTab = lazy(() => import("../features/profile/tabs/FutureGoalsTab"));
+const WealthTab = lazy(() => import("../features/profile/tabs/WealthTab"));
+const OnboardingModal = lazy(() => import("../features/profile/tabs/OnboardingModal"));
+const FinancialModal = lazy(() => import("../features/profile/components/FinancialModal"));
 
 export default function UserProfile() {
   const theme = useTheme();
@@ -80,7 +81,9 @@ export default function UserProfile() {
     <Box sx={{ width: "100%", pb: { xs: 16, sm: 20 } }}>
       {/* 1. Integrated Action Banner */}
       {!isProfileCreated && (
-        <PreviewBanner onOpenOnboarding={() => setOnboardingOpen(true)} />
+        <Suspense fallback={<SuspenseFallback />}>
+          <PreviewBanner onOpenOnboarding={() => setOnboardingOpen(true)} />
+        </Suspense>
       )}
 
       {/* 2. Command Center Navigation (Tabs) */}
@@ -123,42 +126,48 @@ export default function UserProfile() {
 
       {/* 3. Tab Content Area */}
       <Box>
-        <CustomTabPanel value={tabValue} index={0}>
-          <PersonalProfileTab
-            onEditGoal={handleEditGoal}
-            onOpenModal={handleModalOpen}
-          />
-        </CustomTabPanel>
-        <CustomTabPanel value={tabValue} index={1}>
-          <FutureGoalsTab goalToEditId={goalToEditId} />
-        </CustomTabPanel>
-        <CustomTabPanel value={tabValue} index={2}>
-          <WealthTab />
-        </CustomTabPanel>
+        <Suspense fallback={<SuspenseFallback />}>
+          <CustomTabPanel value={tabValue} index={0}>
+            <PersonalProfileTab
+              onEditGoal={handleEditGoal}
+              onOpenModal={handleModalOpen}
+            />
+          </CustomTabPanel>
+          <CustomTabPanel value={tabValue} index={1}>
+            <FutureGoalsTab goalToEditId={goalToEditId} />
+          </CustomTabPanel>
+          <CustomTabPanel value={tabValue} index={2}>
+            <WealthTab />
+          </CustomTabPanel>
+        </Suspense>
       </Box>
 
       {/* Modals */}
-      <OnboardingModal
-        open={onboardingOpen}
-        onClose={() => {
-          setOnboardingOpen(false);
-          setIsProfileCreated(
-            localStorage.getItem("isProfileCreated") === "true",
-          );
-        }}
-      />
-      <FinancialModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        type={modalType}
-      />
+      <Suspense fallback={<SuspenseFallback />}>
+        <OnboardingModal
+          open={onboardingOpen}
+          onClose={() => {
+            setOnboardingOpen(false);
+            setIsProfileCreated(
+              localStorage.getItem("isProfileCreated") === "true",
+            );
+          }}
+        />
+        <FinancialModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          type={modalType}
+        />
+      </Suspense>
 
       {/* 4. High-End Floating Status Island */}
-      <FloatingStatusIsland
-        investableSurplus={investableSurplus}
-        debtFreeCountdown={debtFreeCountdown}
-        currency={currency}
-      />
+      <Suspense fallback={<SuspenseFallback />}>
+        <FloatingStatusIsland
+          investableSurplus={investableSurplus}
+          debtFreeCountdown={debtFreeCountdown}
+          currency={currency}
+        />
+      </Suspense>
     </Box>
   );
 }
