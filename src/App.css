@@ -3,7 +3,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  transition: background-color 0.4s ease, color 0.4s ease;
+
   background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.02) 1px, transparent 0);
   background-size: 30px 30px;
 }

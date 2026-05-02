@@ -38,6 +38,17 @@ export const getAppTheme = (themeMode, designSystem, visualStyle) => {
       },
       text: { primary: textPrimary, secondary: textSecondary },
     },
+    // INJECTING MOTION ENGINE
+    transitions: {
+      easing: {
+        easeInOut: motion.easing.easeInOut,
+        sharp: motion.easing.sharp,
+      },
+      duration: {
+        short: motion.duration.short,
+        standard: motion.duration.standard,
+      },
+    },
     shape: {
       borderRadius: designSystem === 'apple' ? 8 : designSystem === 'fluent' ? 2 : 4
     },
@@ -48,7 +59,11 @@ export const getAppTheme = (themeMode, designSystem, visualStyle) => {
       MuiPaper: {
         styleOverrides: {
           root: ({ theme }) => ({
-            transition: 'all 0.3s ease',
+            // This now uses the dynamic duration from the profile
+            transition: theme.transitions.create(['all'], {
+              duration: theme.transitions.duration.standard,
+              easing: theme.transitions.easing.easeInOut
+            }),
             borderRadius: theme.shape.borderRadius,
             boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
             ...(visualStyle === 'glass' && {
