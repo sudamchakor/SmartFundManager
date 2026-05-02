@@ -29,7 +29,6 @@ import {
   DeleteSweep as DeleteSweepIcon,
   Analytics as AnalyticsIcon,
 } from "@mui/icons-material";
-import { AnimatePresence } from "framer-motion";
 import SuspenseFallback from "../components/common/SuspenseFallback";
 import {
   updateMonthData,
@@ -662,33 +661,31 @@ const TaxDashboard = () => {
 
   return (
     <Box sx={{ flexGrow: 1, position: "relative" }}>
-      <AnimatePresence>
-        {isUpdating && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              bgcolor: alpha(theme.palette.background.default, 0.5),
-              backdropFilter: "blur(4px)",
-              zIndex: 999,
-              borderRadius: 3,
-            }}
-          >
-            <Skeleton
-              variant="rectangular"
-              width="100%"
-              height="100%"
-              sx={{ borderRadius: 3, opacity: 0.2 }}
-            />
-          </Box>
-        )}
-      </AnimatePresence>
+      {isUpdating && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            bgcolor: alpha(theme.palette.background.default, 0.5),
+            backdropFilter: "blur(4px)",
+            zIndex: 999,
+            borderRadius: 3,
+          }}
+        >
+          <Skeleton
+            variant="rectangular"
+            width="100%"
+            height="100%"
+            sx={{ borderRadius: 3, opacity: 0.2 }}
+          />
+        </Box>
+      )}
 
       <PageHeader
         title="Indian Tax Engine (FY 2025-26)"
@@ -777,49 +774,47 @@ const TaxDashboard = () => {
       </Suspense>
 
       {/* Modals */}
-      <AnimatePresence>
-        {modalOpen && (
-          <Suspense fallback={<div />}>
-            <DynamicRowModal
-              open={modalOpen}
-              onClose={() => setModalOpen(false)}
-              onSave={handleModalSave}
-              mode={modalMode}
-              label={modalLabel}
-              onLabelChange={(e) => setModalLabel(e.target.value)}
-              wellInputStyle={wellInputStyle}
-              labelStyle={labelStyle}
-            />
-          </Suspense>
-        )}
-        {settingsModalOpen && (
-          <Suspense fallback={<div />}>
-            <SettingsModal
-              open={settingsModalOpen}
-              onClose={() => setSettingsModalOpen(false)}
-              settings={settings}
-              age={age}
-              onAgeChange={(e) => dispatch(updateAge(e.target.value))}
-              onSettingChange={handleSettingChange}
-              earningsFixed={earningsFixed}
-              dynamicRows={dynamicRows}
-              calculatedSalary={calculatedSalary}
-              onInclusionChange={(field, value) =>
-                dispatch(
-                  updateMonthData({
-                    index: 0,
-                    field,
-                    value,
-                    populateRemaining: true,
-                  }),
-                )
-              }
-              wellInputStyle={wellInputStyle}
-              labelStyle={labelStyle}
-            />
-          </Suspense>
-        )}
-      </AnimatePresence>
+      {modalOpen && (
+        <Suspense fallback={<div />}>
+          <DynamicRowModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onSave={handleModalSave}
+            mode={modalMode}
+            label={modalLabel}
+            onLabelChange={(e) => setModalLabel(e.target.value)}
+            wellInputStyle={wellInputStyle}
+            labelStyle={labelStyle}
+          />
+        </Suspense>
+      )}
+      {settingsModalOpen && (
+        <Suspense fallback={<div />}>
+          <SettingsModal
+            open={settingsModalOpen}
+            onClose={() => setSettingsModalOpen(false)}
+            settings={settings}
+            age={age}
+            onAgeChange={(e) => dispatch(updateAge(e.target.value))}
+            onSettingChange={handleSettingChange}
+            earningsFixed={earningsFixed}
+            dynamicRows={dynamicRows}
+            calculatedSalary={calculatedSalary}
+            onInclusionChange={(field, value) =>
+              dispatch(
+                updateMonthData({
+                  index: 0,
+                  field,
+                  value,
+                  populateRemaining: true,
+                }),
+              )
+            }
+            wellInputStyle={wellInputStyle}
+            labelStyle={labelStyle}
+          />
+        </Suspense>
+      )}
       <Dialog
         open={analyticsModalOpen}
         onClose={() => setAnalyticsModalOpen(false)}

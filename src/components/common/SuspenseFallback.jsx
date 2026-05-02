@@ -1,11 +1,16 @@
 import React from 'react';
 import { Box, Typography, useTheme, keyframes } from '@mui/material';
-import { motion } from 'framer-motion';
 
-// The Zoom + Glow animation
+// The Zoom + Glow animation for the keys
 const popAndGlow = keyframes`
   0%, 100% { transform: scale(0.9); opacity: 0.4; filter: blur(1px); }
   50% { transform: scale(1.15); opacity: 1; filter: blur(0px); }
+`;
+
+// Enter animation
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 `;
 
 const SuspenseFallback = ({ message = "Calculating wealth projections..." }) => {
@@ -19,11 +24,11 @@ const SuspenseFallback = ({ message = "Calculating wealth projections..." }) => 
     ];
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
+        <Box
+            sx={{
+                // Apply enter animation
+                animation: `${fadeIn} 0.3s ease-out`,
+            }}
         >
             <Box
                 sx={{
@@ -92,7 +97,7 @@ const SuspenseFallback = ({ message = "Calculating wealth projections..." }) => 
                     </Typography>
                 </Box>
             </Box>
-        </motion.div>
+        </Box>
     );
 };
 
