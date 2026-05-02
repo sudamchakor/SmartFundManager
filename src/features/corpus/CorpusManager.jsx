@@ -25,6 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import { formatCurrency } from "../../utils/formatting";
 import { selectCurrency } from "../../store/emiSlice";
 import SectionHeader from "../../components/common/SectionHeader";
@@ -85,88 +86,116 @@ const CorpusManager = ({ onOpenModal }) => {
       <CardContent
         sx={{ flexGrow: 1, p: 2, overflowY: "auto", maxHeight: "400px" }}
       >
-        <Stack spacing={1.5}>
-          {assets.map((asset) => {
-            const expectedReturnNum = parseFloat(asset.expectedReturn);
-            const assetColor = getAssetColor(asset.label);
+        {assets.length === 0 ? (
+          <Box
+            sx={{
+              height: "100%",
+              minHeight: 200,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              textAlign: "center",
+              opacity: 0.6,
+            }}
+          >
+            <AccountBalanceWalletOutlinedIcon
+              sx={{ fontSize: 64, mb: 2, color: "text.secondary" }}
+            />
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 700, color: "text.secondary" }}
+            >
+              No assets in your corpus yet.
+            </Typography>
+            <Typography variant="caption" sx={{ color: "text.secondary" }}>
+              Click "Add Asset" to start tracking your investments.
+            </Typography>
+          </Box>
+        ) : (
+          <Stack spacing={1.5}>
+            {assets.map((asset) => {
+              const expectedReturnNum = parseFloat(asset.expectedReturn);
+              const assetColor = getAssetColor(asset.label);
 
-            return (
-              <Box
-                key={asset.id}
-                sx={{
-                  p: 1.5,
-                  borderRadius: 2,
-                  bgcolor: "white",
-                  border: "1px solid",
-                  borderColor: "grey.100",
-                  borderLeft: `5px solid ${assetColor}`,
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  transition: "0.2s",
-                  "&:hover": {
-                    bgcolor: "#f8faff",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                  },
-                }}
-              >
-                <Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 800, color: "#333" }}
-                  >
-                    {asset.label}
-                  </Typography>
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    <TrendingUpIcon sx={{ fontSize: 14, color: assetColor }} />
+              return (
+                <Box
+                  key={asset.id}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    bgcolor: "white",
+                    border: "1px solid",
+                    borderColor: "grey.100",
+                    borderLeft: `5px solid ${assetColor}`,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    transition: "0.2s",
+                    "&:hover": {
+                      bgcolor: "#f8faff",
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                    },
+                  }}
+                >
+                  <Box>
                     <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary", fontWeight: 600 }}
+                      variant="body2"
+                      sx={{ fontWeight: 800, color: "#333" }}
                     >
-                      {!isNaN(expectedReturnNum)
-                        ? expectedReturnNum.toFixed(2)
-                        : "0.00"}
-                      % Return
+                      {asset.label}
                     </Typography>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      <TrendingUpIcon sx={{ fontSize: 14, color: assetColor }} />
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary", fontWeight: 600 }}
+                      >
+                        {!isNaN(expectedReturnNum)
+                          ? expectedReturnNum.toFixed(2)
+                          : "0.00"}
+                        % Return
+                      </Typography>
+                    </Stack>
+                  </Box>
+
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Typography
+                      variant="body1"
+                      sx={{ fontWeight: 800, color: "text.primary" }}
+                    >
+                    {formatCurrency(asset.value, currency)}
+                    </Typography>
+
+                    <Box>
+                      <Tooltip title="Edit">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => onOpenModal("corpus", asset, "edit")}
+                          sx={{ bgcolor: "#f0f7ff", mr: 0.5 }}
+                        >
+                          <EditIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete">
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => handleRemoveAsset(asset.id)}
+                          sx={{ bgcolor: "#fff0f0" }}
+                        >
+                          <DeleteIcon fontSize="inherit" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
                   </Stack>
                 </Box>
-
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Typography
-                    variant="body1"
-                    sx={{ fontWeight: 800, color: "text.primary" }}
-                  >
-                  {formatCurrency(asset.value, currency)}
-                  </Typography>
-
-                  <Box>
-                    <Tooltip title="Edit">
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => onOpenModal("corpus", asset, "edit")}
-                        sx={{ bgcolor: "#f0f7ff", mr: 0.5 }}
-                      >
-                        <EditIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={() => handleRemoveAsset(asset.id)}
-                        sx={{ bgcolor: "#fff0f0" }}
-                      >
-                        <DeleteIcon fontSize="inherit" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Stack>
-              </Box>
-            );
-          })}
-        </Stack>
+              );
+            })}
+          </Stack>
+        )}
       </CardContent>
 
       {/* Premium LCD-Style Footer */}

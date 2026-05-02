@@ -131,22 +131,12 @@ export default function CashFlowDonutChart({ donutData }) {
   return (
     <Box
       sx={{
-        p: 2.5,
-        borderRadius: 3,
-        border: "1px solid",
-        borderColor: alpha(theme.palette.divider, 0.1), // STRICT THEME
-        bgcolor: theme.palette.background.paper, // STRICT THEME
-        boxShadow: `0 2px 12px ${alpha(theme.palette.common.black || "#000", 0.02)}`,
         height: "100%",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <SectionHeader
-        title="Monthly Cash Flow Breakdown"
-        icon={<PieChartIcon />}
-        color={theme.palette.warning.main}
-      />
+
 
       {/* Chart Container */}
       <Box sx={{ flexGrow: 1, minHeight: 250 }}>

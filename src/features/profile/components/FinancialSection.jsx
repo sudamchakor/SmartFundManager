@@ -14,6 +14,8 @@ import AddIcon from "@mui/icons-material/Add";
 import InfoIcon from "@mui/icons-material/Info";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff"; // Keep this icon
+import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import ReadOnlyItem from "../../../components/common/ReadOnlyItem";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -179,88 +181,142 @@ export default function FinancialSection({
             },
           }}
         >
-          <Stack spacing={1.5}>
-            {isIncome ? (
-              incomes.map((item) => (
-                <ReadOnlyItem
-                  key={item.id}
-                  item={item}
-                  currency={currency}
-                  isIncome={true}
-                  isReadOnly={false} // Ensure edit button is visible
-                  onDelete={(id) => dispatch(deleteIncome(id))}
-                  onEdit={(itemId) =>
-                    onOpenModal(
-                      "income",
-                      incomes.find((inc) => inc.id === itemId),
-                      "edit",
-                    )
-                  }
-                  formatCurrency={formatCurrency}
-                  totalIncome={totalIncome}
+          {isIncome ? (
+            incomes.length === 0 ? (
+              <Box
+                sx={{
+                  minHeight: 200,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: 0.6,
+                  textAlign: "center",
+                }}
+              >
+                <SavingsOutlinedIcon
+                  sx={{ fontSize: 64, mb: 2, color: "text.secondary" }}
                 />
-              ))
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 700, color: "text.secondary" }}
+                >
+                  No income streams added.
+                </Typography>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Add your salary, rental income, or other inflows.
+                </Typography>
+              </Box>
             ) : (
-              <>
-                {isLoanActive && monthlyEmi > 0 && (
-                  <ReadOnlyItem
-                    item={{
-                      id: "home-loan-emi",
-                      name: "Home Loan EMI",
-                      amount: monthlyEmi,
-                    }}
-                    currency={currency}
-                    isExpense={true}
-                    totalIncome={totalIncome}
-                    expenseRatio={(monthlyEmi / totalIncome) * 100}
-                    formatCurrency={formatCurrency}
-                    onConfirmDelete={() => dispatch(resetHomeLoanForm())}
-                    isReadOnly={false}
-                    onEdit={() => navigate("/calculator")}
-                    deletionImpactMessage="This will permanently clear your EMI calculator data, including your full loan schedule, property details, and prepayments. This action cannot be undone."
-                  />
-                )}
-                {Object.values(groupedGoals).map((goal) => (
-                  <ReadOnlyItem
-                    key={goal.id}
-                    item={goal}
-                    subItems={goal.investments} // investments passed to subItems
-                    currency={currency}
-                    isExpense={true}
-                    totalIncome={totalIncome}
-                    expenseRatio={(goal.amount / totalIncome) * 100}
-                    formatCurrency={formatCurrency}
-                    isGoal={true}
-                    isReadOnly={false}
-                    onEditGoal={() => onEditGoal(goal.id)}
-                    onConfirmDelete={() => dispatch(deleteGoal(goal.id))}
-                    deletionImpactMessage={`This will permanently delete the goal "${goal.name}" and all its associated investment strategies.`}
-                  />
-                ))}
-                {expenses.map((item) => (
+              <Stack spacing={1.5}>
+                {incomes.map((item) => (
                   <ReadOnlyItem
                     key={item.id}
                     item={item}
                     currency={currency}
-                    isExpense={true}
-                    isReadOnly={false} // Ensure edit button is visible
-                    onDelete={(id) => dispatch(deleteExpense(id))}
+                    isIncome={true}
+                    isReadOnly={false}
+                    onDelete={(id) => dispatch(deleteIncome(id))}
                     onEdit={(itemId) =>
                       onOpenModal(
-                        "expense",
-                        expenses.find((exp) => exp.id === itemId),
+                        "income",
+                        incomes.find((inc) => inc.id === itemId),
                         "edit",
                       )
                     }
                     formatCurrency={formatCurrency}
                     totalIncome={totalIncome}
-                    expenseColor={getExpenseItemColor(item.category)}
-                    taxRate={taxRate}
                   />
                 ))}
-              </>
-            )}
-          </Stack>
+              </Stack>
+            )
+          ) : Object.keys(groupedGoals).length === 0 &&
+            expenses.length === 0 &&
+            !(isLoanActive && monthlyEmi > 0) ? (
+            <Box
+              sx={{
+                minHeight: 200,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                opacity: 0.6,
+                textAlign: "center",
+              }}
+            >
+              <ReceiptLongOutlinedIcon
+                sx={{ fontSize: 64, mb: 2, color: "text.secondary" }}
+              />
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: 700, color: "text.secondary" }}
+              >
+                No expenses recorded.
+              </Typography>
+              <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                Add your monthly liabilities and basic needs.
+              </Typography>
+            </Box>
+          ) : (
+            <Stack spacing={1.5}>
+              {isLoanActive && monthlyEmi > 0 && (
+                <ReadOnlyItem
+                  item={{
+                    id: "home-loan-emi",
+                    name: "Home Loan EMI",
+                    amount: monthlyEmi,
+                  }}
+                  currency={currency}
+                  isExpense={true}
+                  totalIncome={totalIncome}
+                  expenseRatio={(monthlyEmi / totalIncome) * 100}
+                  formatCurrency={formatCurrency}
+                  onConfirmDelete={() => dispatch(resetHomeLoanForm())}
+                  isReadOnly={false}
+                  onEdit={() => navigate("/calculator")}
+                  deletionImpactMessage="This will permanently clear your EMI calculator data, including your full loan schedule, property details, and prepayments. This action cannot be undone."
+                />
+              )}
+              {Object.values(groupedGoals).map((goal) => (
+                <ReadOnlyItem
+                  key={goal.id}
+                  item={goal}
+                  subItems={goal.investments} // investments passed to subItems
+                  currency={currency}
+                  isExpense={true}
+                  totalIncome={totalIncome}
+                  expenseRatio={(goal.amount / totalIncome) * 100}
+                  formatCurrency={formatCurrency}
+                  isGoal={true}
+                  isReadOnly={false}
+                  onEditGoal={() => onEditGoal(goal.id)}
+                  onConfirmDelete={() => dispatch(deleteGoal(goal.id))}
+                  deletionImpactMessage={`This will permanently delete the goal "${goal.name}" and all its associated investment strategies.`}
+                />
+              ))}
+              {expenses.map((item) => (
+                <ReadOnlyItem
+                  key={item.id}
+                  item={item}
+                  currency={currency}
+                  isExpense={true}
+                  isReadOnly={false} // Ensure edit button is visible
+                  onDelete={(id) => dispatch(deleteExpense(id))}
+                  onEdit={(itemId) =>
+                    onOpenModal(
+                      "expense",
+                      expenses.find((exp) => exp.id === itemId),
+                      "edit",
+                    )
+                  }
+                  formatCurrency={formatCurrency}
+                  totalIncome={totalIncome}
+                  expenseColor={getExpenseItemColor(item.category)}
+                  taxRate={taxRate}
+                />
+              ))}
+            </Stack>
+          )}
         </Box>
 
         <Box

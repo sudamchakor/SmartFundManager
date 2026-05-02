@@ -245,10 +245,10 @@ export default function PersonalProfileTab({ onEditGoal }) {
             <CardHeader
               title={
                 <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                  Monthly Allocation
+                  Monthly Cash Flow Breakdown
                 </Typography>
               }
-              avatar={<PieChartIcon color="primary" />}
+              avatar={<PieChartIcon sx={{ color: "warning.main" }} />}
             />
             <Divider />
             <CardContent>
