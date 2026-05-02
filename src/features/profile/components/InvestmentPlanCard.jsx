@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import {
   Box,
-  Grid,
   FormControl,
   InputLabel,
   Select,
@@ -11,7 +10,7 @@ import {
   alpha,
   useTheme,
   Stack,
-  Divider, // Imported Divider to fix the gray box issue
+  Divider,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SipCalculatorForm from "../../investment/tabs/SipCalculatorForm";
@@ -55,48 +54,64 @@ const InvestmentPlanCard = ({
     (results) => {
       if (!results) return;
 
-      const investedAmount =
-        results.totalInvestment ??
-        results.principal ??
-        results.investedAmount ??
-        0;
-      const estimatedReturns =
-        results.totalReturns ??
-        results.totalInterest ??
-        results.estimatedReturns ??
-        0;
-      const totalValue =
-        results.futureValue ??
-        results.maturityAmount ??
-        results.totalValue ??
-        0;
+      const newValues = {
+        investedAmount:
+          results.totalInvestment ??
+          results.principal ??
+          results.investedAmount ??
+          0,
+        estimatedReturns:
+          results.totalReturns ??
+          results.totalInterest ??
+          results.estimatedReturns ??
+          0,
+        totalValue:
+          results.futureValue ??
+          results.maturityAmount ??
+          results.totalValue ??
+          0,
+        monthlyContribution:
+          plan.type === "sip" || plan.type === "stepUpSip"
+            ? results.monthlyInvestment ??
+              results.initialMonthlyInvestment ??
+              0
+            : 0,
+        totalWithdrawn: results.totalWithdrawn ?? 0,
+      };
 
-      let monthlyContribution = 0;
-      if (plan.type === "sip" || plan.type === "stepUpSip") {
-        monthlyContribution =
-          results.monthlyContribution ??
-          plan.monthlyContribution ??
-          plan.amount ??
-          0;
+      // Conditional dispatch to prevent infinite loops
+      if (plan.investedAmount !== newValues.investedAmount) {
+        handlePlanChange(plan.id, "investedAmount", newValues.investedAmount);
       }
-
-      if (plan.investedAmount !== investedAmount)
-        handlePlanChange(plan.id, "investedAmount", investedAmount);
-      if (plan.estimatedReturns !== estimatedReturns)
-        handlePlanChange(plan.id, "estimatedReturns", estimatedReturns);
-      if (plan.totalValue !== totalValue)
-        handlePlanChange(plan.id, "totalValue", totalValue);
-      if (plan.monthlyContribution !== monthlyContribution)
-        handlePlanChange(plan.id, "monthlyContribution", monthlyContribution);
+      if (plan.estimatedReturns !== newValues.estimatedReturns) {
+        handlePlanChange(
+          plan.id,
+          "estimatedReturns",
+          newValues.estimatedReturns,
+        );
+      }
+      if (plan.totalValue !== newValues.totalValue) {
+        handlePlanChange(plan.id, "totalValue", newValues.totalValue);
+      }
+      if (plan.monthlyContribution !== newValues.monthlyContribution) {
+        handlePlanChange(
+          plan.id,
+          "monthlyContribution",
+          newValues.monthlyContribution,
+        );
+      }
+      if (plan.totalWithdrawn !== newValues.totalWithdrawn) {
+        handlePlanChange(plan.id, "totalWithdrawn", newValues.totalWithdrawn);
+      }
     },
     [
-      plan.id,
-      plan.type,
-      plan.monthlyContribution,
-      plan.amount,
       plan.investedAmount,
       plan.estimatedReturns,
       plan.totalValue,
+      plan.monthlyContribution,
+      plan.totalWithdrawn,
+      plan.type,
+      plan.id,
       handlePlanChange,
     ],
   );
@@ -178,7 +193,6 @@ const InvestmentPlanCard = ({
           {plan.details || "Configure Strategy Parameters"}
         </Typography>
 
-        {/* FIXED: Using standard MUI vertical divider to completely remove the gray blocks */}
         <Stack
           direction="row"
           spacing={2}
@@ -210,12 +224,12 @@ const InvestmentPlanCard = ({
       <Box
         sx={{
           "& .MuiTextField-root": { mb: 1.5 },
-          "& .MuiTypography-root": { fontWeight: 700 }, // Ensures labels in sub-forms are bold
+          "& .MuiTypography-root": { fontWeight: 700 },
         }}
       >
         {plan.type === "sip" && (
           <SipCalculatorForm
-            sharedState={plan}
+            sharedState={{ ...plan, monthlyInvestment: plan.monthlyContribution }}
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }
@@ -235,7 +249,10 @@ const InvestmentPlanCard = ({
         )}
         {plan.type === "stepUpSip" && (
           <StepUpSipCalculatorForm
-            sharedState={plan}
+            sharedState={{
+              ...plan,
+              initialMonthlyInvestment: plan.monthlyContribution,
+            }}
             onSharedStateChange={(field, value) =>
               handlePlanChange(plan.id, field, value)
             }

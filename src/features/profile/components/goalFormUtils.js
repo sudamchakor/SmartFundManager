@@ -12,6 +12,7 @@ export const calculatePlanResults = (plan) => {
     investedAmount: 0,
     estimatedReturns: 0,
     totalValue: 0,
+    totalWithdrawn: 0,
     timePeriod: plan.timePeriod || 0,
     details: plan.details || "",
   };
@@ -20,7 +21,8 @@ export const calculatePlanResults = (plan) => {
   const updatedPlanDetails = { ...plan };
 
   // Ensure numeric values for calculations
-  const monthlyContribution = Number(updatedPlanDetails.monthlyContribution) || 0;
+  const monthlyContribution =
+    Number(updatedPlanDetails.monthlyContribution) || 0;
   const totalInvestment = Number(updatedPlanDetails.totalInvestment) || 0;
   const expectedReturnRate = Number(updatedPlanDetails.expectedReturnRate) || 0;
   const timePeriod = Number(updatedPlanDetails.timePeriod) || 0;
@@ -28,14 +30,15 @@ export const calculatePlanResults = (plan) => {
   const withdrawalPerMonth = Number(updatedPlanDetails.withdrawalPerMonth) || 0;
   const principalAmount = Number(updatedPlanDetails.principalAmount) || 0;
   const interestRate = Number(updatedPlanDetails.interestRate) || 0;
-  const compoundingFrequency = updatedPlanDetails.compoundingFrequency || "annually";
+  const compoundingFrequency =
+    updatedPlanDetails.compoundingFrequency || "annually";
 
   switch (updatedPlanDetails.type) {
     case "sip":
       calculatedResult = calculateSip(
         monthlyContribution,
         expectedReturnRate,
-        timePeriod
+        timePeriod,
       );
       updatedPlanDetails.details = `SIP: ₹${monthlyContribution.toLocaleString()} for ${timePeriod} years @ ${expectedReturnRate}%`;
       updatedPlanDetails.frequency = "monthly";
@@ -44,7 +47,7 @@ export const calculatePlanResults = (plan) => {
       calculatedResult = calculateLumpsum(
         totalInvestment,
         expectedReturnRate,
-        timePeriod
+        timePeriod,
       );
       updatedPlanDetails.details = `Lumpsum: ₹${totalInvestment.toLocaleString()} for ${timePeriod} years @ ${expectedReturnRate}%`;
       updatedPlanDetails.frequency = "one-time";
@@ -54,7 +57,7 @@ export const calculatePlanResults = (plan) => {
         monthlyContribution,
         expectedReturnRate,
         timePeriod,
-        stepUpPercentage
+        stepUpPercentage,
       );
       updatedPlanDetails.details = `Step-Up SIP: ₹${monthlyContribution.toLocaleString()} with ${stepUpPercentage}% step-up for ${timePeriod} years @ ${expectedReturnRate}%`;
       updatedPlanDetails.frequency = "monthly";
@@ -64,7 +67,16 @@ export const calculatePlanResults = (plan) => {
         totalInvestment,
         withdrawalPerMonth,
         expectedReturnRate,
-        timePeriod
+        timePeriod,
+      );
+
+      console.log(
+        "Sudam 12",
+        totalInvestment,
+        withdrawalPerMonth,
+        expectedReturnRate,
+        timePeriod,
+        calculatedResult,
       );
       updatedPlanDetails.details = `SWP: Withdraw ₹${withdrawalPerMonth.toLocaleString()} from ₹${totalInvestment.toLocaleString()} for ${timePeriod} years @ ${expectedReturnRate}%`;
       updatedPlanDetails.frequency = "monthly"; // This is a withdrawal, not a contribution.
@@ -74,13 +86,15 @@ export const calculatePlanResults = (plan) => {
         principalAmount,
         interestRate,
         timePeriod,
-        compoundingFrequency
+        compoundingFrequency,
       );
       updatedPlanDetails.details = `FD: ₹${principalAmount.toLocaleString()} for ${timePeriod} years @ ${interestRate}% (${compoundingFrequency})`;
       updatedPlanDetails.frequency = "one-time";
       break;
     default:
-      console.error(`Unknown plan type encountered: ${updatedPlanDetails.type}`);
+      console.error(
+        `Unknown plan type encountered: ${updatedPlanDetails.type}`,
+      );
       // Optionally, you might want to throw an error here depending on desired strictness:
       // throw new Error(`Unknown plan type: ${updatedPlanDetails.type}`);
       break;
@@ -91,6 +105,7 @@ export const calculatePlanResults = (plan) => {
     investedAmount: calculatedResult.investedAmount,
     estimatedReturns: calculatedResult.estimatedReturns,
     totalValue: calculatedResult.totalValue,
+    totalWithdrawn: calculatedResult.totalWithdrawn,
   };
 };
 
@@ -100,7 +115,7 @@ export const getDefaultPlanState = (
   targetAmountForPlan, // This is the target future value for this specific plan
   timePeriod,
   planStartYear, // Renamed from currentYear to be more descriptive
-  goal // The parent goal object, useful for default rates
+  goal, // The parent goal object, useful for default rates
 ) => {
   const id = Date.now();
   const expectedReturnRate = goal?.expectedReturnRate || 12; // Default for equity-linked
@@ -138,31 +153,51 @@ export const getDefaultPlanState = (
     switch (type) {
       case "sip":
         if (monthlyRate > 0) {
-          const factor = ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) * (1 + monthlyRate);
-          newPlan.monthlyContribution = Math.round(targetAmountForPlan / factor);
+          const factor =
+            ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) *
+            (1 + monthlyRate);
+          newPlan.monthlyContribution = Math.round(
+            targetAmountForPlan / factor,
+          );
         }
         // Ensure a minimum monthly contribution for SIP
-        newPlan.monthlyContribution = Math.max(500, newPlan.monthlyContribution);
+        newPlan.monthlyContribution = Math.max(
+          500,
+          newPlan.monthlyContribution,
+        );
         break;
       case "lumpsum":
-        newPlan.totalInvestment = Math.round(targetAmountForPlan / Math.pow(1 + annualRate, newPlan.timePeriod));
+        newPlan.totalInvestment = Math.round(
+          targetAmountForPlan / Math.pow(1 + annualRate, newPlan.timePeriod),
+        );
         break;
       case "fd":
-        newPlan.principalAmount = Math.round(targetAmountForPlan / Math.pow(1 + fdAnnualRate, newPlan.timePeriod));
+        newPlan.principalAmount = Math.round(
+          targetAmountForPlan / Math.pow(1 + fdAnnualRate, newPlan.timePeriod),
+        );
         break;
       case "stepUpSip":
         // Approximate inverse calculation for Step-Up SIP
         // Use SIP inverse calculation as a starting point for monthly contribution
         if (monthlyRate > 0) {
-          const factor = ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) * (1 + monthlyRate);
-          newPlan.monthlyContribution = Math.round(targetAmountForPlan / factor);
+          const factor =
+            ((Math.pow(1 + monthlyRate, nMonths) - 1) / monthlyRate) *
+            (1 + monthlyRate);
+          newPlan.monthlyContribution = Math.round(
+            targetAmountForPlan / factor,
+          );
         }
         // Ensure a minimum contribution for step-up SIP
-        newPlan.monthlyContribution = Math.max(500, newPlan.monthlyContribution);
+        newPlan.monthlyContribution = Math.max(
+          500,
+          newPlan.monthlyContribution,
+        );
         break;
       // SWP inverse calculations are not directly implemented here as it's a withdrawal plan.
       default:
-        console.warn(`No inverse calculation implemented for plan type: ${type}`);
+        console.warn(
+          `No inverse calculation implemented for plan type: ${type}`,
+        );
         break;
     }
   }

@@ -5,7 +5,6 @@ export const calculateSip = (monthlyContribution, annualRate, timePeriod) => {
   if (monthlyRate === 0) {
     futureValue = monthlyContribution * numberOfMonths;
   } else {
-    // Formula for Future Value of an ordinary annuity
     futureValue =
       monthlyContribution *
       ((Math.pow(1 + monthlyRate, numberOfMonths) - 1) / monthlyRate);
@@ -35,7 +34,6 @@ export const calculateStepUpSip = (
 
   for (let year = 1; year <= timePeriod; year++) {
     for (let month = 1; month <= 12; month++) {
-      // Calculation for ordinary annuity (payment at the end of the period)
       totalValue = totalValue * (1 + monthlyRate) + currentMonthlyContribution;
       totalInvested += currentMonthlyContribution;
     }
@@ -49,29 +47,32 @@ export const calculateStepUpSip = (
 
 export const calculateSwp = (
   principal,
+  withdrawalPerMonth,
   annualRate,
   timePeriod,
-  withdrawalPerMonth,
 ) => {
-  let remainingPrincipal = principal;
-  let totalWithdrawn = 0;
-  const monthlyRate = annualRate / 12 / 100;
-  const numberOfMonths = timePeriod * 12;
+  const P = parseFloat(principal) || 0;
+  const W = parseFloat(withdrawalPerMonth) || 0;
+  const n = (parseFloat(timePeriod) || 0) * 12;
+  const r = (parseFloat(annualRate) || 0) / 100 / 12;
 
-  for (let i = 0; i < numberOfMonths; i++) {
-    remainingPrincipal =
-      remainingPrincipal * (1 + monthlyRate) - withdrawalPerMonth;
-    totalWithdrawn += withdrawalPerMonth;
-    if (remainingPrincipal < 0) {
-      remainingPrincipal = 0; // Cannot withdraw more than available
-      break;
-    }
+  let finalBalance = 0;
+  if (r > 0) {
+    const r_plus_1_pow_n = Math.pow(1 + r, n);
+    finalBalance = P * r_plus_1_pow_n - W * ((r_plus_1_pow_n - 1) / r);
+  } else {
+    finalBalance = P - W * n;
   }
+
+  finalBalance = Math.max(0, finalBalance);
+  const totalWithdrawn = W * n;
+  const estimatedReturns = finalBalance + totalWithdrawn - P;
+
   return {
-    investedAmount: principal, // Initial principal is the invested amount
+    investedAmount: P,
     totalWithdrawn: totalWithdrawn,
-    totalValue: remainingPrincipal, // Remaining balance
-    estimatedReturns: totalWithdrawn + remainingPrincipal - principal,
+    totalValue: finalBalance,
+    estimatedReturns: estimatedReturns,
   };
 };
 
@@ -81,7 +82,7 @@ export const calculateFd = (
   timePeriod,
   compoundingFrequency,
 ) => {
-  let n; // Number of times interest is compounded per year
+  let n;
   switch (compoundingFrequency) {
     case "annually":
       n = 1;
@@ -96,7 +97,7 @@ export const calculateFd = (
       n = 12;
       break;
     default:
-      n = 1; // Default to annually
+      n = 1;
   }
 
   const futureValue =

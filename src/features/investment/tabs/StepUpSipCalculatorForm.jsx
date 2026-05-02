@@ -10,9 +10,7 @@ import {
   useTheme,
   Stack,
 } from "@mui/material";
-import { QueryStats as StepUpIcon } from "@mui/icons-material";
-import { useSelector } from "react-redux";
-import { selectCurrency } from "../../../store/emiSlice";
+import { SettingsInputComponent as SettingsIcon } from "@mui/icons-material";
 
 const StepUpSipCalculatorForm = ({
   onCalculate,
@@ -20,66 +18,55 @@ const StepUpSipCalculatorForm = ({
   onSharedStateChange,
 }) => {
   const theme = useTheme();
-  // Wire up the global currency setting
-  const currency = useSelector(selectCurrency) || "₹";
 
-  // FIX: Destructure 'monthlyInvestment' instead of 'monthlyContribution'
   const {
-    monthlyInvestment,
+    initialMonthlyInvestment,
     stepUpPercentage,
     expectedReturnRate,
     timePeriod,
   } = sharedState;
 
   const calculateStepUpSip = useCallback(() => {
-    // Safe fallbacks to prevent NaN crashes if inputs are cleared
-    let currentMonthlySIP = monthlyInvestment || 0;
-    const stepUp = stepUpPercentage || 0;
-    const period = timePeriod || 0;
-    const i = (expectedReturnRate || 0) / 100 / 12;
+    const P = initialMonthlyInvestment || 0;
+    const annualIncrease = stepUpPercentage || 0;
+    const years = timePeriod || 0;
+    const annualRate = expectedReturnRate || 0;
+    const i = annualRate / 100 / 12;
+    const r = annualIncrease / 100;
 
-    let totalInvestedAmount = 0;
-    let finalCorpus = 0;
+    let totalValue = 0;
+    let totalInvestment = 0;
     let chartData = [];
 
-    if (currentMonthlySIP > 0 && period > 0) {
-      for (let year = 1; year <= period; year++) {
-        let yearlyInvested = currentMonthlySIP * 12;
-        totalInvestedAmount += yearlyInvested;
-
-        // Compound existing corpus for the year
-        if (i > 0) {
-          finalCorpus = finalCorpus * Math.pow(1 + i, 12);
-          // Add maturity of this year's SIP contributions
-          let yearlySipMaturity =
-            currentMonthlySIP * ((Math.pow(1 + i, 12) - 1) / i) * (1 + i);
-          finalCorpus += yearlySipMaturity;
-        } else {
-          finalCorpus += yearlyInvested;
+    if (P > 0 && years > 0) {
+      let currentInvestment = P;
+      for (let year = 1; year <= years; year++) {
+        let yearlyInvestment = 0;
+        for (let month = 1; month <= 12; month++) {
+          totalValue = totalValue * (1 + i) + currentInvestment;
+          yearlyInvestment += currentInvestment;
         }
+        totalInvestment += yearlyInvestment;
+        currentInvestment *= 1 + r;
 
         chartData.push({
           year: year,
-          invested: Math.round(totalInvestedAmount),
-          returns: Math.round(finalCorpus - totalInvestedAmount),
-          total: Math.round(finalCorpus),
+          invested: Math.round(totalInvestment),
+          returns: Math.round(totalValue - totalInvestment),
+          total: Math.round(totalValue),
         });
-
-        // Apply Step-Up for the next year
-        currentMonthlySIP += currentMonthlySIP * (stepUp / 100);
       }
     }
 
     onCalculate({
-      investedAmount: Math.round(totalInvestedAmount),
-      estimatedReturns: Math.round(finalCorpus - totalInvestedAmount),
-      totalValue: Math.round(finalCorpus),
-      monthlyInvestment: monthlyInvestment,
+      investedAmount: Math.round(totalInvestment),
+      estimatedReturns: Math.round(totalValue - totalInvestment),
+      totalValue: Math.round(totalValue),
+      initialMonthlyInvestment: initialMonthlyInvestment,
       chartData: chartData,
-      totalWithdrawn: 0,
     });
   }, [
-    monthlyInvestment,
+    initialMonthlyInvestment,
     stepUpPercentage,
     expectedReturnRate,
     timePeriod,
@@ -101,9 +88,8 @@ const StepUpSipCalculatorForm = ({
 
   return (
     <Box sx={{ mt: 1 }}>
-      {/* Internal Subsection Header */}
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-        <StepUpIcon
+        <SettingsIcon
           sx={{
             fontSize: "1rem",
             color: theme.palette.primary.main,
@@ -122,7 +108,6 @@ const StepUpSipCalculatorForm = ({
         </Typography>
       </Stack>
 
-      {/* 1. Monthly Investment */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -132,23 +117,20 @@ const StepUpSipCalculatorForm = ({
             <TextField
               variant="standard"
               size="small"
-              value={monthlyInvestment}
+              value={initialMonthlyInvestment}
               onChange={(e) =>
-                onSharedStateChange("monthlyInvestment", Number(e.target.value))
+                onSharedStateChange(
+                  "monthlyContribution",
+                  Number(e.target.value),
+                )
               }
               InputProps={{
                 startAdornment: (
                   <InputAdornment
                     position="start"
-                    sx={{
-                      "& p": {
-                        fontWeight: 900,
-                        fontSize: "0.8rem",
-                        color: "primary.main",
-                      },
-                    }}
+                    sx={{ "& p": { fontWeight: 900, fontSize: "0.8rem" } }}
                   >
-                    {currency}
+                    ₹
                   </InputAdornment>
                 ),
                 disableUnderline: true,
@@ -158,7 +140,6 @@ const StepUpSipCalculatorForm = ({
                   bgcolor: alpha(theme.palette.primary.main, 0.05),
                   px: 1,
                   borderRadius: 1,
-                  textAlign: "right",
                 },
               }}
               fullWidth
@@ -166,25 +147,25 @@ const StepUpSipCalculatorForm = ({
           </Grid>
         </Grid>
         <Slider
-          value={monthlyInvestment}
+          value={initialMonthlyInvestment}
           min={500}
           max={100000}
           step={500}
-          onChange={(e, val) => onSharedStateChange("monthlyInvestment", val)}
+          onChange={(e, val) =>
+            onSharedStateChange("monthlyContribution", val)
+          }
           sx={{
             py: 1,
             "& .MuiSlider-thumb": { width: 12, height: 12 },
             "& .MuiSlider-track": { height: 4 },
-            "& .MuiSlider-rail": { height: 4, opacity: 0.2 },
           }}
         />
       </Box>
 
-      {/* 2. Annual Step-Up % */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
-            <Typography sx={labelStyle}>Annual Increment (%)</Typography>
+            <Typography sx={labelStyle}>Annual Step-Up (%)</Typography>
           </Grid>
           <Grid item xs={5}>
             <TextField
@@ -192,7 +173,10 @@ const StepUpSipCalculatorForm = ({
               size="small"
               value={stepUpPercentage}
               onChange={(e) =>
-                onSharedStateChange("stepUpPercentage", Number(e.target.value))
+                onSharedStateChange(
+                  "stepUpPercentage",
+                  Number(e.target.value),
+                )
               }
               InputProps={{
                 endAdornment: (
@@ -210,7 +194,6 @@ const StepUpSipCalculatorForm = ({
                   bgcolor: alpha(theme.palette.secondary.main, 0.05),
                   px: 1,
                   borderRadius: 1,
-                  textAlign: "right",
                 },
               }}
               fullWidth
@@ -220,7 +203,7 @@ const StepUpSipCalculatorForm = ({
         <Slider
           value={stepUpPercentage}
           min={1}
-          max={50}
+          max={25}
           step={1}
           onChange={(e, val) => onSharedStateChange("stepUpPercentage", val)}
           color="secondary"
@@ -232,7 +215,6 @@ const StepUpSipCalculatorForm = ({
         />
       </Box>
 
-      {/* 3. Expected Return Rate */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -265,7 +247,6 @@ const StepUpSipCalculatorForm = ({
                   bgcolor: alpha(theme.palette.success.main, 0.05),
                   px: 1,
                   borderRadius: 1,
-                  textAlign: "right",
                 },
               }}
               fullWidth
@@ -287,7 +268,6 @@ const StepUpSipCalculatorForm = ({
         />
       </Box>
 
-      {/* 4. Time Period */}
       <Box sx={{ mb: 1 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -317,7 +297,6 @@ const StepUpSipCalculatorForm = ({
                   bgcolor: alpha(theme.palette.info.main, 0.05),
                   px: 1,
                   borderRadius: 1,
-                  textAlign: "right",
                 },
               }}
               fullWidth

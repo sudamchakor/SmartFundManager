@@ -84,18 +84,20 @@ export const GoalForm = ({ goal, currentYear, onSave, retirementYear }) => {
       />
 
       <Grid container spacing={2}>
-        {editedGoal.investmentPlans.map((plan) => (
-          <Grid item xs={12} lg={6} key={plan.id}>
-            {/* Ensure InvestmentPlanCard also uses StyledPaper/Card logic internally */}
-            <InvestmentPlanCard
-              plan={plan}
-              targetAmount={editedGoal.targetAmount}
-              handlePlanChange={handlePlanChange}
-              handleRemovePlan={handleRemovePlan}
-              formatAmount={formatAmount}
-            />
-          </Grid>
-        ))}
+        {editedGoal.investmentPlans.map((plan) => {
+          return (
+            <Grid item xs={12} lg={6} key={plan.id}>
+              {/* Ensure InvestmentPlanCard also uses StyledPaper/Card logic internally */}
+              <InvestmentPlanCard
+                plan={plan}
+                targetAmount={editedGoal.targetAmount}
+                handlePlanChange={handlePlanChange}
+                handleRemovePlan={handleRemovePlan}
+                formatAmount={formatAmount}
+              />
+            </Grid>
+          );
+        })}
 
         {/* 3. The "Add Strategy" Placeholder */}
         <Grid item xs={12} lg={6}>

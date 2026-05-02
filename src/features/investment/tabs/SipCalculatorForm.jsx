@@ -19,11 +19,10 @@ const SipCalculatorForm = ({
 }) => {
   const theme = useTheme();
 
-  // FIX: Destructure 'monthlyInvestment' instead of 'monthlyContribution' to match parent state
   const { monthlyInvestment, expectedReturnRate, timePeriod } = sharedState;
 
   const calculateSip = useCallback(() => {
-    const P = monthlyInvestment || 0; // Fallback to 0 if undefined
+    const P = monthlyInvestment || 0;
     const years = timePeriod || 0;
     const annualRate = expectedReturnRate || 0;
     const n = years * 12;
@@ -71,7 +70,6 @@ const SipCalculatorForm = ({
     calculateSip();
   }, [calculateSip]);
 
-  // Label style consistent with "Command Center" metadata
   const labelStyle = {
     fontWeight: 800,
     textTransform: "uppercase",
@@ -83,7 +81,6 @@ const SipCalculatorForm = ({
 
   return (
     <Box sx={{ mt: 1 }}>
-      {/* Internal Subsection Header */}
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
         <SettingsIcon
           sx={{
@@ -104,7 +101,6 @@ const SipCalculatorForm = ({
         </Typography>
       </Stack>
 
-      {/* 1. Monthly Investment Input */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -116,7 +112,7 @@ const SipCalculatorForm = ({
               size="small"
               value={monthlyInvestment}
               onChange={(e) =>
-                onSharedStateChange("monthlyInvestment", Number(e.target.value))
+                onSharedStateChange("monthlyContribution", Number(e.target.value))
               }
               InputProps={{
                 startAdornment: (
@@ -146,7 +142,7 @@ const SipCalculatorForm = ({
           min={500}
           max={100000}
           step={500}
-          onChange={(e, val) => onSharedStateChange("monthlyInvestment", val)}
+          onChange={(e, val) => onSharedStateChange("monthlyContribution", val)}
           sx={{
             py: 1,
             "& .MuiSlider-thumb": { width: 12, height: 12 },
@@ -156,7 +152,6 @@ const SipCalculatorForm = ({
         />
       </Box>
 
-      {/* 2. Expected Return Rate */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -210,7 +205,6 @@ const SipCalculatorForm = ({
         />
       </Box>
 
-      {/* 3. Time Period */}
       <Box sx={{ mb: 1 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>

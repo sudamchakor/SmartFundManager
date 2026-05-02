@@ -20,7 +20,6 @@ const SwpCalculatorForm = ({
   onSharedStateChange,
 }) => {
   const theme = useTheme();
-  // Wire up the global currency setting
   const currency = useSelector(selectCurrency) || "₹";
 
   const {
@@ -31,48 +30,40 @@ const SwpCalculatorForm = ({
   } = sharedState;
 
   const calculateSwp = useCallback(() => {
-    // Safe fallbacks to prevent NaN crashes if inputs are cleared
-    const P = totalInvestment || 0;
-    const W = withdrawalPerMonth || 0;
-    const n = (timePeriod || 0) * 12;
-    const i = (expectedReturnRate || 0) / 100 / 12;
+    const P = parseFloat(totalInvestment) || 0;
+    const W = parseFloat(withdrawalPerMonth) || 0;
+    const n = (parseFloat(timePeriod) || 0) * 12;
+    const i = (parseFloat(expectedReturnRate) || 0) / 100 / 12;
 
-    let currentBalance = P;
+    let finalBalance = 0;
     let totalWithdrawn = 0;
-    let chartData = [];
+    let totalInterest = 0;
 
     if (P > 0 && n > 0) {
-      for (let month = 1; month <= n; month++) {
-        if (currentBalance > 0) {
-          let interest = currentBalance * i;
-          currentBalance += interest;
-
-          let actualWithdrawal = Math.min(W, currentBalance);
-          currentBalance -= actualWithdrawal;
-          totalWithdrawn += actualWithdrawal;
-        }
-
-        if (month % 12 === 0) {
-          chartData.push({
-            year: month / 12,
-            invested: Math.round(P),
-            withdrawn: Math.round(totalWithdrawn),
-            total: Math.round(Math.max(0, currentBalance)),
-          });
-        }
+      if (i > 0) {
+        const r_plus_1_pow_n = Math.pow(1 + i, n);
+        finalBalance = P * r_plus_1_pow_n - W * ((r_plus_1_pow_n - 1) / i);
+      } else {
+        // If rate is 0, it's just principal minus withdrawals
+        finalBalance = P - W * n;
       }
+      totalWithdrawn = W * n;
     }
 
-    const finalBalance = Math.max(0, currentBalance);
-    const estimatedReturns = totalWithdrawn + finalBalance - P;
+    finalBalance = Math.max(0, finalBalance);
+    totalInterest = finalBalance + totalWithdrawn - P;
 
-    onCalculate({
-      investedAmount: Math.round(P),
-      estimatedReturns: Math.round(estimatedReturns),
-      totalValue: Math.round(finalBalance),
-      totalWithdrawn: Math.round(totalWithdrawn),
-      chartData: chartData,
-    });
+    // Sanitize outputs to prevent NaN or Infinity
+    const sanitizedResults = {
+      investedAmount: isFinite(P) ? Math.round(P) : 0,
+      estimatedReturns: isFinite(totalInterest) ? Math.round(totalInterest) : 0,
+      totalValue: isFinite(finalBalance) ? Math.round(finalBalance) : 0,
+      totalWithdrawn: isFinite(totalWithdrawn) ? Math.round(totalWithdrawn) : 0,
+      chartData: [], // Chart data generation can be added back if needed
+    };
+    console.log("Sudam 1", sanitizedResults);
+
+    onCalculate(sanitizedResults);
   }, [
     totalInvestment,
     withdrawalPerMonth,
@@ -96,7 +87,6 @@ const SwpCalculatorForm = ({
 
   return (
     <Box sx={{ mt: 1 }}>
-      {/* Internal Subsection Header */}
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
         <SwpIcon
           sx={{
@@ -117,7 +107,6 @@ const SwpCalculatorForm = ({
         </Typography>
       </Stack>
 
-      {/* 1. Total Investment */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -175,7 +164,6 @@ const SwpCalculatorForm = ({
         />
       </Box>
 
-      {/* 2. Monthly Withdrawal */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -237,7 +225,6 @@ const SwpCalculatorForm = ({
         />
       </Box>
 
-      {/* 3. Expected Return Rate */}
       <Box sx={{ mb: 2 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
@@ -299,7 +286,6 @@ const SwpCalculatorForm = ({
         />
       </Box>
 
-      {/* 4. Time Period */}
       <Box sx={{ mb: 1 }}>
         <Grid container spacing={1} alignItems="flex-end" sx={{ mb: 0.5 }}>
           <Grid item xs={7}>
