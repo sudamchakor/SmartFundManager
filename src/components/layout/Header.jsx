@@ -38,6 +38,7 @@ import {
   ExpandMore,
   Payments as PersonalLoanIcon,
   Dashboard as WealthIcon,
+  Article as ArticleIcon,
 } from '@mui/icons-material';
 
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -46,6 +47,7 @@ import { selectCalculatedValues } from '../../features/emiCalculator/utils/emiCa
 import { resetEmiState } from '../../store/emiSlice';
 import { useSnackbar } from 'notistack';
 import storage from 'redux-persist/lib/storage';
+// import { useAuth } from '../../hooks/useAuth'; // No longer needed in public header
 
 const CALCULATORS = [
   { path: '/calculator', label: 'Home Loan EMI', icon: <CalculateIcon /> },
@@ -71,6 +73,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
   const calculatedValues = useSelector(selectCalculatedValues);
+  // const { user, logout } = useAuth(); // No longer needed in public header
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -79,7 +82,6 @@ const Header = () => {
   const [openCalculators, setOpenCalculators] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
 
-  // Set default to Home Loan EMI if no matching path
   const currentCalc = useMemo(
     () =>
       CALCULATORS.find((c) => location.pathname.startsWith(c.path)) ||
@@ -87,7 +89,6 @@ const Header = () => {
     [location.pathname],
   );
 
-  // Export visible only on specific pages
   const showExport = useMemo(() => {
     const allowed = ['/calculator', '/profile', '/tax-calculator'];
     return allowed.some((path) => location.pathname.startsWith(path));
@@ -123,6 +124,13 @@ const Header = () => {
     setAnchorEl(null);
     setProfileAnchorEl(null);
   };
+
+  // const handleLogout = () => { // No longer needed in public header
+  //   logout();
+  //   setProfileAnchorEl(null);
+  //   setDrawerOpen(false);
+  //   navigate('/');
+  // };
 
   return (
     <AppBar
@@ -188,6 +196,20 @@ const Header = () => {
               >
                 {currentCalc.label}
               </Button>
+
+              <Button
+                onClick={() => handleNavigation('/articles')}
+                sx={{
+                  color: 'inherit',
+                  textTransform: 'none',
+                  fontWeight: 'medium',
+                  fontSize: '1rem',
+                  borderRadius: theme.shape.borderRadius,
+                  '&:hover': { bgcolor: 'action.hover' },
+                }}
+              >
+                Articles
+              </Button>
             </>
           )}
         </Stack>
@@ -225,6 +247,7 @@ const Header = () => {
             </>
           )}
 
+          {/* Profile Icon for public users, leads to generic profile or login */}
           <IconButton
             onClick={(e) => setProfileAnchorEl(e.currentTarget)}
             color="inherit"
@@ -234,14 +257,14 @@ const Header = () => {
           </IconButton>
         </Stack>
 
-        {/* CALCULATORS DROPDOWN - Inherits Glass from theme */}
+        {/* CALCULATORS DROPDOWN */}
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
           disableScrollLock
           PaperProps={{
-            elevation: 0, // Glass themes usually prefer 0 elevation to show blur
+            elevation: 0,
             sx: { mt: 1, minWidth: 220 },
           }}
         >
@@ -263,7 +286,7 @@ const Header = () => {
           ))}
         </Menu>
 
-        {/* PROFILE DROPDOWN */}
+        {/* PROFILE DROPDOWN (Public) */}
         <Menu
           anchorEl={profileAnchorEl}
           open={Boolean(profileAnchorEl)}
@@ -289,6 +312,7 @@ const Header = () => {
             </ListItemIcon>{' '}
             Wealth Dashboard
           </MenuItem>
+
           <Divider sx={{ my: 1 }} />
           <MenuItem onClick={() => handleNavigation('/settings')}>
             <ListItemIcon>
@@ -297,12 +321,14 @@ const Header = () => {
             Global Settings
           </MenuItem>
           <Divider sx={{ my: 1 }} />
+
           <MenuItem onClick={handleResetData} sx={{ color: 'error.main' }}>
             <ListItemIcon>
               <ResetIcon fontSize="small" color="error" />
             </ListItemIcon>{' '}
             Reset All Data
           </MenuItem>
+          {/* No Login/Logout here, handled by AdminHeader or direct route */}
         </Menu>
 
         {/* EXPORT MENU */}
@@ -318,7 +344,7 @@ const Header = () => {
         </Menu>
       </Toolbar>
 
-      {/* DRAWER - Inherits Glass/Paper feel from theme */}
+      {/* DRAWER - Public */}
       <Drawer
         anchor="left"
         open={drawerOpen}
@@ -374,6 +400,18 @@ const Header = () => {
                 ))}
               </List>
             </Collapse>
+
+            <Divider sx={{ my: theme.spacing(1) }} />
+
+            <ListItemButton
+              onClick={() => handleNavigation('/articles')}
+              sx={{ borderRadius: theme.shape.borderRadius }}
+            >
+              <ListItemIcon>
+                <ArticleIcon />
+              </ListItemIcon>
+              <ListItemText primary="Articles" />
+            </ListItemButton>
 
             <Divider sx={{ my: theme.spacing(1) }} />
 
@@ -442,6 +480,7 @@ const Header = () => {
               </ListItemIcon>
               <ListItemText primary="Clear All Data" />
             </ListItemButton>
+            {/* No Login/Logout here, handled by AdminHeader or direct route */}
           </List>
         </Box>
       </Drawer>

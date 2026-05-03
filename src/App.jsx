@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, Suspense, lazy } from "react";
-import {Routes, Route, Navigate} from "react-router-dom";
+import {Routes, Route, Navigate, useLocation} from "react-router-dom";
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -12,8 +12,10 @@ import { getAppTheme } from "./theme/ThemeConfig";
 import { selectThemeMode, selectDesignSystem, selectVisualStyle } from "./store/emiSlice";
 
 import Header from "./components/layout/Header";
+import AdminHeader from "./components/layout/AdminHeader";
 import Footer from "./components/layout/Footer";
 import SuspenseFallback from "./components/common/SuspenseFallback";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 
 const Home = lazy(() => import("./pages/Home"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
@@ -29,11 +31,45 @@ const ContactUs = lazy(() => import("./pages/ContactUs"));
 const CreditCardEMICalculator = lazy(() => import("./pages/CreditCardEmiCalculator"));
 const PersonalLoanCalculator = lazy(() => import("./pages/PersonalLoanCalculator"));
 
+// New Article Module Imports
+const ArticlesArchive = lazy(() => import("./pages/articles/ArticlesArchive"));
+const SingleArticle = lazy(() => import("./pages/articles/SingleArticle"));
+const WriteArticle = lazy(() => import("./pages/admin/WriteArticle"));
+const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
+const LoginPage = lazy(() => import("./pages/admin/LoginPage")); // Corrected import path for LoginPage
+const AdminProfile = lazy(() => import("./pages/admin/AdminProfile"));
+
+// ProtectedRoute component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <SuspenseFallback />;
+  }
+  if (!user) {
+    return <Navigate to="/admin/login" replace />; // Corrected redirect path
+  }
+  return children;
+};
+
+// AdminRedirect component for the /admin path
+const AdminRedirect = () => {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return <SuspenseFallback />;
+  }
+  if (!user) {
+    return <Navigate to="/admin/login" replace />; // Corrected redirect path
+  }
+  return <Navigate to="/admin/articles" replace />;
+};
+
 
 const AppContent = () => {
     const themeMode = useSelector(selectThemeMode);
     const designSystem = useSelector(selectDesignSystem);
     const visualStyle = useSelector(selectVisualStyle);
+    const location = useLocation();
+    const isAdminRoute = location.pathname.startsWith('/admin');
 
     const muiTheme = useMemo(() =>
             getAppTheme(themeMode, designSystem, visualStyle),
@@ -50,16 +86,14 @@ const AppContent = () => {
         <ThemeProvider theme={muiTheme}>
             <CssBaseline />
             <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-                <Header />
+                {isAdminRoute ? <AdminHeader /> : <Header />}
 
                 <Box
                     component="main"
                     sx={{
                         flexGrow: 1,
                         width: '100%',
-                        // TOP OFFSET: Keeps header from hiding alerts and page titles
                         pt: { xs: '100px', md: '120px' },
-                        // BOTTOM OFFSET: Clear room for the sticky surplus bar and footer
                         pb: { xs: '150px', md: '200px' },
                         transition: 'padding 0.3s ease'
                     }}
@@ -67,10 +101,8 @@ const AppContent = () => {
                     <Box sx={{ width: '100%', maxWidth: '1440px', mx: 'auto', px: { xs: 2, md: 3 } }}>
                         <Suspense fallback={<SuspenseFallback />}>
                             <Routes>
-                                {/* Redirects for GH Pages root path logic */}
                                 <Route path="/smart-fund-manager" element={<Navigate to="/" replace />} />
 
-                                {/* Core Dashboard Routes */}
                                 <Route path="/" element={<Home />} />
                                 <Route path="/calculator" element={<Calculator />} />
                                 <Route path="/profile" element={<UserProfile />} />
@@ -88,6 +120,19 @@ const AppContent = () => {
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                                 <Route path="/terms-of-service" element={<TermsOfService />} />
                                 <Route path="/contact-us" element={<ContactUs />} />
+
+                                <Route path="/admin/login" element={<LoginPage />} />
+
+                                <Route path="/articles" element={<ArticlesArchive />} />
+                                <Route path="/articles/:id" element={<SingleArticle />} />
+
+                                <Route path="/admin" element={<AdminRedirect />} />
+
+                                <Route path="/admin/articles" element={<ProtectedRoute><AdminArticles /></ProtectedRoute>} />
+                                <Route path="/admin/articles/new" element={<ProtectedRoute><WriteArticle /></ProtectedRoute>} />
+                                <Route path="/admin/articles/edit/:id" element={<ProtectedRoute><WriteArticle /></ProtectedRoute>} />
+                                <Route path="/admin/profile" element={<ProtectedRoute><AdminProfile /></ProtectedRoute>} />
+
                                 <Route path="*" element={<NotFoundPage />} />
                             </Routes>
                         </Suspense>
@@ -106,7 +151,9 @@ export default function App() {
             <PersistGate loading={null} persistor={persistor}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <HelmetProvider>
-                        <AppContent />
+                        <AuthProvider>
+                            <AppContent />
+                        </AuthProvider>
                     </HelmetProvider>
                 </LocalizationProvider>
             </PersistGate>

@@ -12,17 +12,19 @@ export default function PageHeader({ title, subtitle, icon: Icon, iconColor = "p
       sx={{ mb: 4 }}
     >
       <Stack direction="row" spacing={2} alignItems="center">
-        <Box
-          sx={{
-            display: "flex",
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: alpha(theme.palette[iconColor].main, 0.1),
-            color: `${iconColor}.main`,
-          }}
-        >
-          <Icon fontSize="medium" />
-        </Box>
+        {Icon && ( // Conditionally render the icon box only if Icon is provided
+          <Box
+            sx={{
+              display: "flex",
+              p: 1.5,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette[iconColor].main, 0.1),
+              color: `${iconColor}.main`,
+            }}
+          >
+            <Icon fontSize="medium" />
+          </Box>
+        )}
         <Box>
           <Typography
             variant="h5"
