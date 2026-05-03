@@ -1,10 +1,62 @@
-import React from "react";
-import { Box, Typography, Stack, alpha, useTheme } from "@mui/material";
-import { useSelector } from "react-redux";
-import { selectCalculatedValues } from "../utils/emiCalculator";
-import { selectCurrency, selectExpenses } from "../../../store/emiSlice";
-import { formatCurrency } from "../../../utils/formatting";
-import DetailRow from "../../../components/common/DetailRow";
+import React from 'react';
+import { Box, Typography, Stack, alpha, useTheme } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { selectCalculatedValues } from '../utils/emiCalculator';
+import { selectCurrency, selectExpenses } from '../../../store/emiSlice';
+import { formatCurrency } from '../../../utils/formatting';
+import DetailRow from '../../../components/common/DetailRow';
+
+/**
+ * Custom Row for the Total section.
+ * Aligns with the 'Grand Total' style from Payment Breakdown.
+ */
+const TotalOutflowRow = ({ label, value }) => {
+  const theme = useTheme();
+  return (
+    <Box sx={{ px: 2, mt: 1 }}>
+      <Box
+        sx={{
+          p: 2,
+          borderRadius: 2,
+          bgcolor: alpha(theme.palette.primary.main, 0.04),
+          border: '1px dashed',
+          borderColor: alpha(theme.palette.primary.main, 0.3),
+        }}
+      >
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap" // Auto-splits into two rows if space is insufficient
+          gap={1}
+        >
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 700, // Matches 'Grand Total' label weight
+              color: 'text.primary',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {label}
+          </Typography>
+          <Typography
+            variant="h5" // Uses H5 to match the prominence of the Pie Chart's 'Total Cost'
+            sx={{
+              fontWeight: 900, // Same weight as other totals for visual consistency
+              color: 'text.primary', // Matches the black/dark text in screenshot
+              fontVariantNumeric: 'tabular-nums',
+              lineHeight: 1,
+              textAlign: 'right',
+            }}
+          >
+            {value}
+          </Typography>
+        </Stack>
+      </Box>
+    </Box>
+  );
+};
 
 const TotalMonthlyPayment = () => {
   const theme = useTheme();
@@ -12,6 +64,7 @@ const TotalMonthlyPayment = () => {
   const currency = useSelector(selectCurrency);
   const expenses = useSelector(selectExpenses);
 
+  // Core Calculations
   const emi = Math.round(calculatedValues.emi || 0);
   const monthlyTaxes = Math.round((calculatedValues.taxesYearlyInRs || 0) / 12);
   const monthlyInsurance = Math.round(
@@ -32,30 +85,30 @@ const TotalMonthlyPayment = () => {
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-
-        justifyContent: "space-between",
-        width: "100%",
-        boxSizing: "border-box", // Essential to prevent overflow
-        overflow: "hidden",
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
-      <Box sx={{ width: "100%" }}>
+      {/* Upper Breakdown List */}
+      <Box sx={{ p: 2.5, pb: 0 }}>
         <Typography
           variant="caption"
           sx={{
-            mb: 1,
-            px: 1,
+            mb: 1.5,
             fontWeight: 800,
-            color: "text.disabled",
-            textTransform: "uppercase",
-            display: "block",
+            color: 'text.disabled',
+            textTransform: 'uppercase',
+            display: 'block',
+            letterSpacing: 1.2,
           }}
         >
           Breakdown
         </Typography>
-        <Stack spacing={0.5} sx={{ width: "100%" }}>
+        <Stack spacing={0.5}>
           <DetailRow
             label="Monthly EMI"
             value={formatCurrency(emi, currency)}
@@ -79,39 +132,11 @@ const TotalMonthlyPayment = () => {
         </Stack>
       </Box>
 
-      <Box
-        sx={{
-          mt: 3,
-          p: 2.5, // Added padding so text doesn't touch the edges
-          borderRadius: 4,
-          textAlign: "center",
-          bgcolor: theme.palette.primary.main,
-          color: "primary.contrastText",
-          boxShadow: `0 8px 24px ${alpha(theme.palette.primary.main, 0.25)}`,
-          width: "100%",
-          boxSizing: "border-box", // Critical for containment
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 800,
-            textTransform: "uppercase",
-            opacity: 0.9,
-            display: "block",
-            mb: 0.5,
-            letterSpacing: 1,
-          }}
-        >
-          Total Monthly Outflow
-        </Typography>
-        <Typography
-          variant="h4"
-          sx={{ fontWeight: 900, fontSize: { xs: "1.5rem", sm: "2rem" } }}
-        >
-          {formatCurrency(totalMonthlyPayment, currency)}
-        </Typography>
-      </Box>
+      {/* Styled Total Row aligned with Payment Breakdown */}
+      <TotalOutflowRow
+        label="Total Monthly Outflow"
+        value={formatCurrency(totalMonthlyPayment, currency)}
+      />
     </Box>
   );
 };

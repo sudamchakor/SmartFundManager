@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Grid,
   Box,
@@ -8,35 +8,35 @@ import {
   Stack,
   useTheme,
   alpha,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Payments as PaymentsIcon,
   PieChart as PieChartIcon,
   TableChart as TableIcon,
   BarChart as BarIcon,
-} from "@mui/icons-material";
-import { useSelector } from "react-redux";
-import { selectCalculatedValues } from "../features/emiCalculator/utils/emiCalculator";
+} from '@mui/icons-material';
+import { useSelector } from 'react-redux';
+import { selectCalculatedValues } from '../features/emiCalculator/utils/emiCalculator';
 
-import HomeLoanForm from "../features/emiCalculator/components/HomeLoanForm";
-import PrepaymentsForm from "../features/emiCalculator/components/PrepaymentsForm";
-import PaymentScheduleTable from "../features/emiCalculator/components/PaymentScheduleTable";
-import TotalMonthlyPayment from "../features/emiCalculator/components/TotalMonthlyPayment";
-import PieChartComponent from "../components/charts/PieChartComponent";
-import BarChartComponent from "../components/charts/BarChartComponent";
+import HomeLoanForm from '../features/emiCalculator/components/HomeLoanForm';
+import PrepaymentsForm from '../features/emiCalculator/components/PrepaymentsForm';
+import PaymentScheduleTable from '../features/emiCalculator/components/PaymentScheduleTable';
+import TotalMonthlyPayment from '../features/emiCalculator/components/TotalMonthlyPayment';
+import PieChartComponent from '../components/charts/PieChartComponent';
+import BarChartComponent from '../components/charts/BarChartComponent';
 
 const SectionHeader = ({ icon, title, color }) => (
   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
     <Box
       sx={{
-        display: "flex",
+        display: 'flex',
         p: 0.8,
         borderRadius: 1.5,
         bgcolor: alpha(color, 0.1),
         color: color,
       }}
     >
-      {React.cloneElement(icon, { fontSize: "small" })}
+      {React.cloneElement(icon, { fontSize: 'small' })}
     </Box>
     <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
       {title}
@@ -52,7 +52,7 @@ const StyledPaper = ({ children, sx = {} }) => {
       sx={{
         p: 2.5,
         borderRadius: 3,
-        border: "1px solid",
+        border: '1px solid',
         borderColor: alpha(theme.palette.divider, 0.1),
         boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.02)}`,
         bgcolor: theme.palette.background.paper,
@@ -68,15 +68,18 @@ const Calculator = () => {
   const theme = useTheme();
   const calculatedValues = useSelector(selectCalculatedValues);
   const schedule = calculatedValues.schedule || [];
-  const startMonthYear = schedule.length > 0 ? schedule[0].date : "";
+  const startMonthYear = schedule.length > 0 ? schedule[0].date : '';
   const endMonthYear =
-    schedule.length > 0 ? schedule[schedule.length - 1].date : "";
+    schedule.length > 0 ? schedule[schedule.length - 1].date : '';
 
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        background: `linear-gradient(180deg, ${alpha(theme.palette.primary.main, 0.04)} 0%, ${theme.palette.background.default} 100%)`,
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${alpha(
+          theme.palette.primary.main,
+          0.04,
+        )} 0%, ${theme.palette.background.default} 100%)`,
         pt: 3,
         pb: 10,
       }}
@@ -84,7 +87,7 @@ const Calculator = () => {
       <Container maxWidth="xl">
         <Box sx={{ mb: 3 }}>
           <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.5 }}>
-            Home Loan{" "}
+            Home Loan{' '}
             <Box component="span" sx={{ color: theme.palette.primary.main }}>
               EMI Calculator
             </Box>
@@ -110,20 +113,20 @@ const Calculator = () => {
           </Grid>
 
           <Grid item xs={12} md={7} lg={8}>
-            <StyledPaper sx={{ height: "100%" }}>
+            <StyledPaper>
               <SectionHeader
                 title="Payment Breakdown"
                 icon={<PieChartIcon />}
                 color={theme.palette.info.main}
               />
-              <Box sx={{ height: 350 }}>
+              <Box sx={{ height: { xs: 630, md: 380 } }}>
                 <PieChartComponent />
               </Box>
             </StyledPaper>
           </Grid>
 
           <Grid item xs={12} md={5} lg={4}>
-            <StyledPaper sx={{ padding: 0, height: "100%" }}>
+            <StyledPaper>
               <SectionHeader
                 title="Monthly Commitment"
                 icon={<TableIcon />}
@@ -147,7 +150,7 @@ const Calculator = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <StyledPaper sx={{ p: 0, overflow: "hidden" }}>
+            <StyledPaper sx={{ overflow: 'hidden' }}>
               <Box sx={{ p: 2.5, pb: 0 }}>
                 <SectionHeader
                   title={`Amortization Schedule (${startMonthYear} - ${endMonthYear})`}

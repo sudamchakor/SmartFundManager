@@ -1,11 +1,19 @@
-import React from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
-import { useSelector } from "react-redux";
-import { selectCalculatedValues } from "../../features/emiCalculator/utils/emiCalculator";
-import { selectExpenses, selectCurrency } from "../../store/emiSlice";
-import { Box, Typography, Grid, Stack, alpha, useTheme } from "@mui/material";
-import { formatCurrency } from "../../utils/formatting";
-import DetailRow from "../common/DetailRow";
+import React from 'react';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { useSelector } from 'react-redux';
+import { selectCalculatedValues } from '../../features/emiCalculator/utils/emiCalculator';
+import { selectExpenses, selectCurrency } from '../../store/emiSlice';
+import {
+  Box,
+  Typography,
+  Grid,
+  Stack,
+  alpha,
+  useTheme,
+  Divider,
+} from '@mui/material';
+import { formatCurrency } from '../../utils/formatting';
+import DetailRow from '../common/DetailRow';
 
 const PieChartComponent = () => {
   const theme = useTheme();
@@ -13,24 +21,17 @@ const PieChartComponent = () => {
   const expenses = useSelector(selectExpenses);
   const currency = useSelector(selectCurrency);
 
-  // Strictly using Theme Palette Colors
   const COLORS = [
-    theme.palette.primary.main, // Initial Costs
-    theme.palette.success.main, // Principal
-    theme.palette.warning.main, // Prepayments
-    theme.palette.error.main, // Interest
-    theme.palette.info.main, // Taxes & Maintenance
+    theme.palette.primary.main,
+    theme.palette.success.main,
+    theme.palette.warning.main,
+    theme.palette.error.main,
+    theme.palette.info.main,
   ];
 
-  if (!calculatedValues?.schedule?.length) {
-    return (
-      <Typography color="text.disabled" sx={{ p: 2 }}>
-        No data available for breakdown
-      </Typography>
-    );
-  }
+  if (!calculatedValues?.schedule?.length)
+    return <Typography color="text.disabled">No data available</Typography>;
 
-  // Data Aggregation logic
   const downPaymentFees =
     calculatedValues.marginInRs +
     calculatedValues.feesInRs +
@@ -39,148 +40,117 @@ const PieChartComponent = () => {
   const prepayments = calculatedValues.totalPrepayments;
   const interest = calculatedValues.totalInterest;
   const taxesInsMaint =
-    calculatedValues.taxesYearlyInRs * (calculatedValues.schedule.length / 12) +
-    calculatedValues.homeInsYearlyInRs *
+    (calculatedValues.taxesYearlyInRs + calculatedValues.homeInsYearlyInRs) *
       (calculatedValues.schedule.length / 12) +
     expenses.maintenance * calculatedValues.schedule.length;
 
   const chartData = [
-    { name: "Initial Costs", value: downPaymentFees, color: COLORS[0] },
-    { name: "Principal", value: principal, color: COLORS[1] },
-    { name: "Prepayments", value: prepayments, color: COLORS[2] },
-    { name: "Interest", value: interest, color: COLORS[3] },
-    { name: "Taxes & Maint", value: taxesInsMaint, color: COLORS[4] },
+    { name: 'Initial', value: downPaymentFees, color: COLORS[0] },
+    { name: 'Principal', value: principal, color: COLORS[1] },
+    { name: 'Prepay', value: prepayments, color: COLORS[2] },
+    { name: 'Interest', value: interest, color: COLORS[3] },
+    { name: 'Maint', value: taxesInsMaint, color: COLORS[4] },
   ].filter((d) => d.value > 0);
 
   return (
-    <Grid container spacing={2} alignItems="center">
-      {/* Donut Chart Side */}
+    <Grid container spacing={4} alignItems="center">
       <Grid item xs={12} md={6}>
-        <Box
-          sx={{
-            height: { xs: 280, md: 320 },
-            width: "100%",
-            position: "relative",
-          }}
-        >
+        <Box sx={{ height: 260, width: '100%', position: 'relative' }}>
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
-                innerRadius="70%" // Thinner donut for cleaner look
-                outerRadius="90%"
-                paddingAngle={4}
+                innerRadius="75%"
+                outerRadius="95%"
+                paddingAngle={5}
                 dataKey="value"
                 stroke="none"
               >
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {chartData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(val) => formatCurrency(val, currency)}
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: theme.shadows[10],
-                  backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                  backdropFilter: "blur(4px)",
-                }}
-              />
+              <Tooltip formatter={(v) => formatCurrency(v, currency)} />
             </PieChart>
           </ResponsiveContainer>
-
-          {/* Centered Summary Text */}
           <Box
             sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
             }}
           >
             <Typography
               variant="caption"
               sx={{
-                fontWeight: 800,
-                color: "text.disabled",
-                textTransform: "uppercase",
-                letterSpacing: 1,
+                fontWeight: 600,
+                color: 'text.secondary',
+                textTransform: 'uppercase',
               }}
             >
               Total Cost
             </Typography>
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 900,
-                color: "text.primary",
-                letterSpacing: -0.5,
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>
               {formatCurrency(calculatedValues.totalPayments, currency)}
             </Typography>
           </Box>
         </Box>
       </Grid>
-
-      {/* Legend Side */}
       <Grid item xs={12} md={6}>
-        <Stack spacing={0.25}>
+        <Stack spacing={1}>
           <DetailRow
-            label="Down Payment & Fees"
+            label="Down Payment"
             value={formatCurrency(downPaymentFees, currency)}
             indicatorColor={COLORS[0]}
           />
           <DetailRow
-            label="Total Principal"
+            label="Principal"
             value={formatCurrency(principal, currency)}
             indicatorColor={COLORS[1]}
           />
           <DetailRow
-            label="Total Prepayments"
+            label="Prepayments"
             value={formatCurrency(prepayments, currency)}
             indicatorColor={COLORS[2]}
           />
           <DetailRow
-            label="Total Interest"
+            label="Interest"
             value={formatCurrency(interest, currency)}
             indicatorColor={COLORS[3]}
           />
           <DetailRow
-            label="Taxes & Maintenance"
+            label="Taxes/Maint"
             value={formatCurrency(taxesInsMaint, currency)}
             indicatorColor={COLORS[4]}
           />
 
-          {/* Grand Total Highlight */}
-          <Box sx={{ pt: 1.5, mt: 1 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                px: 2,
-                py: 1.5,
-                borderRadius: 2.5,
-                bgcolor: alpha(theme.palette.primary.main, 0.08),
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
-              }}
+          <Box
+            sx={{
+              mt: 2,
+              p: 2,
+              borderRadius: 2,
+              bgcolor: alpha(theme.palette.primary.main, 0.04),
+              border: '1px dashed',
+              borderColor: alpha(theme.palette.primary.main, 0.3),
+            }}
+          >
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
             >
-              <Typography
-                variant="subtitle2"
-                sx={{ fontWeight: 900, textTransform: "uppercase" }}
-              >
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
                 Grand Total
               </Typography>
               <Typography
                 variant="subtitle1"
-                sx={{ fontWeight: 900, color: "primary.main" }}
+                sx={{ fontWeight: 800, color: 'primary.main' }}
               >
                 {formatCurrency(calculatedValues.totalPayments, currency)}
               </Typography>
-            </Box>
+            </Stack>
           </Box>
         </Stack>
       </Grid>
