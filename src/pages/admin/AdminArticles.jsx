@@ -14,7 +14,9 @@ import {
   Paper,
   IconButton,
   TablePagination,
-  Fade, // Import Fade component
+  Fade,
+  Snackbar, // Import Snackbar
+  Alert,    // Import Alert
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -27,6 +29,7 @@ import { db } from '../../firebaseConfig';
 import { useAuth } from '../../hooks/useAuth';
 import { ADMIN_UID } from '../../utils/constants';
 import SuspenseFallback from '../../components/common/SuspenseFallback';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 
 const AdminArticles = () => {
   const [articles, setArticles] = useState([]);
@@ -36,6 +39,17 @@ const AdminArticles = () => {
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // State for confirmation modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState(null);
+
+  // State for Snackbar notifications
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
 
   const isAdmin = user && user.uid === ADMIN_UID;
 
@@ -52,6 +66,7 @@ const AdminArticles = () => {
       } catch (err) {
         console.error('Error fetching articles:', err);
         setError('Failed to load articles.');
+        setSnackbar({ open: true, message: 'Failed to load articles.', severity: 'error' });
       } finally {
         setLoadingArticles(false);
       }
@@ -60,17 +75,39 @@ const AdminArticles = () => {
     fetchArticles();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this article?')) {
+  // Function to open the confirmation modal
+  const confirmDelete = (id) => {
+    setArticleToDelete(id);
+    setIsModalOpen(true);
+  };
+
+  // Function to handle actual deletion after confirmation
+  const handleConfirmDelete = async () => {
+    if (articleToDelete) {
       try {
-        await deleteDoc(doc(db, 'articles', id));
-        setArticles(articles.filter((article) => article.id !== id));
-        alert('Article deleted successfully!');
+        await deleteDoc(doc(db, 'articles', articleToDelete));
+        setArticles(articles.filter((article) => article.id !== articleToDelete));
+        setSnackbar({ open: true, message: 'Article deleted successfully!', severity: 'success' });
       } catch (err) {
         console.error('Error deleting article:', err);
-        alert('Failed to delete article.');
+        setSnackbar({ open: true, message: 'Failed to delete article.', severity: 'error' });
+      } finally {
+        setIsModalOpen(false);
+        setArticleToDelete(null);
       }
     }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setArticleToDelete(null);
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
   };
 
   const handleChangePage = (event, newPage) => {
@@ -116,7 +153,7 @@ const AdminArticles = () => {
 
   return (
     <Fade in={!loadingArticles} timeout={1000}>
-      <Box> {/* Wrap Container with a Box to ensure a stable direct child for Fade */}
+      <Box>
         <Container maxWidth="lg" sx={{ py: 4 }}>
           <Box
             sx={{
@@ -200,7 +237,7 @@ const AdminArticles = () => {
                               <IconButton
                                 aria-label="delete"
                                 color="error"
-                                onClick={() => handleDelete(article.id)}
+                                onClick={() => confirmDelete(article.id)}
                               >
                                 <DeleteIcon />
                               </IconButton>
@@ -223,6 +260,28 @@ const AdminArticles = () => {
             </Paper>
           )}
         </Container>
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          onConfirm={handleConfirmDelete}
+          title="Confirm Deletion"
+          description="Are you sure you want to delete this article? This action cannot be undone."
+          confirmText="Delete"
+        />
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={5000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Box>
     </Fade>
   );
