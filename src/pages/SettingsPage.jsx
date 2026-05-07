@@ -17,6 +17,7 @@ import {
 import {
   SettingsOutlined as SettingsIcon,
   SaveOutlined as SaveIcon,
+  DownloadOutlined as DownloadIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -31,6 +32,7 @@ import {
 import { themePresets } from '../theme/ThemeConfig';
 import ThemeSelector from '../components/common/ThemeSelector';
 import PageHeader from '../components/common/PageHeader';
+import usePWAInstall from '../hooks/usePWAInstall';
 
 export default function SettingsPage() {
   const dispatch = useDispatch();
@@ -39,6 +41,8 @@ export default function SettingsPage() {
   const globalSettings = useSelector((state) => state.emi);
   const originalSettings = useRef({ ...globalSettings });
   const [hasSaved, setHasSaved] = useState(false);
+
+  const { isInstallable, handleInstall } = usePWAInstall();
 
   useEffect(() => {
     return () => {
@@ -205,6 +209,35 @@ export default function SettingsPage() {
               </Grid>
             </Grid>
           </Box>
+
+          {/* Section 3: App Install (PWA) */}
+          {isInstallable && (
+            <>
+              <Divider sx={{ opacity: 0.6 }} />
+              <Box>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    fontWeight: 800,
+                    color: 'primary.main',
+                    letterSpacing: 1.2,
+                  }}
+                >
+                  App Installation
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={handleInstall}
+                    startIcon={<DownloadIcon />}
+                  >
+                    Install App
+                  </Button>
+                </Box>
+              </Box>
+            </>
+          )}
         </Stack>
 
         {/* Minimal Action Bar */}

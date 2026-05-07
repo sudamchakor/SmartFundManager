@@ -125,11 +125,9 @@ const Header = () => {
 
   // Custom Menu PaperProps for styling
   const menuPaperProps = {
-    elevation: 4,
     sx: {
       mt: 1,
       borderRadius: 2,
-      bgcolor: 'background.paper',
       border: '1px solid',
       borderColor: 'divider',
       overflow: 'hidden',
@@ -425,19 +423,20 @@ const Header = () => {
         anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        PaperProps={{ elevation: 0, sx: { width: theme.spacing(35) } }}
+        PaperProps={{ sx: { width: theme.spacing(35) } }}
       >
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <Box
             sx={{
-              p: theme.spacing(3),
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 'black' }}>
-              SmartFund Manager
-            </Typography>
+            <Toolbar>
+              <Typography variant="h6" sx={{ fontWeight: 'black' }}>
+                SmartFund Manager
+              </Typography>
+            </Toolbar>
           </Box>
 
           <List sx={{ p: theme.spacing(1.5) }}>
@@ -531,6 +530,8 @@ const Header = () => {
               </ListItemIcon>
               <ListItemText primary="Settings" />
             </ListItemButton>
+
+            <Divider sx={{ my: theme.spacing(1) }} />
 
             <ListItemButton
               onClick={() => handleNavigation('/faq')}

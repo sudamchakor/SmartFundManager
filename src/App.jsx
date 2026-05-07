@@ -22,6 +22,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Lazy load UpdatePrompt
 const UpdatePrompt = lazy(() => import('./components/common/UpdatePrompt'));
+const PWAInstallPrompt = lazy(() => import('./components/common/PWAInstallPrompt'));
 
 // Lazy Loaded Pages
 const Home = lazy(() => import('./pages/Home'));
@@ -90,6 +91,7 @@ const AppContent = () => {
       <CssBaseline />
       <Suspense fallback={null}>
         <UpdatePrompt />
+        <PWAInstallPrompt />
       </Suspense>
       <Box
         sx={{
