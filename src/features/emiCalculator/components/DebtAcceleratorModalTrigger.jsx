@@ -10,7 +10,7 @@ import {
   useMediaQuery,
   Box,
   Typography,
-  alpha, // Import alpha here
+  alpha,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DebtAccelerator from '../../profile/components/DebtAccelerator';
@@ -24,12 +24,16 @@ const DebtAcceleratorModalTrigger = ({
   onApplyPrepayment,
 }) => {
   const theme = useTheme();
+  // Makes modal full screen on small devices (md breakpoint and below)
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
+  // We'll manage the extraPayment state here, which controls the slider in DebtAccelerator
   const [currentExtraPayment, setCurrentExtraPayment] = useState(initialPrepaymentAmount);
 
+  // Access loan details from Redux, as DebtAccelerator also uses them
   const { principal, interestRate, tenure, loanAmount } = useSelector(selectCalculatedValues);
 
+  // Ref to access methods exposed by DebtAccelerator (e.g., getCurrentExtraPayment)
   const debtAcceleratorRef = useRef(null);
 
   const handleApply = () => {
@@ -37,83 +41,121 @@ const DebtAcceleratorModalTrigger = ({
     if (onApplyPrepayment && valueToApply !== undefined) {
       onApplyPrepayment(valueToApply);
     }
-    onClose();
+    onClose(); // Close the modal after applying
   };
 
   return (
-    <Box>
-      <Dialog
-        fullScreen={fullScreen}
-        open={open}
-        onClose={onClose}
-        aria-labelledby="debt-accelerator-dialog-title"
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            bgcolor: theme.palette.background.default,
-            color: theme.palette.text.primary,
-            borderRadius: fullScreen ? 0 : 3,
-            boxShadow: fullScreen ? 'none' : `0 8px 24px ${alpha(theme.palette.common.black, 0.5)}`,
-          }
+    <Dialog
+      fullScreen={fullScreen} // Full screen on mobile
+      open={open}
+      onClose={onClose}
+      aria-labelledby="debt-accelerator-dialog-title"
+      maxWidth="md" // Max width for desktop
+      fullWidth // Takes full width up to maxWidth
+      PaperProps={{
+        sx: {
+          bgcolor: theme.palette.background.default, // Dark theme background for dialog
+          color: theme.palette.text.primary,
+          borderRadius: fullScreen ? 0 : 3, // No border radius for full screen on mobile
+          boxShadow: fullScreen ? 'none' : `0 8px 24px ${alpha(theme.palette.common.black, 0.5)}`,
+          // Ensure dialog itself can flex its content
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: fullScreen ? '100%' : '90vh', // Limit height on desktop
+        }
+      }}
+    >
+      <DialogTitle
+        id="debt-accelerator-dialog-title"
+        sx={{
+          m: 0,
+          p: { xs: 2, md: 3 }, // Responsive padding for title
+          bgcolor: theme.palette.background.paper,
+          flexShrink: 0, // Prevent title from shrinking
         }}
       >
-        <DialogTitle sx={{ m: 0, p: 2, bgcolor: theme.palette.background.paper }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 700, color: theme.palette.text.primary }}>
-            Debt Accelerator Tool
+        <Typography
+          variant="h6"
+          component="div"
+          sx={{
+            fontWeight: 700,
+            color: theme.palette.text.primary,
+            fontSize: { xs: '1.1rem', md: '1.25rem' } // Fluid typography
+          }}
+        >
+          Debt Accelerator Tool
+        </Typography>
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{
+            position: 'absolute',
+            right: { xs: 8, md: 16 }, // Responsive positioning
+            top: { xs: 8, md: 16 },   // Responsive positioning
+            color: (theme) => theme.palette.grey[500],
+            // Ensure touch target size (MUI IconButton usually handles this)
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent
+        dividers // Adds a border and makes content scrollable
+        sx={{
+          bgcolor: theme.palette.background.default,
+          p: { xs: 2, md: 3 }, // Responsive padding for content
+          flex: '1 1 auto', // Allows content to grow and shrink, pushing actions to bottom
+          overflowY: 'auto', // Enables vertical scrolling for content
+          // Ensure minHeight for touch targets within content if custom elements are used
+        }}
+      >
+        {loanAmount > 0 ? (
+          <DebtAccelerator
+            ref={debtAcceleratorRef}
+            initialOutstandingPrincipal={principal}
+            initialInterestRateAnnual={interestRate}
+            initialRemainingTenureMonths={tenure}
+            extraPayment={currentExtraPayment}
+            setExtraPayment={setCurrentExtraPayment}
+          />
+        ) : (
+          <Typography variant="body1" color="text.secondary" sx={{ p: { xs: 2, md: 3 } }}>
+            Please enter your loan details in the main calculator to use the Debt Accelerator.
           </Typography>
-          <IconButton
-            aria-label="close"
-            onClick={onClose}
-            sx={{
-              position: 'absolute',
-              right: 8,
-              top: 8,
-              color: (theme) => theme.palette.grey[500],
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers sx={{ bgcolor: theme.palette.background.default, p: fullScreen ? 1 : 3 }}>
-          {loanAmount > 0 ? (
-            <DebtAccelerator
-              ref={debtAcceleratorRef}
-              initialOutstandingPrincipal={principal}
-              initialInterestRateAnnual={interestRate}
-              initialRemainingTenureMonths={tenure}
-              extraPayment={currentExtraPayment}
-              setExtraPayment={setCurrentExtraPayment}
-            />
-          ) : (
-            <Typography variant="body1" color="text.secondary" sx={{ p: 3 }}>
-              Please enter your loan details in the main calculator to use the Debt Accelerator.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ bgcolor: theme.palette.background.paper, p: 2 }}>
-          <Button onClick={onClose} color="inherit" sx={{ fontWeight: 600 }}>
-            Close
-          </Button>
-          <Button
-            onClick={handleApply}
-            color="primary"
-            variant="contained"
-            sx={{
-              bgcolor: theme.palette.primary.main,
-              '&:hover': {
-                bgcolor: theme.palette.primary.dark,
-              },
-              color: theme.palette.primary.contrastText,
-              fontWeight: 700,
-              textTransform: 'none',
-            }}
-          >
-            Apply Prepayment Strategy
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+        )}
+      </DialogContent>
+      <DialogActions
+        sx={{
+          bgcolor: theme.palette.background.paper,
+          p: { xs: 2, md: 3 }, // Responsive padding for actions
+          flexShrink: 0, // Prevent actions from shrinking
+          justifyContent: { xs: 'space-between', md: 'flex-end' } // Adjust button alignment on mobile
+        }}
+      >
+        <Button onClick={onClose} color="inherit" sx={{ fontWeight: 600, textTransform: 'none' }}>
+          Close
+        </Button>
+        <Button
+          onClick={handleApply}
+          color="primary"
+          variant="contained"
+          sx={{
+            bgcolor: theme.palette.primary.main,
+            '&:hover': {
+              bgcolor: theme.palette.primary.dark,
+            },
+            color: theme.palette.primary.contrastText,
+            fontWeight: 700,
+            textTransform: 'none',
+            minWidth: { xs: 'auto', md: 120 }, // Ensure touch target size, but allow shrinking on mobile
+            px: { xs: 2, md: 3 }, // Responsive padding
+            py: { xs: 1, md: 1.2 }, // Responsive padding
+          }}
+        >
+          Apply Prepayment Strategy
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

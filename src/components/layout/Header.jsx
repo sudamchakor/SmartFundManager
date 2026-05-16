@@ -82,8 +82,10 @@ const Header = () => {
 
   const currentCalc = useMemo(
     () =>
-      CALCULATORS.find((c) => location.pathname.startsWith(c.path)) ||
-      { label: 'Select Calculator', path: '' }, // Placeholder for no selection
+      CALCULATORS.find((c) => location.pathname.startsWith(c.path)) || {
+        label: 'Select Calculator',
+        path: '',
+      }, // Placeholder for no selection
     [location.pathname],
   );
 
@@ -127,7 +129,6 @@ const Header = () => {
   const menuPaperProps = {
     sx: {
       mt: 1,
-      borderRadius: 2,
       border: '1px solid',
       borderColor: 'divider',
       overflow: 'hidden',
@@ -178,6 +179,7 @@ const Header = () => {
         zIndex: theme.zIndex.drawer + 1,
         borderBottom: 1,
         borderColor: 'divider',
+        borderRadius: { xs: 0, md: 0 }, // Explicitly set to 0 for all screen sizes
       }}
     >
       <Toolbar>
